@@ -43,10 +43,15 @@ type Sequencer struct {
 
 // New init sequencer
 func New(cfg Config, batchCfg state.BatchConfig, poolCfg pool.Config, txPool txPool, stateIntf stateInterface, etherman etherman, eventLog *event.EventLog) (*Sequencer, error) {
-	addr, err := etherman.TrustedSequencer()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get trusted sequencer address, error: %v", err)
+	//addr, err := etherman.TrustedSequencer()
+	//if err != nil {
+	//	return nil, fmt.Errorf("failed to get trusted sequencer address, err: %v", err)
+	//}
+	addr := cfg.L2Coinbase
+	if addr.String() == "0x0000000000000000000000000000000000000000" {
+		return nil, fmt.Errorf("invalid l2 coinbase address")
 	}
+	log.Infof("Load L2 coinbase %v", addr)
 
 	sequencer := &Sequencer{
 		cfg:       cfg,
