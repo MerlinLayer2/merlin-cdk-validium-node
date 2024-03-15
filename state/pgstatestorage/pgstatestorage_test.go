@@ -1410,7 +1410,8 @@ func TestGetForcedBatch(t *testing.T) {
 	require.Equal(t, "0x717e05de47a87a7d1679e183f1c224150675f6302b7da4eaab526b2b91ae0761", fb.GlobalExitRoot.String())
 	require.Equal(t, []byte{0xb}, fb.RawTxsData)
 
-	fbData, err := testState.GetBatchL2DataByNumber(ctx, 1, dbTx)
+	// also check data retrieval
+	fbData, err := testState.GetForcedBatchL2DataByNumbers(ctx, []uint64{1}, dbTx)
 	require.NoError(t, err)
 	require.Equal(t, []byte{0xb}, fbData)
 }
