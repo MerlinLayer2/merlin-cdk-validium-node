@@ -64,8 +64,14 @@ func (d *DataAvailability) GetBatchL2Data(batchNums []uint64, batchHashes []comm
 		return nil, fmt.Errorf("invalid L2 batch data retrieval arguments, %d != %d", len(batchNums), len(batchHashes))
 	}
 
-	data, err := d.localData(batchNums, batchHashes)
-	if err == nil {
+	localData, err := d.state.GetBatchL2DataByNumbers(d.ctx, batchNums, nil)
+	if err != nil {
+		return nil, err
+	}
+	data, err := checkBatches(batchNums, batchHashes, localData)
+	if err != nil {
+		log.Warnf("failed to retrieve local data for batches %v: %s", batchNums, err.Error())
+	} else {
 		return data, nil
 	}
 
@@ -81,23 +87,29 @@ func (d *DataAvailability) GetBatchL2Data(batchNums []uint64, batchHashes []comm
 	return d.backend.GetSequence(d.ctx, batchHashes, dataAvailabilityMessage)
 }
 
-// localData retrieves batches from local database and returns an error unless all are found
-func (d *DataAvailability) localData(numbers []uint64, hashes []common.Hash) ([][]byte, error) {
-	data, err := d.state.GetBatchL2DataByNumbers(d.ctx, numbers, nil)
+func (d *DataAvailability) GetForcedBatchL2Data(batchNumbers []uint64, expectedHashes []common.Hash) ([][]byte, error) {
+	data, err := d.state.GetForcedBatchL2DataByNumbers(d.ctx, batchNumbers, nil)
 	if err != nil {
 		return nil, err
 	}
+	return checkBatches(batchNumbers, expectedHashes, data)
+}
+
+func checkBatches(batchNumbers []uint64, expectedHashes []common.Hash, batchData map[uint64][]byte) ([][]byte, error) {
+	if len(batchNumbers) != len(expectedHashes) {
+		return nil, fmt.Errorf("invalid batch parameters, %d != %d", len(batchNumbers), len(expectedHashes))
+	}
 	var batches [][]byte
-	for i := 0; i < len(numbers); i++ {
-		batchNumber := numbers[i]
-		expectedHash := hashes[i]
-		batchData, ok := data[batchNumber]
+	for i := 0; i < len(batchNumbers); i++ {
+		batchNumber := batchNumbers[i]
+		expectedHash := expectedHashes[i]
+		batchData, ok := batchData[batchNumber]
 		if !ok {
 			return nil, fmt.Errorf("missing batch %v", batchNumber)
 		}
 		actualHash := crypto.Keccak256Hash(batchData)
 		if actualHash != expectedHash {
-			err = fmt.Errorf(unexpectedHashTemplate, batchNumber, expectedHash, actualHash)
+			err := fmt.Errorf(unexpectedHashTemplate, batchNumber, expectedHash, actualHash)
 			log.Warnf("wrong local data for hash: %s", err.Error())
 			return nil, err
 		} else {
