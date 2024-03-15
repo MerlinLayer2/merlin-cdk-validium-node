@@ -87,6 +87,7 @@ func (d *DataAvailability) GetBatchL2Data(batchNums []uint64, batchHashes []comm
 	return d.backend.GetSequence(d.ctx, batchHashes, dataAvailabilityMessage)
 }
 
+// GetForcedBatchL2Data retrieves, checks, and returns the raw data associated with forced batches.
 func (d *DataAvailability) GetForcedBatchL2Data(batchNumbers []uint64, expectedHashes []common.Hash) ([][]byte, error) {
 	data, err := d.state.GetForcedBatchL2DataByNumbers(d.ctx, batchNumbers, nil)
 	if err != nil {
