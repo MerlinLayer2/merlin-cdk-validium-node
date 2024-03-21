@@ -60,7 +60,15 @@ func (c *Client) BatchByNumber(ctx context.Context, number *big.Int) (*types.Bat
 
 // BatchesByNumbers returns batches from the current canonical chain by batch numbers. If the list is empty, the last
 // known batch is returned as a list.
-func (c *Client) BatchesByNumbers(_ context.Context, numbers []*big.Int) ([]*types.BatchData, error) {
+func (c *Client) BatchesByNumbers(ctx context.Context, numbers []*big.Int) ([]*types.BatchData, error) {
+	return c.batchesByNumbers(ctx, numbers, "zkevm_getBatchDataByNumbers")
+}
+
+func (c *Client) ForcedBatchesByNumbers(ctx context.Context, numbers []*big.Int) ([]*types.BatchData, error) {
+	return c.batchesByNumbers(ctx, numbers, "zkevm_getForcedBatchDataByNumbers")
+}
+
+func (c *Client) batchesByNumbers(_ context.Context, numbers []*big.Int, method string) ([]*types.BatchData, error) {
 	var list []types.BatchNumber
 	for _, n := range numbers {
 		list = append(list, types.BatchNumber(n.Int64()))
@@ -74,7 +82,7 @@ func (c *Client) BatchesByNumbers(_ context.Context, numbers []*big.Int) ([]*typ
 		batchNumbers = append(batchNumbers, n.StringOrHex())
 	}
 
-	response, err := JSONRPCCall(c.url, "zkevm_getBatchDataByNumbers", batchNumbers, true)
+	response, err := JSONRPCCall(c.url, method, batchNumbers, true)
 	if err != nil {
 		return nil, err
 	}

@@ -57,4 +57,5 @@ type DataManager interface {
 type ZKEVMClientTrustedBatchesGetter interface {
 	BatchByNumber(ctx context.Context, number *big.Int) (*types.Batch, error)
 	BatchesByNumbers(ctx context.Context, numbers []*big.Int) ([]*types.BatchData, error)
+	ForcedBatchesByNumbers(ctx context.Context, numbers []*big.Int) ([]*types.BatchData, error)
 }

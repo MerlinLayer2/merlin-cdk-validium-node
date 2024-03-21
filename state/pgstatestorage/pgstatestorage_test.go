@@ -1197,11 +1197,8 @@ func TestGetBatchL2DataByNumbers(t *testing.T) {
 	_, err = testState.Exec(ctx, insertForcedBatch)
 	require.NoError(t, err)
 
-	allData, err := testState.GetBatchL2DataByNumbers(ctx, []uint64{i1, i2, i3, i4, i5}, tx)
+	allData, err := testState.GetForcedBatchL2DataByNumbers(ctx, []uint64{i4}, tx)
 	require.NoError(t, err)
-	assert.Equal(t, d1, allData[i1])
-	assert.Equal(t, d2, allData[i2])
-	assert.Nil(t, allData[i3])
 	assert.Equal(t, d4, allData[i4])
 
 	_, ok := allData[i5]

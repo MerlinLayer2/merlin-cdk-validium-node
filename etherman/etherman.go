@@ -1363,14 +1363,33 @@ func decodeSequencedBatches(smcAbi abi.ABI, txData []byte, forkID uint64, lastBa
 		initSequencedBatchNumber := data[2].(uint64)
 		coinbase := data[3].(common.Address)
 		dataAvailabilityMessage := (data[4]).([]byte)
-		batchNumbers, validiumData, err := getValidiumData(da, lastBatchNumber, sequencesValidium, dataAvailabilityMessage)
+
+		var batchInfos []batchInfo // pair the batch number and hash and keep in order
+		for i, validiumData := range sequencesValidium {
+			bn := lastBatchNumber - uint64(len(sequencesValidium)-(i+1))
+			batchInfos = append(batchInfos, batchInfo{num: bn, hash: validiumData.TransactionsHash})
+		}
+
+		batchData, err := resolveBatchData(da, batchInfos, dataAvailabilityMessage)
 		if err != nil {
 			return nil, err
 		}
+		forcedBatchData, err := resolveForcedBatchData(da, batchInfos)
+		if err != nil {
+			return nil, err
+		}
+
 		sequencedBatches := make([]SequencedBatch, len(sequencesValidium))
-		for i, bn := range batchNumbers {
+		for i, info := range batchInfos {
+			bn := info.num
+			var validiumData []byte
+			if info.isForced {
+				validiumData = forcedBatchData[bn]
+			} else {
+				validiumData = batchData[bn]
+			}
 			s := polygonzkevm.PolygonRollupBaseEtrogBatchData{
-				Transactions:         validiumData[i],
+				Transactions:         validiumData,
 				ForcedGlobalExitRoot: sequencesValidium[i].ForcedGlobalExitRoot,
 				ForcedTimestamp:      sequencesValidium[i].ForcedTimestamp,
 				ForcedBlockHashL1:    sequencesValidium[i].ForcedBlockHashL1,
@@ -1393,55 +1412,65 @@ func decodeSequencedBatches(smcAbi abi.ABI, txData []byte, forkID uint64, lastBa
 			}
 			sequencedBatches[i] = batch
 		}
+
 		return sequencedBatches, nil
 	}
 
 	return nil, fmt.Errorf("unexpected method called in sequence batches transaction: %s", method.RawName)
 }
 
-func getValidiumData(da dataavailability.BatchDataProvider, lastBatchNumber uint64, sequencesValidium []polygonzkevm.PolygonValidiumEtrogValidiumBatchData, daMessage []byte) ([]uint64, [][]byte, error) {
-	var batchNums, forceBatchNums, allBatchNums []uint64
-	var batchHashes, forcedBatchHashes []common.Hash
-	for i, validiumData := range sequencesValidium {
-		bn := lastBatchNumber - uint64(len(sequencesValidium)-(i+1))
-		if validiumData.ForcedTimestamp == 0 {
-			batchNums = append(batchNums, bn)
-			batchHashes = append(batchHashes, validiumData.TransactionsHash)
-		} else {
-			forceBatchNums = append(forceBatchNums, bn)
-			forcedBatchHashes = append(forcedBatchHashes, validiumData.TransactionsHash)
+type batchInfo struct {
+	num      uint64
+	hash     common.Hash
+	isForced bool
+}
+
+func resolveBatchData(da dataavailability.BatchDataProvider, batchInfos []batchInfo, daMessage []byte) (map[uint64][]byte, error) {
+	var batchNums []uint64
+	var batchHashes []common.Hash
+	// only resolve the normal batches
+	for _, info := range batchInfos {
+		if !info.isForced {
+			batchNums = append(batchNums, info.num)
+			batchHashes = append(batchHashes, info.hash)
 		}
-		allBatchNums = append(allBatchNums, bn)
 	}
 	batchL2Data, err := da.GetBatchL2Data(batchNums, batchHashes, daMessage)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	forcedBatchL2Data, err := da.GetForcedBatchL2Data(forceBatchNums, forcedBatchHashes)
-	if err != nil {
-		return nil, nil, err
+	if len(batchL2Data) != len(batchInfos) {
+		return nil, fmt.Errorf("failed to resolve batch data for numbers: %v", batchNums)
 	}
-	var b, f int
-	var recombinedData [][]byte
-	for _, validiumData := range sequencesValidium {
-		if validiumData.ForcedTimestamp == 0 {
-			if b > len(batchL2Data)-1 {
-				return nil, nil, fmt.Errorf("missing batch data %v", batchNums)
-			}
-			recombinedData = append(recombinedData, batchL2Data[b])
-			b += 1
-		} else {
-			if f > len(forcedBatchL2Data)-1 {
-				return nil, nil, fmt.Errorf("missing forced batch data %v", forceBatchNums)
-			}
-			recombinedData = append(recombinedData, forcedBatchL2Data[f])
-			f += 1
+	data := make(map[uint64][]byte)
+	for i, bn := range batchNums {
+		data[bn] = batchL2Data[i]
+	}
+	return data, nil
+}
+
+func resolveForcedBatchData(da dataavailability.BatchDataProvider, batchInfos []batchInfo) (map[uint64][]byte, error) {
+	var batchNums []uint64
+	var batchHashes []common.Hash
+	// only resolve the forced ones
+	for _, info := range batchInfos {
+		if info.isForced {
+			batchNums = append(batchNums, info.num)
+			batchHashes = append(batchHashes, info.hash)
 		}
 	}
-	if len(recombinedData) != len(allBatchNums) {
-		return nil, nil, fmt.Errorf("failed to retrieve batch data, asked for %d, got %d", len(sequencesValidium), len(recombinedData))
+	batchL2Data, err := da.GetForcedBatchL2Data(batchNums, batchHashes)
+	if err != nil {
+		return nil, err
 	}
-	return allBatchNums, recombinedData, nil
+	if len(batchL2Data) != len(batchInfos) {
+		return nil, fmt.Errorf("failed to resolve batch data for numbers: %v", batchNums)
+	}
+	data := make(map[uint64][]byte)
+	for i, bn := range batchNums {
+		data[bn] = batchL2Data[i]
+	}
+	return data, nil
 }
 
 func decodeSequencesPreEtrog(txData []byte, lastBatchNumber uint64, sequencer common.Address, txHash common.Hash, nonce uint64) ([]SequencedBatch, error) {

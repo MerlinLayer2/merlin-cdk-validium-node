@@ -204,8 +204,17 @@ func (z *ZKEVMEndpoints) GetBatchByNumber(batchNumber types.BatchNumber, fullTx 
 	})
 }
 
-// GetBatchDataByNumbers returns the batch data for batches by numbers
+type batchDataFunc func(ctx context.Context, batchNumbers []uint64, dbTx pgx.Tx) (map[uint64][]byte, error)
+
 func (z *ZKEVMEndpoints) GetBatchDataByNumbers(filter types.BatchFilter) (interface{}, types.Error) {
+	return z.getBatchData(filter, z.state.GetBatchL2DataByNumbers)
+}
+
+func (z *ZKEVMEndpoints) GetForcedBatchDataByNumbers(filter types.BatchFilter) (interface{}, types.Error) {
+	return z.getBatchData(filter, z.state.GetForcedBatchL2DataByNumbers)
+}
+
+func (z *ZKEVMEndpoints) getBatchData(filter types.BatchFilter, f batchDataFunc) (interface{}, types.Error) {
 	return z.txMan.NewDbTxScope(z.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {
 		var batchNumbers []uint64
 		for _, bn := range filter.Numbers {
@@ -216,7 +225,7 @@ func (z *ZKEVMEndpoints) GetBatchDataByNumbers(filter types.BatchFilter) (interf
 			batchNumbers = append(batchNumbers, n)
 		}
 
-		batchesData, err := z.state.GetBatchL2DataByNumbers(ctx, batchNumbers, dbTx)
+		batchesData, err := f(ctx, batchNumbers, dbTx)
 		if errors.Is(err, state.ErrNotFound) {
 			return nil, nil
 		} else if err != nil {
