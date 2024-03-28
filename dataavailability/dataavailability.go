@@ -162,7 +162,7 @@ func (d *DataAvailability) trustedSequencerForcedData(batchNums []uint64, expect
 	return checkBatches(batchNums, expectedHashes, data)
 }
 
-// rpcData retrieved batch data from the trusted sequencer and returns an error unless all are found
+// rpcData retrieves batch data from rpcBatchDataFunc, returns an error unless all are found and correct
 func (d *DataAvailability) rpcData(batchNums []uint64, expectedHashes []common.Hash, rpcFunc rpcBatchDataFunc) (map[uint64][]byte, error) {
 	if len(batchNums) != len(expectedHashes) {
 		return nil, fmt.Errorf("invalid arguments, len of batch numbers does not equal length of expected hashes: %d != %d",
