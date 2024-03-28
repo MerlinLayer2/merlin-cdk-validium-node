@@ -252,11 +252,9 @@ func (s *State) StoreL2Block(ctx context.Context, batchNumber uint64, l2Block *P
 		if executor.IsInvalidL2Block(executor.RomErrorCode(txResponse.RomError)) {
 			continue
 		}
-
 		txResp := *txResponse
 		transactions = append(transactions, &txResp.Tx)
 		txsL2Hash = append(txsL2Hash, txResp.TxHashL2_V2)
-
 		storeTxEGPData := StoreTxEGPData{EGPLog: nil, EffectivePercentage: uint8(txResponse.EffectivePercentage)}
 		if txsEGPLog != nil {
 			storeTxEGPData.EGPLog = txsEGPLog[i]
@@ -1048,7 +1046,6 @@ func (s *State) internalTestGasEstimationTransactionV2(ctx context.Context, batc
 	}
 	if processBatchResponseV2.ErrorRom != executor.RomError_ROM_ERROR_NO_ERROR {
 		err = executor.RomErr(processBatchResponseV2.ErrorRom)
-		s.eventLog.LogExecutorErrorV2(ctx, processBatchResponseV2.Error, processBatchRequestV2)
 		return false, false, gasUsed, nil, err
 	}
 

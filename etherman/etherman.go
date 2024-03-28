@@ -1320,6 +1320,12 @@ func decodeSequencedBatches(smcAbi abi.ABI, txData []byte, forkID uint64, lastBa
 		return nil, err
 	}
 
+	var (
+		maxSequenceTimestamp     uint64
+		initSequencedBatchNumber uint64
+		coinbase                 common.Address
+	)
+
 	switch method.Name {
 	case "sequenceBatches":
 		var sequences []polygonzkevm.PolygonRollupBaseEtrogBatchData
@@ -1327,9 +1333,17 @@ func decodeSequencedBatches(smcAbi abi.ABI, txData []byte, forkID uint64, lastBa
 		if err != nil {
 			return nil, err
 		}
-		maxSequenceTimestamp := data[1].(uint64)
-		initSequencedBatchNumber := data[2].(uint64)
-		coinbase := data[3].(common.Address)
+
+		switch forkID {
+		case state.FORKID_ETROG:
+			coinbase = data[1].(common.Address)
+
+		case state.FORKID_ELDERBERRY:
+			maxSequenceTimestamp = data[1].(uint64)
+			initSequencedBatchNumber = data[2].(uint64)
+			coinbase = data[3].(common.Address)
+		}
+
 		sequencedBatches := make([]SequencedBatch, len(sequences))
 		for i, seq := range sequences {
 			bn := lastBatchNumber - uint64(len(sequences)-(i+1))
@@ -1354,15 +1368,26 @@ func decodeSequencedBatches(smcAbi abi.ABI, txData []byte, forkID uint64, lastBa
 
 		return sequencedBatches, nil
 	case "sequenceBatchesValidium":
-		var sequencesValidium []polygonzkevm.PolygonValidiumEtrogValidiumBatchData
+		var (
+			sequencesValidium   []polygonzkevm.PolygonValidiumEtrogValidiumBatchData
+			dataAvailabilityMsg []byte
+		)
 		err := json.Unmarshal(bytedata, &sequencesValidium)
 		if err != nil {
 			return nil, err
 		}
-		maxSequenceTimestamp := data[1].(uint64)
-		initSequencedBatchNumber := data[2].(uint64)
-		coinbase := data[3].(common.Address)
-		dataAvailabilityMessage := (data[4]).([]byte)
+
+		switch forkID {
+		case state.FORKID_ETROG:
+			coinbase = data[1].(common.Address)
+			dataAvailabilityMsg = data[2].([]byte)
+
+		case state.FORKID_ELDERBERRY:
+			maxSequenceTimestamp = data[1].(uint64)
+			initSequencedBatchNumber = data[2].(uint64)
+			coinbase = data[3].(common.Address)
+			dataAvailabilityMsg = data[4].([]byte)
+		}
 
 		var batchInfos []batchInfo // pair the batch number and hash and keep in order
 		for i, validiumData := range sequencesValidium {
@@ -1370,7 +1395,7 @@ func decodeSequencedBatches(smcAbi abi.ABI, txData []byte, forkID uint64, lastBa
 			batchInfos = append(batchInfos, batchInfo{num: bn, hash: validiumData.TransactionsHash})
 		}
 
-		batchData, err := resolveBatchData(da, batchInfos, dataAvailabilityMessage)
+		batchData, err := resolveBatchData(da, batchInfos, dataAvailabilityMsg)
 		if err != nil {
 			return nil, err
 		}
