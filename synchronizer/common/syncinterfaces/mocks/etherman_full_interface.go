@@ -32,10 +32,6 @@ func (_m *EthermanFullInterface) EXPECT() *EthermanFullInterface_Expecter {
 func (_m *EthermanFullInterface) EthBlockByNumber(ctx context.Context, blockNumber uint64) (*types.Block, error) {
 	ret := _m.Called(ctx, blockNumber)
 
-	if len(ret) == 0 {
-		panic("no return value specified for EthBlockByNumber")
-	}
-
 	var r0 *types.Block
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, uint64) (*types.Block, error)); ok {
@@ -91,10 +87,6 @@ func (_c *EthermanFullInterface_EthBlockByNumber_Call) RunAndReturn(run func(con
 func (_m *EthermanFullInterface) GetLatestBatchNumber() (uint64, error) {
 	ret := _m.Called()
 
-	if len(ret) == 0 {
-		panic("no return value specified for GetLatestBatchNumber")
-	}
-
 	var r0 uint64
 	var r1 error
 	if rf, ok := ret.Get(0).(func() (uint64, error)); ok {
@@ -146,10 +138,6 @@ func (_c *EthermanFullInterface_GetLatestBatchNumber_Call) RunAndReturn(run func
 func (_m *EthermanFullInterface) GetLatestVerifiedBatchNum() (uint64, error) {
 	ret := _m.Called()
 
-	if len(ret) == 0 {
-		panic("no return value specified for GetLatestVerifiedBatchNum")
-	}
-
 	var r0 uint64
 	var r1 error
 	if rf, ok := ret.Get(0).(func() (uint64, error)); ok {
@@ -200,10 +188,6 @@ func (_c *EthermanFullInterface_GetLatestVerifiedBatchNum_Call) RunAndReturn(run
 // GetRollupInfoByBlockRange provides a mock function with given fields: ctx, fromBlock, toBlock
 func (_m *EthermanFullInterface) GetRollupInfoByBlockRange(ctx context.Context, fromBlock uint64, toBlock *uint64) ([]etherman.Block, map[common.Hash][]etherman.Order, error) {
 	ret := _m.Called(ctx, fromBlock, toBlock)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetRollupInfoByBlockRange")
-	}
 
 	var r0 []etherman.Block
 	var r1 map[common.Hash][]etherman.Order
@@ -270,10 +254,6 @@ func (_c *EthermanFullInterface_GetRollupInfoByBlockRange_Call) RunAndReturn(run
 func (_m *EthermanFullInterface) GetTrustedSequencerURL() (string, error) {
 	ret := _m.Called()
 
-	if len(ret) == 0 {
-		panic("no return value specified for GetTrustedSequencerURL")
-	}
-
 	var r0 string
 	var r1 error
 	if rf, ok := ret.Get(0).(func() (string, error)); ok {
@@ -324,10 +304,6 @@ func (_c *EthermanFullInterface_GetTrustedSequencerURL_Call) RunAndReturn(run fu
 // HeaderByNumber provides a mock function with given fields: ctx, number
 func (_m *EthermanFullInterface) HeaderByNumber(ctx context.Context, number *big.Int) (*types.Header, error) {
 	ret := _m.Called(ctx, number)
-
-	if len(ret) == 0 {
-		panic("no return value specified for HeaderByNumber")
-	}
 
 	var r0 *types.Header
 	var r1 error
@@ -383,10 +359,6 @@ func (_c *EthermanFullInterface_HeaderByNumber_Call) RunAndReturn(run func(conte
 // VerifyGenBlockNumber provides a mock function with given fields: ctx, genBlockNumber
 func (_m *EthermanFullInterface) VerifyGenBlockNumber(ctx context.Context, genBlockNumber uint64) (bool, error) {
 	ret := _m.Called(ctx, genBlockNumber)
-
-	if len(ret) == 0 {
-		panic("no return value specified for VerifyGenBlockNumber")
-	}
 
 	var r0 bool
 	var r1 error

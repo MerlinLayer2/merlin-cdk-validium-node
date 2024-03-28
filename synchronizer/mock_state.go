@@ -39,10 +39,6 @@ func (_m *StateMock) EXPECT() *StateMock_Expecter {
 func (_m *StateMock) AddAccumulatedInputHash(ctx context.Context, batchNum uint64, accInputHash common.Hash, dbTx pgx.Tx) error {
 	ret := _m.Called(ctx, batchNum, accInputHash, dbTx)
 
-	if len(ret) == 0 {
-		panic("no return value specified for AddAccumulatedInputHash")
-	}
-
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, uint64, common.Hash, pgx.Tx) error); ok {
 		r0 = rf(ctx, batchNum, accInputHash, dbTx)
@@ -88,10 +84,6 @@ func (_c *StateMock_AddAccumulatedInputHash_Call) RunAndReturn(run func(context.
 func (_m *StateMock) AddBlock(ctx context.Context, block *state.Block, dbTx pgx.Tx) error {
 	ret := _m.Called(ctx, block, dbTx)
 
-	if len(ret) == 0 {
-		panic("no return value specified for AddBlock")
-	}
-
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, *state.Block, pgx.Tx) error); ok {
 		r0 = rf(ctx, block, dbTx)
@@ -135,10 +127,6 @@ func (_c *StateMock_AddBlock_Call) RunAndReturn(run func(context.Context, *state
 // AddForcedBatch provides a mock function with given fields: ctx, forcedBatch, dbTx
 func (_m *StateMock) AddForcedBatch(ctx context.Context, forcedBatch *state.ForcedBatch, dbTx pgx.Tx) error {
 	ret := _m.Called(ctx, forcedBatch, dbTx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for AddForcedBatch")
-	}
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, *state.ForcedBatch, pgx.Tx) error); ok {
@@ -184,10 +172,6 @@ func (_c *StateMock_AddForcedBatch_Call) RunAndReturn(run func(context.Context, 
 func (_m *StateMock) AddForkIDInterval(ctx context.Context, newForkID state.ForkIDInterval, dbTx pgx.Tx) error {
 	ret := _m.Called(ctx, newForkID, dbTx)
 
-	if len(ret) == 0 {
-		panic("no return value specified for AddForkIDInterval")
-	}
-
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, state.ForkIDInterval, pgx.Tx) error); ok {
 		r0 = rf(ctx, newForkID, dbTx)
@@ -232,10 +216,6 @@ func (_c *StateMock_AddForkIDInterval_Call) RunAndReturn(run func(context.Contex
 func (_m *StateMock) AddGlobalExitRoot(ctx context.Context, exitRoot *state.GlobalExitRoot, dbTx pgx.Tx) error {
 	ret := _m.Called(ctx, exitRoot, dbTx)
 
-	if len(ret) == 0 {
-		panic("no return value specified for AddGlobalExitRoot")
-	}
-
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, *state.GlobalExitRoot, pgx.Tx) error); ok {
 		r0 = rf(ctx, exitRoot, dbTx)
@@ -279,10 +259,6 @@ func (_c *StateMock_AddGlobalExitRoot_Call) RunAndReturn(run func(context.Contex
 // AddL1InfoTreeLeaf provides a mock function with given fields: ctx, L1InfoTreeLeaf, dbTx
 func (_m *StateMock) AddL1InfoTreeLeaf(ctx context.Context, L1InfoTreeLeaf *state.L1InfoTreeLeaf, dbTx pgx.Tx) (*state.L1InfoTreeExitRootStorageEntry, error) {
 	ret := _m.Called(ctx, L1InfoTreeLeaf, dbTx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for AddL1InfoTreeLeaf")
-	}
 
 	var r0 *state.L1InfoTreeExitRootStorageEntry
 	var r1 error
@@ -340,10 +316,6 @@ func (_c *StateMock_AddL1InfoTreeLeaf_Call) RunAndReturn(run func(context.Contex
 func (_m *StateMock) AddSequence(ctx context.Context, sequence state.Sequence, dbTx pgx.Tx) error {
 	ret := _m.Called(ctx, sequence, dbTx)
 
-	if len(ret) == 0 {
-		panic("no return value specified for AddSequence")
-	}
-
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, state.Sequence, pgx.Tx) error); ok {
 		r0 = rf(ctx, sequence, dbTx)
@@ -387,10 +359,6 @@ func (_c *StateMock_AddSequence_Call) RunAndReturn(run func(context.Context, sta
 // AddTrustedReorg provides a mock function with given fields: ctx, trustedReorg, dbTx
 func (_m *StateMock) AddTrustedReorg(ctx context.Context, trustedReorg *state.TrustedReorg, dbTx pgx.Tx) error {
 	ret := _m.Called(ctx, trustedReorg, dbTx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for AddTrustedReorg")
-	}
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, *state.TrustedReorg, pgx.Tx) error); ok {
@@ -436,10 +404,6 @@ func (_c *StateMock_AddTrustedReorg_Call) RunAndReturn(run func(context.Context,
 func (_m *StateMock) AddVerifiedBatch(ctx context.Context, verifiedBatch *state.VerifiedBatch, dbTx pgx.Tx) error {
 	ret := _m.Called(ctx, verifiedBatch, dbTx)
 
-	if len(ret) == 0 {
-		panic("no return value specified for AddVerifiedBatch")
-	}
-
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, *state.VerifiedBatch, pgx.Tx) error); ok {
 		r0 = rf(ctx, verifiedBatch, dbTx)
@@ -484,10 +448,6 @@ func (_c *StateMock_AddVerifiedBatch_Call) RunAndReturn(run func(context.Context
 func (_m *StateMock) AddVirtualBatch(ctx context.Context, virtualBatch *state.VirtualBatch, dbTx pgx.Tx) error {
 	ret := _m.Called(ctx, virtualBatch, dbTx)
 
-	if len(ret) == 0 {
-		panic("no return value specified for AddVirtualBatch")
-	}
-
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, *state.VirtualBatch, pgx.Tx) error); ok {
 		r0 = rf(ctx, virtualBatch, dbTx)
@@ -531,10 +491,6 @@ func (_c *StateMock_AddVirtualBatch_Call) RunAndReturn(run func(context.Context,
 // BeginStateTransaction provides a mock function with given fields: ctx
 func (_m *StateMock) BeginStateTransaction(ctx context.Context) (pgx.Tx, error) {
 	ret := _m.Called(ctx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for BeginStateTransaction")
-	}
 
 	var r0 pgx.Tx
 	var r1 error
@@ -590,10 +546,6 @@ func (_c *StateMock_BeginStateTransaction_Call) RunAndReturn(run func(context.Co
 func (_m *StateMock) CloseBatch(ctx context.Context, receipt state.ProcessingReceipt, dbTx pgx.Tx) error {
 	ret := _m.Called(ctx, receipt, dbTx)
 
-	if len(ret) == 0 {
-		panic("no return value specified for CloseBatch")
-	}
-
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, state.ProcessingReceipt, pgx.Tx) error); ok {
 		r0 = rf(ctx, receipt, dbTx)
@@ -637,10 +589,6 @@ func (_c *StateMock_CloseBatch_Call) RunAndReturn(run func(context.Context, stat
 // ExecuteBatch provides a mock function with given fields: ctx, batch, updateMerkleTree, dbTx
 func (_m *StateMock) ExecuteBatch(ctx context.Context, batch state.Batch, updateMerkleTree bool, dbTx pgx.Tx) (*executor.ProcessBatchResponse, error) {
 	ret := _m.Called(ctx, batch, updateMerkleTree, dbTx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ExecuteBatch")
-	}
 
 	var r0 *executor.ProcessBatchResponse
 	var r1 error
@@ -698,10 +646,6 @@ func (_c *StateMock_ExecuteBatch_Call) RunAndReturn(run func(context.Context, st
 // ExecuteBatchV2 provides a mock function with given fields: ctx, batch, L1InfoTreeRoot, l1InfoTreeData, timestampLimit, updateMerkleTree, skipVerifyL1InfoRoot, forcedBlockHashL1, dbTx
 func (_m *StateMock) ExecuteBatchV2(ctx context.Context, batch state.Batch, L1InfoTreeRoot common.Hash, l1InfoTreeData map[uint32]state.L1DataV2, timestampLimit time.Time, updateMerkleTree bool, skipVerifyL1InfoRoot uint32, forcedBlockHashL1 *common.Hash, dbTx pgx.Tx) (*executor.ProcessBatchResponseV2, error) {
 	ret := _m.Called(ctx, batch, L1InfoTreeRoot, l1InfoTreeData, timestampLimit, updateMerkleTree, skipVerifyL1InfoRoot, forcedBlockHashL1, dbTx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ExecuteBatchV2")
-	}
 
 	var r0 *executor.ProcessBatchResponseV2
 	var r1 error
@@ -765,10 +709,6 @@ func (_c *StateMock_ExecuteBatchV2_Call) RunAndReturn(run func(context.Context, 
 func (_m *StateMock) GetBatchByNumber(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) (*state.Batch, error) {
 	ret := _m.Called(ctx, batchNumber, dbTx)
 
-	if len(ret) == 0 {
-		panic("no return value specified for GetBatchByNumber")
-	}
-
 	var r0 *state.Batch
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, uint64, pgx.Tx) (*state.Batch, error)); ok {
@@ -824,10 +764,6 @@ func (_c *StateMock_GetBatchByNumber_Call) RunAndReturn(run func(context.Context
 // GetExitRootByGlobalExitRoot provides a mock function with given fields: ctx, ger, dbTx
 func (_m *StateMock) GetExitRootByGlobalExitRoot(ctx context.Context, ger common.Hash, dbTx pgx.Tx) (*state.GlobalExitRoot, error) {
 	ret := _m.Called(ctx, ger, dbTx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetExitRootByGlobalExitRoot")
-	}
 
 	var r0 *state.GlobalExitRoot
 	var r1 error
@@ -885,10 +821,6 @@ func (_c *StateMock_GetExitRootByGlobalExitRoot_Call) RunAndReturn(run func(cont
 func (_m *StateMock) GetForkIDByBatchNumber(batchNumber uint64) uint64 {
 	ret := _m.Called(batchNumber)
 
-	if len(ret) == 0 {
-		panic("no return value specified for GetForkIDByBatchNumber")
-	}
-
 	var r0 uint64
 	if rf, ok := ret.Get(0).(func(uint64) uint64); ok {
 		r0 = rf(batchNumber)
@@ -931,10 +863,6 @@ func (_c *StateMock_GetForkIDByBatchNumber_Call) RunAndReturn(run func(uint64) u
 func (_m *StateMock) GetForkIDByBlockNumber(blockNumber uint64) uint64 {
 	ret := _m.Called(blockNumber)
 
-	if len(ret) == 0 {
-		panic("no return value specified for GetForkIDByBlockNumber")
-	}
-
 	var r0 uint64
 	if rf, ok := ret.Get(0).(func(uint64) uint64); ok {
 		r0 = rf(blockNumber)
@@ -976,10 +904,6 @@ func (_c *StateMock_GetForkIDByBlockNumber_Call) RunAndReturn(run func(uint64) u
 // GetForkIDInMemory provides a mock function with given fields: forkId
 func (_m *StateMock) GetForkIDInMemory(forkId uint64) *state.ForkIDInterval {
 	ret := _m.Called(forkId)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetForkIDInMemory")
-	}
 
 	var r0 *state.ForkIDInterval
 	if rf, ok := ret.Get(0).(func(uint64) *state.ForkIDInterval); ok {
@@ -1024,10 +948,6 @@ func (_c *StateMock_GetForkIDInMemory_Call) RunAndReturn(run func(uint64) *state
 // GetForkIDs provides a mock function with given fields: ctx, dbTx
 func (_m *StateMock) GetForkIDs(ctx context.Context, dbTx pgx.Tx) ([]state.ForkIDInterval, error) {
 	ret := _m.Called(ctx, dbTx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetForkIDs")
-	}
 
 	var r0 []state.ForkIDInterval
 	var r1 error
@@ -1084,10 +1004,6 @@ func (_c *StateMock_GetForkIDs_Call) RunAndReturn(run func(context.Context, pgx.
 func (_m *StateMock) GetL1InfoRootLeafByL1InfoRoot(ctx context.Context, l1InfoRoot common.Hash, dbTx pgx.Tx) (state.L1InfoTreeExitRootStorageEntry, error) {
 	ret := _m.Called(ctx, l1InfoRoot, dbTx)
 
-	if len(ret) == 0 {
-		panic("no return value specified for GetL1InfoRootLeafByL1InfoRoot")
-	}
-
 	var r0 state.L1InfoTreeExitRootStorageEntry
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, common.Hash, pgx.Tx) (state.L1InfoTreeExitRootStorageEntry, error)); ok {
@@ -1141,10 +1057,6 @@ func (_c *StateMock_GetL1InfoRootLeafByL1InfoRoot_Call) RunAndReturn(run func(co
 // GetL1InfoTreeDataFromBatchL2Data provides a mock function with given fields: ctx, batchL2Data, dbTx
 func (_m *StateMock) GetL1InfoTreeDataFromBatchL2Data(ctx context.Context, batchL2Data []byte, dbTx pgx.Tx) (map[uint32]state.L1DataV2, common.Hash, common.Hash, error) {
 	ret := _m.Called(ctx, batchL2Data, dbTx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetL1InfoTreeDataFromBatchL2Data")
-	}
 
 	var r0 map[uint32]state.L1DataV2
 	var r1 common.Hash
@@ -1220,10 +1132,6 @@ func (_c *StateMock_GetL1InfoTreeDataFromBatchL2Data_Call) RunAndReturn(run func
 func (_m *StateMock) GetLastBatchNumber(ctx context.Context, dbTx pgx.Tx) (uint64, error) {
 	ret := _m.Called(ctx, dbTx)
 
-	if len(ret) == 0 {
-		panic("no return value specified for GetLastBatchNumber")
-	}
-
 	var r0 uint64
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, pgx.Tx) (uint64, error)); ok {
@@ -1276,10 +1184,6 @@ func (_c *StateMock_GetLastBatchNumber_Call) RunAndReturn(run func(context.Conte
 // GetLastBlock provides a mock function with given fields: ctx, dbTx
 func (_m *StateMock) GetLastBlock(ctx context.Context, dbTx pgx.Tx) (*state.Block, error) {
 	ret := _m.Called(ctx, dbTx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetLastBlock")
-	}
 
 	var r0 *state.Block
 	var r1 error
@@ -1335,10 +1239,6 @@ func (_c *StateMock_GetLastBlock_Call) RunAndReturn(run func(context.Context, pg
 // GetLastL2BlockByBatchNumber provides a mock function with given fields: ctx, batchNumber, dbTx
 func (_m *StateMock) GetLastL2BlockByBatchNumber(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) (*state.L2Block, error) {
 	ret := _m.Called(ctx, batchNumber, dbTx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetLastL2BlockByBatchNumber")
-	}
 
 	var r0 *state.L2Block
 	var r1 error
@@ -1396,10 +1296,6 @@ func (_c *StateMock_GetLastL2BlockByBatchNumber_Call) RunAndReturn(run func(cont
 func (_m *StateMock) GetLastVerifiedBatch(ctx context.Context, dbTx pgx.Tx) (*state.VerifiedBatch, error) {
 	ret := _m.Called(ctx, dbTx)
 
-	if len(ret) == 0 {
-		panic("no return value specified for GetLastVerifiedBatch")
-	}
-
 	var r0 *state.VerifiedBatch
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, pgx.Tx) (*state.VerifiedBatch, error)); ok {
@@ -1455,10 +1351,6 @@ func (_c *StateMock_GetLastVerifiedBatch_Call) RunAndReturn(run func(context.Con
 func (_m *StateMock) GetLastVirtualBatchNum(ctx context.Context, dbTx pgx.Tx) (uint64, error) {
 	ret := _m.Called(ctx, dbTx)
 
-	if len(ret) == 0 {
-		panic("no return value specified for GetLastVirtualBatchNum")
-	}
-
 	var r0 uint64
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, pgx.Tx) (uint64, error)); ok {
@@ -1511,10 +1403,6 @@ func (_c *StateMock_GetLastVirtualBatchNum_Call) RunAndReturn(run func(context.C
 // GetNextForcedBatches provides a mock function with given fields: ctx, nextForcedBatches, dbTx
 func (_m *StateMock) GetNextForcedBatches(ctx context.Context, nextForcedBatches int, dbTx pgx.Tx) ([]state.ForcedBatch, error) {
 	ret := _m.Called(ctx, nextForcedBatches, dbTx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetNextForcedBatches")
-	}
 
 	var r0 []state.ForcedBatch
 	var r1 error
@@ -1572,10 +1460,6 @@ func (_c *StateMock_GetNextForcedBatches_Call) RunAndReturn(run func(context.Con
 func (_m *StateMock) GetPreviousBlock(ctx context.Context, offset uint64, dbTx pgx.Tx) (*state.Block, error) {
 	ret := _m.Called(ctx, offset, dbTx)
 
-	if len(ret) == 0 {
-		panic("no return value specified for GetPreviousBlock")
-	}
-
 	var r0 *state.Block
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, uint64, pgx.Tx) (*state.Block, error)); ok {
@@ -1631,10 +1515,6 @@ func (_c *StateMock_GetPreviousBlock_Call) RunAndReturn(run func(context.Context
 // GetReorgedTransactions provides a mock function with given fields: ctx, batchNumber, dbTx
 func (_m *StateMock) GetReorgedTransactions(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) ([]*types.Transaction, error) {
 	ret := _m.Called(ctx, batchNumber, dbTx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetReorgedTransactions")
-	}
 
 	var r0 []*types.Transaction
 	var r1 error
@@ -1692,10 +1572,6 @@ func (_c *StateMock_GetReorgedTransactions_Call) RunAndReturn(run func(context.C
 func (_m *StateMock) GetStateRootByBatchNumber(ctx context.Context, batchNum uint64, dbTx pgx.Tx) (common.Hash, error) {
 	ret := _m.Called(ctx, batchNum, dbTx)
 
-	if len(ret) == 0 {
-		panic("no return value specified for GetStateRootByBatchNumber")
-	}
-
 	var r0 common.Hash
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, uint64, pgx.Tx) (common.Hash, error)); ok {
@@ -1751,10 +1627,6 @@ func (_c *StateMock_GetStateRootByBatchNumber_Call) RunAndReturn(run func(contex
 // GetStoredFlushID provides a mock function with given fields: ctx
 func (_m *StateMock) GetStoredFlushID(ctx context.Context) (uint64, string, error) {
 	ret := _m.Called(ctx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetStoredFlushID")
-	}
 
 	var r0 uint64
 	var r1 string
@@ -1815,10 +1687,6 @@ func (_c *StateMock_GetStoredFlushID_Call) RunAndReturn(run func(context.Context
 func (_m *StateMock) OpenBatch(ctx context.Context, processingContext state.ProcessingContext, dbTx pgx.Tx) error {
 	ret := _m.Called(ctx, processingContext, dbTx)
 
-	if len(ret) == 0 {
-		panic("no return value specified for OpenBatch")
-	}
-
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, state.ProcessingContext, pgx.Tx) error); ok {
 		r0 = rf(ctx, processingContext, dbTx)
@@ -1862,10 +1730,6 @@ func (_c *StateMock_OpenBatch_Call) RunAndReturn(run func(context.Context, state
 // ProcessAndStoreClosedBatch provides a mock function with given fields: ctx, processingCtx, encodedTxs, dbTx, caller
 func (_m *StateMock) ProcessAndStoreClosedBatch(ctx context.Context, processingCtx state.ProcessingContext, encodedTxs []byte, dbTx pgx.Tx, caller metrics.CallerLabel) (common.Hash, uint64, string, error) {
 	ret := _m.Called(ctx, processingCtx, encodedTxs, dbTx, caller)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ProcessAndStoreClosedBatch")
-	}
 
 	var r0 common.Hash
 	var r1 uint64
@@ -1939,10 +1803,6 @@ func (_c *StateMock_ProcessAndStoreClosedBatch_Call) RunAndReturn(run func(conte
 func (_m *StateMock) ProcessAndStoreClosedBatchV2(ctx context.Context, processingCtx state.ProcessingContextV2, dbTx pgx.Tx, caller metrics.CallerLabel) (common.Hash, uint64, string, error) {
 	ret := _m.Called(ctx, processingCtx, dbTx, caller)
 
-	if len(ret) == 0 {
-		panic("no return value specified for ProcessAndStoreClosedBatchV2")
-	}
-
 	var r0 common.Hash
 	var r1 uint64
 	var r2 string
@@ -2014,10 +1874,6 @@ func (_c *StateMock_ProcessAndStoreClosedBatchV2_Call) RunAndReturn(run func(con
 func (_m *StateMock) ProcessBatch(ctx context.Context, request state.ProcessRequest, updateMerkleTree bool) (*state.ProcessBatchResponse, error) {
 	ret := _m.Called(ctx, request, updateMerkleTree)
 
-	if len(ret) == 0 {
-		panic("no return value specified for ProcessBatch")
-	}
-
 	var r0 *state.ProcessBatchResponse
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, state.ProcessRequest, bool) (*state.ProcessBatchResponse, error)); ok {
@@ -2073,10 +1929,6 @@ func (_c *StateMock_ProcessBatch_Call) RunAndReturn(run func(context.Context, st
 // ProcessBatchV2 provides a mock function with given fields: ctx, request, updateMerkleTree
 func (_m *StateMock) ProcessBatchV2(ctx context.Context, request state.ProcessRequest, updateMerkleTree bool) (*state.ProcessBatchResponse, error) {
 	ret := _m.Called(ctx, request, updateMerkleTree)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ProcessBatchV2")
-	}
 
 	var r0 *state.ProcessBatchResponse
 	var r1 error
@@ -2134,10 +1986,6 @@ func (_c *StateMock_ProcessBatchV2_Call) RunAndReturn(run func(context.Context, 
 func (_m *StateMock) Reset(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) error {
 	ret := _m.Called(ctx, blockNumber, dbTx)
 
-	if len(ret) == 0 {
-		panic("no return value specified for Reset")
-	}
-
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, uint64, pgx.Tx) error); ok {
 		r0 = rf(ctx, blockNumber, dbTx)
@@ -2181,10 +2029,6 @@ func (_c *StateMock_Reset_Call) RunAndReturn(run func(context.Context, uint64, p
 // ResetForkID provides a mock function with given fields: ctx, batchNumber, dbTx
 func (_m *StateMock) ResetForkID(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) error {
 	ret := _m.Called(ctx, batchNumber, dbTx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ResetForkID")
-	}
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, uint64, pgx.Tx) error); ok {
@@ -2230,10 +2074,6 @@ func (_c *StateMock_ResetForkID_Call) RunAndReturn(run func(context.Context, uin
 func (_m *StateMock) ResetTrustedState(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) error {
 	ret := _m.Called(ctx, batchNumber, dbTx)
 
-	if len(ret) == 0 {
-		panic("no return value specified for ResetTrustedState")
-	}
-
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, uint64, pgx.Tx) error); ok {
 		r0 = rf(ctx, batchNumber, dbTx)
@@ -2277,10 +2117,6 @@ func (_c *StateMock_ResetTrustedState_Call) RunAndReturn(run func(context.Contex
 // SetGenesis provides a mock function with given fields: ctx, block, genesis, m, dbTx
 func (_m *StateMock) SetGenesis(ctx context.Context, block state.Block, genesis state.Genesis, m metrics.CallerLabel, dbTx pgx.Tx) (common.Hash, error) {
 	ret := _m.Called(ctx, block, genesis, m, dbTx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for SetGenesis")
-	}
 
 	var r0 common.Hash
 	var r1 error
@@ -2340,10 +2176,6 @@ func (_c *StateMock_SetGenesis_Call) RunAndReturn(run func(context.Context, stat
 func (_m *StateMock) SetInitSyncBatch(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) error {
 	ret := _m.Called(ctx, batchNumber, dbTx)
 
-	if len(ret) == 0 {
-		panic("no return value specified for SetInitSyncBatch")
-	}
-
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, uint64, pgx.Tx) error); ok {
 		r0 = rf(ctx, batchNumber, dbTx)
@@ -2387,10 +2219,6 @@ func (_c *StateMock_SetInitSyncBatch_Call) RunAndReturn(run func(context.Context
 // SetLastBatchInfoSeenOnEthereum provides a mock function with given fields: ctx, lastBatchNumberSeen, lastBatchNumberVerified, dbTx
 func (_m *StateMock) SetLastBatchInfoSeenOnEthereum(ctx context.Context, lastBatchNumberSeen uint64, lastBatchNumberVerified uint64, dbTx pgx.Tx) error {
 	ret := _m.Called(ctx, lastBatchNumberSeen, lastBatchNumberVerified, dbTx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for SetLastBatchInfoSeenOnEthereum")
-	}
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, pgx.Tx) error); ok {
@@ -2437,10 +2265,6 @@ func (_c *StateMock_SetLastBatchInfoSeenOnEthereum_Call) RunAndReturn(run func(c
 func (_m *StateMock) StoreL2Block(ctx context.Context, batchNumber uint64, l2Block *state.ProcessBlockResponse, txsEGPLog []*state.EffectiveGasPriceLog, dbTx pgx.Tx) error {
 	ret := _m.Called(ctx, batchNumber, l2Block, txsEGPLog, dbTx)
 
-	if len(ret) == 0 {
-		panic("no return value specified for StoreL2Block")
-	}
-
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, uint64, *state.ProcessBlockResponse, []*state.EffectiveGasPriceLog, pgx.Tx) error); ok {
 		r0 = rf(ctx, batchNumber, l2Block, txsEGPLog, dbTx)
@@ -2486,10 +2310,6 @@ func (_c *StateMock_StoreL2Block_Call) RunAndReturn(run func(context.Context, ui
 // StoreTransaction provides a mock function with given fields: ctx, batchNumber, processedTx, coinbase, timestamp, egpLog, globalExitRoot, blockInfoRoot, dbTx
 func (_m *StateMock) StoreTransaction(ctx context.Context, batchNumber uint64, processedTx *state.ProcessTransactionResponse, coinbase common.Address, timestamp uint64, egpLog *state.EffectiveGasPriceLog, globalExitRoot common.Hash, blockInfoRoot common.Hash, dbTx pgx.Tx) (*state.L2Header, error) {
 	ret := _m.Called(ctx, batchNumber, processedTx, coinbase, timestamp, egpLog, globalExitRoot, blockInfoRoot, dbTx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for StoreTransaction")
-	}
 
 	var r0 *state.L2Header
 	var r1 error
@@ -2553,10 +2373,6 @@ func (_c *StateMock_StoreTransaction_Call) RunAndReturn(run func(context.Context
 func (_m *StateMock) UpdateBatchL2Data(ctx context.Context, batchNumber uint64, batchL2Data []byte, dbTx pgx.Tx) error {
 	ret := _m.Called(ctx, batchNumber, batchL2Data, dbTx)
 
-	if len(ret) == 0 {
-		panic("no return value specified for UpdateBatchL2Data")
-	}
-
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, uint64, []byte, pgx.Tx) error); ok {
 		r0 = rf(ctx, batchNumber, batchL2Data, dbTx)
@@ -2601,10 +2417,6 @@ func (_c *StateMock_UpdateBatchL2Data_Call) RunAndReturn(run func(context.Contex
 // UpdateWIPBatch provides a mock function with given fields: ctx, receipt, dbTx
 func (_m *StateMock) UpdateWIPBatch(ctx context.Context, receipt state.ProcessingReceipt, dbTx pgx.Tx) error {
 	ret := _m.Called(ctx, receipt, dbTx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for UpdateWIPBatch")
-	}
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, state.ProcessingReceipt, pgx.Tx) error); ok {

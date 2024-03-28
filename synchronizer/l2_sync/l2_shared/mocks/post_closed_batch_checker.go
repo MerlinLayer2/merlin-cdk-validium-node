@@ -28,10 +28,6 @@ func (_m *PostClosedBatchChecker) EXPECT() *PostClosedBatchChecker_Expecter {
 func (_m *PostClosedBatchChecker) CheckPostClosedBatch(ctx context.Context, processData l2_shared.ProcessData, dbTx pgx.Tx) error {
 	ret := _m.Called(ctx, processData, dbTx)
 
-	if len(ret) == 0 {
-		panic("no return value specified for CheckPostClosedBatch")
-	}
-
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, l2_shared.ProcessData, pgx.Tx) error); ok {
 		r0 = rf(ctx, processData, dbTx)

@@ -29,10 +29,6 @@ func (_m *L1SyncGlobalExitRootChecker) EXPECT() *L1SyncGlobalExitRootChecker_Exp
 func (_m *L1SyncGlobalExitRootChecker) CheckL1SyncGlobalExitRootEnoughToProcessBatch(ctx context.Context, batchNumber uint64, globalExitRoot common.Hash, dbTx pgx.Tx) error {
 	ret := _m.Called(ctx, batchNumber, globalExitRoot, dbTx)
 
-	if len(ret) == 0 {
-		panic("no return value specified for CheckL1SyncGlobalExitRootEnoughToProcessBatch")
-	}
-
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, uint64, common.Hash, pgx.Tx) error); ok {
 		r0 = rf(ctx, batchNumber, globalExitRoot, dbTx)

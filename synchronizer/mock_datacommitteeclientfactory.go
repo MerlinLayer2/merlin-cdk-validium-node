@@ -24,10 +24,6 @@ func (_m *dataCommitteeClientFactoryMock) EXPECT() *dataCommitteeClientFactoryMo
 func (_m *dataCommitteeClientFactoryMock) New(url string) client.Client {
 	ret := _m.Called(url)
 
-	if len(ret) == 0 {
-		panic("no return value specified for New")
-	}
-
 	var r0 client.Client
 	if rf, ok := ret.Get(0).(func(string) client.Client); ok {
 		r0 = rf(url)

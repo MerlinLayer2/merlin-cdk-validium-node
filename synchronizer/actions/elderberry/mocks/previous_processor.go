@@ -31,10 +31,6 @@ func (_m *PreviousProcessor) EXPECT() *PreviousProcessor_Expecter {
 func (_m *PreviousProcessor) Process(ctx context.Context, order etherman.Order, l1Block *etherman.Block, dbTx pgx.Tx) error {
 	ret := _m.Called(ctx, order, l1Block, dbTx)
 
-	if len(ret) == 0 {
-		panic("no return value specified for Process")
-	}
-
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, etherman.Order, *etherman.Block, pgx.Tx) error); ok {
 		r0 = rf(ctx, order, l1Block, dbTx)
@@ -79,10 +75,6 @@ func (_c *PreviousProcessor_Process_Call) RunAndReturn(run func(context.Context,
 // ProcessSequenceBatches provides a mock function with given fields: ctx, sequencedBatches, blockNumber, l1BlockTimestamp, dbTx
 func (_m *PreviousProcessor) ProcessSequenceBatches(ctx context.Context, sequencedBatches []etherman.SequencedBatch, blockNumber uint64, l1BlockTimestamp time.Time, dbTx pgx.Tx) error {
 	ret := _m.Called(ctx, sequencedBatches, blockNumber, l1BlockTimestamp, dbTx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ProcessSequenceBatches")
-	}
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, []etherman.SequencedBatch, uint64, time.Time, pgx.Tx) error); ok {

@@ -29,10 +29,6 @@ func (_m *statePostClosedBatchCheckL2Block) EXPECT() *statePostClosedBatchCheckL
 func (_m *statePostClosedBatchCheckL2Block) GetLastL2BlockByBatchNumber(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) (*state.L2Block, error) {
 	ret := _m.Called(ctx, batchNumber, dbTx)
 
-	if len(ret) == 0 {
-		panic("no return value specified for GetLastL2BlockByBatchNumber")
-	}
-
 	var r0 *state.L2Block
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, uint64, pgx.Tx) (*state.L2Block, error)); ok {
