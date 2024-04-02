@@ -64,6 +64,7 @@ func (c *Client) BatchesByNumbers(ctx context.Context, numbers []*big.Int) ([]*t
 	return c.batchesByNumbers(ctx, numbers, "zkevm_getBatchDataByNumbers")
 }
 
+// ForcedBatchesByNumbers returns forced batches data.
 func (c *Client) ForcedBatchesByNumbers(ctx context.Context, numbers []*big.Int) ([]*types.BatchData, error) {
 	return c.batchesByNumbers(ctx, numbers, "zkevm_getForcedBatchDataByNumbers")
 }

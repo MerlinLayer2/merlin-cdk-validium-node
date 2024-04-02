@@ -206,10 +206,12 @@ func (z *ZKEVMEndpoints) GetBatchByNumber(batchNumber types.BatchNumber, fullTx 
 
 type batchDataFunc func(ctx context.Context, batchNumbers []uint64, dbTx pgx.Tx) (map[uint64][]byte, error)
 
+// GetBatchDataByNumbers returns L2 batch data by batch numbers.
 func (z *ZKEVMEndpoints) GetBatchDataByNumbers(filter types.BatchFilter) (interface{}, types.Error) {
 	return z.getBatchData(filter, z.state.GetBatchL2DataByNumbers)
 }
 
+// GetForcedBatchDataByNumbers returns forced batch data by batch numbers.
 func (z *ZKEVMEndpoints) GetForcedBatchDataByNumbers(filter types.BatchFilter) (interface{}, types.Error) {
 	return z.getBatchData(filter, z.state.GetForcedBatchL2DataByNumbers)
 }
