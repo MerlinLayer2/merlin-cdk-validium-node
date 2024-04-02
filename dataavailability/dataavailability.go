@@ -68,9 +68,6 @@ func (d *DataAvailability) GetBatchL2Data(batchNums []uint64, batchHashes []comm
 	if len(batchNums) != len(batchHashes) {
 		return nil, fmt.Errorf(invalidBatchRetrievalArgs, len(batchNums), len(batchHashes))
 	}
-
-	log.Info("getting batch l2 data: %v", batchNums)
-
 	localData, err := d.state.GetBatchL2DataByNumbers(d.ctx, batchNums, nil)
 	if err != nil {
 		return nil, err
@@ -101,9 +98,6 @@ func (d *DataAvailability) GetForcedBatchL2Data(batchNums []uint64, batchHashes 
 	if len(batchNums) != len(batchHashes) {
 		return nil, fmt.Errorf(invalidBatchRetrievalArgs, len(batchNums), len(batchHashes))
 	}
-
-	log.Info("getting FORCED batch l2 data: %v", batchNums)
-
 	localData, err := d.state.GetForcedBatchL2DataByNumbers(d.ctx, batchNums, nil)
 	if err != nil {
 		return nil, err
