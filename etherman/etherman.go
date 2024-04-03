@@ -1389,17 +1389,17 @@ func decodeSequencedBatches(smcAbi abi.ABI, txData []byte, forkID uint64, lastBa
 			dataAvailabilityMsg = data[4].([]byte)
 		}
 
-		var batchInfos []batchInfo // pair the batch number and hash and keep in order
-		for i, validiumData := range sequencesValidium {
+		// Pair the batch number, hash, and if it is forced. This will allow
+		// retrieval from different sources, and keep them in original order.
+		var batchInfos []batchInfo
+		for i, d := range sequencesValidium {
 			bn := lastBatchNumber - uint64(len(sequencesValidium)-(i+1))
-			batchInfos = append(batchInfos, batchInfo{num: bn, hash: validiumData.TransactionsHash})
+			forced := d.ForcedTimestamp > 0
+			h := d.TransactionsHash
+			batchInfos = append(batchInfos, batchInfo{num: bn, hash: h, isForced: forced})
 		}
 
-		batchData, err := resolveBatchData(da, batchInfos, dataAvailabilityMsg)
-		if err != nil {
-			return nil, err
-		}
-		forcedBatchData, err := resolveForcedBatchData(da, batchInfos)
+		batchData, err := retrieveBatchData(da, batchInfos, dataAvailabilityMsg)
 		if err != nil {
 			return nil, err
 		}
@@ -1407,14 +1407,8 @@ func decodeSequencedBatches(smcAbi abi.ABI, txData []byte, forkID uint64, lastBa
 		sequencedBatches := make([]SequencedBatch, len(sequencesValidium))
 		for i, info := range batchInfos {
 			bn := info.num
-			var validiumData []byte
-			if info.isForced {
-				validiumData = forcedBatchData[bn]
-			} else {
-				validiumData = batchData[bn]
-			}
 			s := polygonzkevm.PolygonRollupBaseEtrogBatchData{
-				Transactions:         validiumData,
+				Transactions:         batchData[i],
 				ForcedGlobalExitRoot: sequencesValidium[i].ForcedGlobalExitRoot,
 				ForcedTimestamp:      sequencesValidium[i].ForcedTimestamp,
 				ForcedBlockHashL1:    sequencesValidium[i].ForcedBlockHashL1,
@@ -1450,48 +1444,55 @@ type batchInfo struct {
 	isForced bool
 }
 
-func resolveBatchData(da dataavailability.BatchDataProvider, batchInfos []batchInfo, daMessage []byte) (map[uint64][]byte, error) {
-	var batchNums []uint64
-	var batchHashes []common.Hash
-	// only resolve the normal batches
-	for _, info := range batchInfos {
-		if !info.isForced {
-			batchNums = append(batchNums, info.num)
-			batchHashes = append(batchHashes, info.hash)
-		}
-	}
-	batchL2Data, err := da.GetBatchL2Data(batchNums, batchHashes, daMessage)
+func retrieveBatchData(da dataavailability.BatchDataProvider, batchInfos []batchInfo, daMessage []byte) ([][]byte, error) {
+	validiumData, err := getBatchData(da, batchInfos, false, daMessage)
 	if err != nil {
 		return nil, err
 	}
-	if len(batchL2Data) != len(batchInfos) {
-		return nil, fmt.Errorf("failed to resolve batch data for numbers: %v", batchNums)
+	forcedData, err := getBatchData(da, batchInfos, true, nil)
+	if err != nil {
+		return nil, err
 	}
-	data := make(map[uint64][]byte)
-	for i, bn := range batchNums {
-		data[bn] = batchL2Data[i]
+	data := make([][]byte, len(batchInfos))
+	for i, info := range batchInfos {
+		bn := info.num
+		if info.isForced {
+			data[i] = forcedData[bn] // these are guaranteed to be in map
+		} else {
+			data[i] = validiumData[bn] // these are guaranteed to be in map
+		}
 	}
 	return data, nil
 }
 
-func resolveForcedBatchData(da dataavailability.BatchDataProvider, batchInfos []batchInfo) (map[uint64][]byte, error) {
+// getBatchData picks either validium or forced batch data (based on forced arg) and returns a map of batch number -> data, or error
+func getBatchData(da dataavailability.BatchDataProvider, batchInfos []batchInfo, forced bool, daMessage []byte) (map[uint64][]byte, error) {
 	var batchNums []uint64
 	var batchHashes []common.Hash
-	// only resolve the forced ones
 	for _, info := range batchInfos {
-		if info.isForced {
+		if info.isForced == forced {
 			batchNums = append(batchNums, info.num)
 			batchHashes = append(batchHashes, info.hash)
 		}
 	}
-	batchL2Data, err := da.GetForcedBatchL2Data(batchNums, batchHashes)
+	data := make(map[uint64][]byte)
+	if len(batchNums) == 0 {
+		return data, nil
+	}
+	var batchL2Data [][]byte
+	var err error
+	if forced {
+		batchL2Data, err = da.GetForcedBatchL2Data(batchNums, batchHashes)
+	} else {
+		batchL2Data, err = da.GetBatchL2Data(batchNums, batchHashes, daMessage)
+	}
 	if err != nil {
 		return nil, err
 	}
-	if len(batchL2Data) != len(batchInfos) {
-		return nil, fmt.Errorf("failed to resolve batch data for numbers: %v", batchNums)
+	if len(batchL2Data) != len(batchNums) {
+		return nil,
+			fmt.Errorf("failed to retrieve all batch data. Expected %d, got %d", len(batchNums), len(batchL2Data))
 	}
-	data := make(map[uint64][]byte)
 	for i, bn := range batchNums {
 		data[bn] = batchL2Data[i]
 	}
