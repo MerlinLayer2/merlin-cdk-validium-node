@@ -1410,7 +1410,9 @@ func TestGetForcedBatch(t *testing.T) {
 	// also check data retrieval
 	fbData, err := testState.GetForcedBatchL2DataByNumbers(ctx, []uint64{1}, dbTx)
 	require.NoError(t, err)
-	require.Equal(t, []byte{0xb}, fbData)
+	var expected = make(map[uint64][]byte)
+	expected[uint64(1)] = []byte{0xb}
+	require.Equal(t, expected, fbData)
 }
 
 func TestGetLastGER(t *testing.T) {
