@@ -85,6 +85,9 @@ type Config struct {
 	// allowed to be cleared.
 	GeneratingProofCleanupThreshold string `mapstructure:"GeneratingProofCleanupThreshold"`
 
+	// GenerateProofDelay is the delay to start generating proof for a batch since the batch's timestamp
+	GenerateProofDelay types.Duration `mapstructure:"GenerateProofDelay"`
+
 	// GasOffset is the amount of gas to be added to the gas estimation in order
 	// to provide an amount that is higher than the estimated one. This is used
 	// to avoid the TX getting reverted in case something has changed in the network
