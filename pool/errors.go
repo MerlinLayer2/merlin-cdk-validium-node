@@ -68,6 +68,9 @@ var (
 	// ErrGasPriceTooHigh Returned if the gas price specified by the transaction is higher than the maximum price allowed.
 	ErrGasPriceTooHigh = errors.New("gas price too high")
 
+	// ErrGasTooHigh is returned if the transaction has specified higher gas price than the max allowed.
+	ErrGasTooHigh = errors.New("gas limit too high")
+
 	// ErrReceivedZeroL1GasPrice is returned if the L1 gas price is 0.
 	ErrReceivedZeroL1GasPrice = errors.New("received L1 gas price 0")
 

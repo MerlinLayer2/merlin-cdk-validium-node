@@ -41,6 +41,7 @@ MaxTxBytesSize=100132
 MaxTxDataBytesSize=100000
 DefaultMinGasPriceAllowed = 1000000000
 DefaultMaxGasPriceAllowed = 0
+DefaultMaxGasAllowed = 0
 MinAllowedGasPriceInterval = "5m"
 PollMinAllowedGasPriceInterval = "15s"
 AccountQueue = 64
