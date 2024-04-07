@@ -26,6 +26,9 @@ type Config struct {
 	// DefaultMinGasPriceAllowed is the default min gas price to suggest
 	DefaultMinGasPriceAllowed uint64 `mapstructure:"DefaultMinGasPriceAllowed"`
 
+	// DefaultMaxGasPriceAllowed is the default max gas price to suggest
+	DefaultMaxGasPriceAllowed uint64 `mapstructure:"DefaultMaxGasPriceAllowed"`
+
 	// MinAllowedGasPriceInterval is the interval to look back of the suggested min gas price for a tx
 	MinAllowedGasPriceInterval types.Duration `mapstructure:"MinAllowedGasPriceInterval"`
 

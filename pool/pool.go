@@ -45,6 +45,7 @@ type Pool struct {
 	blockedAddresses        sync.Map
 	minSuggestedGasPrice    *big.Int
 	minSuggestedGasPriceMux *sync.RWMutex
+	maxSuggestedGasPrice    *big.Int
 	eventLog                *event.EventLog
 	startTimestamp          time.Time
 	gasPrices               GasPrices
@@ -81,6 +82,7 @@ func NewPool(cfg Config, batchConstraintsCfg state.BatchConstraintsCfg, s storag
 		blockedAddresses:        sync.Map{},
 		minSuggestedGasPriceMux: new(sync.RWMutex),
 		minSuggestedGasPrice:    big.NewInt(int64(cfg.DefaultMinGasPriceAllowed)),
+		maxSuggestedGasPrice:    big.NewInt(int64(cfg.DefaultMaxGasPriceAllowed)),
 		eventLog:                eventLog,
 		gasPrices:               GasPrices{0, 0},
 		gasPricesMux:            new(sync.RWMutex),
@@ -524,6 +526,13 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 	p.minSuggestedGasPriceMux.RUnlock()
 	if gasPriceCmp == -1 {
 		return ErrGasPrice
+	}
+
+	if p.maxSuggestedGasPrice.Uint64() > 0 {
+		gasPriceCmp := poolTx.GasPrice().Cmp(p.maxSuggestedGasPrice)
+		if gasPriceCmp > 0 {
+			return ErrGasPriceTooHigh
+		}
 	}
 
 	// Transactor should have enough funds to cover the costs
