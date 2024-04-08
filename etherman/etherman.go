@@ -208,11 +208,12 @@ type Client struct {
 	cfg   Config
 	auth  map[common.Address]bind.TransactOpts // empty in case of read-only client
 
-	da dataavailability.BatchDataProvider
+	da    dataavailability.BatchDataProvider
+	state stateProvider
 }
 
 // NewClient creates a new etherman.
-func NewClient(cfg Config, l1Config L1Config, da dataavailability.BatchDataProvider) (*Client, error) {
+func NewClient(cfg Config, l1Config L1Config, da dataavailability.BatchDataProvider, st stateProvider) (*Client, error) {
 	// Connect to ethereum node
 	ethClient, err := ethclient.Dial(cfg.URL)
 	if err != nil {
@@ -305,6 +306,7 @@ func NewClient(cfg Config, l1Config L1Config, da dataavailability.BatchDataProvi
 		cfg:   cfg,
 		auth:  map[common.Address]bind.TransactOpts{},
 		da:    da,
+		state: st,
 	}, nil
 }
 
@@ -1185,13 +1187,13 @@ func (etherMan *Client) sequencedBatchesEvent(ctx context.Context, vLog types.Lo
 		log.Debugf("MethodId: %s", common.Bytes2Hex(methodId))
 		if bytes.Equal(methodId, methodIDSequenceBatchesEtrog) ||
 			bytes.Equal(methodId, methodIDSequenceBatchesValidiumEtrog) {
-			sequences, err = decodeSequencesEtrog(tx.Data(), sb.NumBatch, msg.From, vLog.TxHash, msg.Nonce, sb.L1InfoRoot, etherMan.da)
+			sequences, err = decodeSequencesEtrog(tx.Data(), sb.NumBatch, msg.From, vLog.TxHash, msg.Nonce, sb.L1InfoRoot, etherMan.da, etherMan.state)
 			if err != nil {
 				return fmt.Errorf("error decoding the sequences (etrog): %v", err)
 			}
 		} else if bytes.Equal(methodId, methodIDSequenceBatchesElderberry) ||
 			bytes.Equal(methodId, methodIDSequenceBatchesValidiumElderberry) {
-			sequences, err = decodeSequencesElderberry(tx.Data(), sb.NumBatch, msg.From, vLog.TxHash, msg.Nonce, sb.L1InfoRoot, etherMan.da)
+			sequences, err = decodeSequencesElderberry(tx.Data(), sb.NumBatch, msg.From, vLog.TxHash, msg.Nonce, sb.L1InfoRoot, etherMan.da, etherMan.state)
 			if err != nil {
 				return fmt.Errorf("error decoding the sequences (elderberry): %v", err)
 			}
@@ -1277,7 +1279,8 @@ func (etherMan *Client) sequencedBatchesPreEtrogEvent(ctx context.Context, vLog 
 	return nil
 }
 
-func decodeSequencesElderberry(txData []byte, lastBatchNumber uint64, sequencer common.Address, txHash common.Hash, nonce uint64, l1InfoRoot common.Hash, da dataavailability.BatchDataProvider) ([]SequencedBatch, error) {
+func decodeSequencesElderberry(txData []byte, lastBatchNumber uint64, sequencer common.Address, txHash common.Hash, nonce uint64,
+	l1InfoRoot common.Hash, da dataavailability.BatchDataProvider, st stateProvider) ([]SequencedBatch, error) {
 	// Extract coded txs.
 	// Load contract ABI
 	smcAbi, err := abi.JSON(strings.NewReader(polygonzkevm.PolygonzkevmABI))
@@ -1285,11 +1288,11 @@ func decodeSequencesElderberry(txData []byte, lastBatchNumber uint64, sequencer 
 		return nil, err
 	}
 
-	return decodeSequencedBatches(smcAbi, txData, state.FORKID_ELDERBERRY, lastBatchNumber, sequencer, txHash, nonce, l1InfoRoot, da)
+	return decodeSequencedBatches(smcAbi, txData, state.FORKID_ELDERBERRY, lastBatchNumber, sequencer, txHash, nonce, l1InfoRoot, da, st)
 }
 
 func decodeSequencesEtrog(txData []byte, lastBatchNumber uint64, sequencer common.Address, txHash common.Hash, nonce uint64, l1InfoRoot common.Hash,
-	da dataavailability.BatchDataProvider) ([]SequencedBatch, error) {
+	da dataavailability.BatchDataProvider, st stateProvider) ([]SequencedBatch, error) {
 	// Extract coded txs.
 	// Load contract ABI
 	smcAbi, err := abi.JSON(strings.NewReader(etrogpolygonzkevm.EtrogpolygonzkevmABI))
@@ -1297,13 +1300,13 @@ func decodeSequencesEtrog(txData []byte, lastBatchNumber uint64, sequencer commo
 		return nil, err
 	}
 
-	return decodeSequencedBatches(smcAbi, txData, state.FORKID_ETROG, lastBatchNumber, sequencer, txHash, nonce, l1InfoRoot, da)
+	return decodeSequencedBatches(smcAbi, txData, state.FORKID_ETROG, lastBatchNumber, sequencer, txHash, nonce, l1InfoRoot, da, st)
 }
 
 // decodeSequencedBatches decodes provided data, based on the funcName, whether it is rollup or validium data and returns sequenced batches
 func decodeSequencedBatches(smcAbi abi.ABI, txData []byte, forkID uint64, lastBatchNumber uint64,
 	sequencer common.Address, txHash common.Hash, nonce uint64, l1InfoRoot common.Hash,
-	da dataavailability.BatchDataProvider) ([]SequencedBatch, error) {
+	da dataavailability.BatchDataProvider, st stateProvider) ([]SequencedBatch, error) {
 	// Recover Method from signature and ABI
 	method, err := smcAbi.MethodById(txData[:4])
 	if err != nil {
@@ -1399,7 +1402,7 @@ func decodeSequencedBatches(smcAbi abi.ABI, txData []byte, forkID uint64, lastBa
 			batchInfos = append(batchInfos, batchInfo{num: bn, hash: h, isForced: forced})
 		}
 
-		batchData, err := retrieveBatchData(da, batchInfos, dataAvailabilityMsg)
+		batchData, err := retrieveBatchData(da, st, batchInfos, dataAvailabilityMsg)
 		if err != nil {
 			return nil, err
 		}
@@ -1444,12 +1447,12 @@ type batchInfo struct {
 	isForced bool
 }
 
-func retrieveBatchData(da dataavailability.BatchDataProvider, batchInfos []batchInfo, daMessage []byte) ([][]byte, error) {
-	validiumData, err := getBatchData(da, batchInfos, false, daMessage)
+func retrieveBatchData(da dataavailability.BatchDataProvider, st stateProvider, batchInfos []batchInfo, daMessage []byte) ([][]byte, error) {
+	validiumData, err := getBatchL2Data(da, batchInfos, daMessage)
 	if err != nil {
 		return nil, err
 	}
-	forcedData, err := getBatchData(da, batchInfos, true, nil)
+	forcedData, err := getForcedBatchData(st, batchInfos)
 	if err != nil {
 		return nil, err
 	}
@@ -1457,35 +1460,27 @@ func retrieveBatchData(da dataavailability.BatchDataProvider, batchInfos []batch
 	for i, info := range batchInfos {
 		bn := info.num
 		if info.isForced {
-			data[i] = forcedData[bn] // these are guaranteed to be in map
+			data[i] = forcedData[bn]
 		} else {
-			data[i] = validiumData[bn] // these are guaranteed to be in map
+			data[i] = validiumData[bn]
 		}
 	}
 	return data, nil
 }
 
-// getBatchData picks either validium or forced batch data (based on forced arg) and returns a map of batch number -> data, or error
-func getBatchData(da dataavailability.BatchDataProvider, batchInfos []batchInfo, forced bool, daMessage []byte) (map[uint64][]byte, error) {
+func getBatchL2Data(da dataavailability.BatchDataProvider, batchInfos []batchInfo, daMessage []byte) (map[uint64][]byte, error) {
 	var batchNums []uint64
 	var batchHashes []common.Hash
 	for _, info := range batchInfos {
-		if info.isForced == forced {
+		if !info.isForced {
 			batchNums = append(batchNums, info.num)
 			batchHashes = append(batchHashes, info.hash)
 		}
 	}
-	data := make(map[uint64][]byte)
 	if len(batchNums) == 0 {
-		return data, nil
+		return nil, nil
 	}
-	var batchL2Data [][]byte
-	var err error
-	if forced {
-		batchL2Data, err = da.GetForcedBatchL2Data(batchNums, batchHashes)
-	} else {
-		batchL2Data, err = da.GetBatchL2Data(batchNums, batchHashes, daMessage)
-	}
+	batchL2Data, err := da.GetBatchL2Data(batchNums, batchHashes, daMessage)
 	if err != nil {
 		return nil, err
 	}
@@ -1493,8 +1488,40 @@ func getBatchData(da dataavailability.BatchDataProvider, batchInfos []batchInfo,
 		return nil,
 			fmt.Errorf("failed to retrieve all batch data. Expected %d, got %d", len(batchNums), len(batchL2Data))
 	}
+	data := make(map[uint64][]byte)
 	for i, bn := range batchNums {
 		data[bn] = batchL2Data[i]
+	}
+	return data, nil
+}
+
+func getForcedBatchData(st stateProvider, batchInfos []batchInfo) (map[uint64][]byte, error) {
+	var batchNums []uint64
+	var batchHashes []common.Hash
+	for _, info := range batchInfos {
+		if info.isForced {
+			batchNums = append(batchNums, info.num)
+			batchHashes = append(batchHashes, info.hash)
+		}
+	}
+	if len(batchNums) == 0 {
+		return nil, nil
+	}
+	data, err := st.GetForcedBatchDataByNumbers(context.Background(), batchNums, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	for i, bn := range batchNums {
+		expectedHash := batchHashes[i]
+		d, ok := data[bn]
+		if !ok {
+			return nil, fmt.Errorf("missing forced batch data for number %d", bn)
+		}
+		actualHash := crypto.Keccak256Hash(d)
+		if actualHash != expectedHash {
+			return nil, fmt.Errorf("got wrong hash for forced batch data number %d", bn)
+		}
 	}
 	return data, nil
 }

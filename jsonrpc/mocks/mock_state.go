@@ -331,12 +331,12 @@ func (_m *StateMock) GetExitRootByGlobalExitRoot(ctx context.Context, ger common
 	return r0, r1
 }
 
-// GetForcedBatchL2DataByNumbers provides a mock function with given fields: ctx, batchNumbers, dbTx
-func (_m *StateMock) GetForcedBatchL2DataByNumbers(ctx context.Context, batchNumbers []uint64, dbTx pgx.Tx) (map[uint64][]byte, error) {
+// GetForcedBatchDataByNumbers provides a mock function with given fields: ctx, batchNumbers, dbTx
+func (_m *StateMock) GetForcedBatchDataByNumbers(ctx context.Context, batchNumbers []uint64, dbTx pgx.Tx) (map[uint64][]byte, error) {
 	ret := _m.Called(ctx, batchNumbers, dbTx)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetForcedBatchL2DataByNumbers")
+		panic("no return value specified for GetForcedBatchDataByNumbers")
 	}
 
 	var r0 map[uint64][]byte

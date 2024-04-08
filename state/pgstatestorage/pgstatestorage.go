@@ -375,8 +375,8 @@ func (p *PostgresStorage) GetBatchL2DataByNumbers(ctx context.Context, batchNumb
 	return p.getBatchData(ctx, sql, batchNumbers, dbTx)
 }
 
-// GetForcedBatchL2DataByNumbers returns the forced batch data of the given batch numbers
-func (p *PostgresStorage) GetForcedBatchL2DataByNumbers(ctx context.Context, batchNumbers []uint64, dbTx pgx.Tx) (map[uint64][]byte, error) {
+// GetForcedBatchDataByNumbers returns the forced batch data of the given batch numbers
+func (p *PostgresStorage) GetForcedBatchDataByNumbers(ctx context.Context, batchNumbers []uint64, dbTx pgx.Tx) (map[uint64][]byte, error) {
 	const sql = "SELECT forced_batch_num, convert_from(decode(raw_txs_data, 'hex'), 'UTF8')::bytea FROM state.forced_batch WHERE forced_batch_num = ANY($1)"
 	return p.getBatchData(ctx, sql, batchNumbers, dbTx)
 }

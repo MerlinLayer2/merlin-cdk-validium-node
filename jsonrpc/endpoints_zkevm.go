@@ -213,7 +213,7 @@ func (z *ZKEVMEndpoints) GetBatchDataByNumbers(filter types.BatchFilter) (interf
 
 // GetForcedBatchDataByNumbers returns forced batch data by batch numbers.
 func (z *ZKEVMEndpoints) GetForcedBatchDataByNumbers(filter types.BatchFilter) (interface{}, types.Error) {
-	return z.getBatchData(filter, z.state.GetForcedBatchL2DataByNumbers)
+	return z.getBatchData(filter, z.state.GetForcedBatchDataByNumbers)
 }
 
 func (z *ZKEVMEndpoints) getBatchData(filter types.BatchFilter, f batchDataFunc) (interface{}, types.Error) {

@@ -91,35 +91,6 @@ func (d *DataAvailability) GetBatchL2Data(batchNums []uint64, batchHashes []comm
 	return d.backend.GetSequence(d.ctx, batchHashes, dataAvailabilityMessage)
 }
 
-// GetForcedBatchL2Data retrieves, checks, and returns the raw data associated with forced batches.
-// 1. From local DB
-// 2. From Trusted Sequencer (if not self)
-func (d *DataAvailability) GetForcedBatchL2Data(batchNums []uint64, batchHashes []common.Hash) ([][]byte, error) {
-	if len(batchNums) != len(batchHashes) {
-		return nil, fmt.Errorf(invalidBatchRetrievalArgs, len(batchNums), len(batchHashes))
-	}
-	localData, err := d.state.GetForcedBatchL2DataByNumbers(d.ctx, batchNums, nil)
-	if err != nil {
-		return nil, err
-	}
-	data, err := checkBatches(batchNums, batchHashes, localData)
-	if err != nil {
-		log.Warnf(failedDataRetrievalTemplate, batchNums, err.Error())
-	} else {
-		return data, nil
-	}
-
-	if d.isTrustedSequencer {
-		return nil, fmt.Errorf(failedDataRetrievalTemplate, batchNums, "not found")
-	}
-
-	data, err = d.rpcData(batchNums, batchHashes, d.zkEVMClient.ForcedBatchesByNumbers)
-	if err != nil {
-		return nil, fmt.Errorf(failedDataRetrievalTemplate, batchNums, "not found")
-	}
-	return data, nil
-}
-
 func checkBatches(batchNumbers []uint64, expectedHashes []common.Hash, batchData map[uint64][]byte) ([][]byte, error) {
 	if len(batchNumbers) != len(expectedHashes) {
 		return nil, fmt.Errorf("invalid batch parameters")

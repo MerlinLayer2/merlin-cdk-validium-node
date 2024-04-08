@@ -1197,7 +1197,7 @@ func TestGetBatchL2DataByNumbers(t *testing.T) {
 	_, err = testState.Exec(ctx, insertForcedBatch)
 	require.NoError(t, err)
 
-	allData, err := testState.GetForcedBatchL2DataByNumbers(ctx, []uint64{i4}, tx)
+	allData, err := testState.GetForcedBatchDataByNumbers(ctx, []uint64{i4}, tx)
 	require.NoError(t, err)
 	assert.Equal(t, d4, allData[i4])
 
@@ -1408,7 +1408,7 @@ func TestGetForcedBatch(t *testing.T) {
 	require.Equal(t, []byte{0xb}, fb.RawTxsData)
 
 	// also check data retrieval
-	fbData, err := testState.GetForcedBatchL2DataByNumbers(ctx, []uint64{1}, dbTx)
+	fbData, err := testState.GetForcedBatchDataByNumbers(ctx, []uint64{1}, dbTx)
 	require.NoError(t, err)
 	var expected = make(map[uint64][]byte)
 	expected[uint64(1)] = []byte{0xb}
