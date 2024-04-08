@@ -94,6 +94,7 @@ MaxLogsCount = 10000
 MaxLogsBlockRange = 10000
 MaxNativeBlockHashBlockRange = 60000
 EnableHttpLog = true
+PreCheckEnabled = true
 	[RPC.WebSockets]
 		Enabled = true
 		Host = "0.0.0.0"

@@ -415,6 +415,14 @@ func (p *Pool) IsTxPending(ctx context.Context, hash common.Hash) (bool, error) 
 	return p.storage.IsTxPending(ctx, hash)
 }
 
+func (p *Pool) ExternalValidateTx(ctx context.Context, tx types.Transaction, ip string) error {
+	poolTx := NewTransaction(tx, ip, false)
+	if err := p.validateTx(ctx, *poolTx); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 	// Make sure the IP is valid.
 	if poolTx.IP != "" && !IsValidIP(poolTx.IP) {
