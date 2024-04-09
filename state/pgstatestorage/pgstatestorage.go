@@ -381,26 +381,61 @@ func (p *PostgresStorage) GetForcedBatchDataByNumbers(ctx context.Context, batch
 	return p.getBatchData(ctx, sql, batchNumbers, dbTx)
 }
 
-func (p *PostgresStorage) getBatchData(ctx context.Context, sql string, numbers []uint64, dbTx pgx.Tx) (map[uint64][]byte, error) {
+func (p *PostgresStorage) getBatchData(ctx context.Context, sql string, batchNumbers []uint64, dbTx pgx.Tx) (map[uint64][]byte, error) {
 	q := p.getExecQuerier(dbTx)
-	rows, err := q.Query(ctx, sql, numbers)
+	rows, err := q.Query(ctx, sql, batchNumbers)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return p.GetBatchL2DataByNumbersFromBackup(ctx, batchNumbers, dbTx)
+	} else if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	batchL2DataMap, err := readBatchDataResults(rows, batchNumbers)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(batchL2DataMap) == 0 {
+		return p.GetBatchL2DataByNumbersFromBackup(ctx, batchNumbers, dbTx)
+	}
+
+	return batchL2DataMap, nil
+}
+
+// GetBatchL2DataByNumbersFromBackup returns the batch L2 data of the given batch number from the backup table
+func (p *PostgresStorage) GetBatchL2DataByNumbersFromBackup(ctx context.Context, batchNumbers []uint64, dbTx pgx.Tx) (map[uint64][]byte, error) {
+	getBatchL2DataByBatchNumber := `
+		SELECT batch_num, data FROM state.batch_data_backup
+		WHERE batch_num = ANY($1) 
+		ORDER BY created_at DESC
+	`
+	q := p.getExecQuerier(dbTx)
+	rows, err := q.Query(ctx, getBatchL2DataByBatchNumber, batchNumbers)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, state.ErrNotFound
 	} else if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	batchL2DataMap := make(map[uint64][]byte)
-	for rows.Next() {
+
+	return readBatchDataResults(rows, batchNumbers)
+}
+
+// readBatchDataResults retrieves batch data from the provided result set
+func readBatchDataResults(results pgx.Rows, batchNumbers []uint64) (map[uint64][]byte, error) {
+	batchL2DataMap := make(map[uint64][]byte, len(batchNumbers))
+	for results.Next() {
 		var (
 			batchNum    uint64
 			batchL2Data []byte
 		)
-		err := rows.Scan(&batchNum, &batchL2Data)
-		if err != nil {
+
+		if err := results.Scan(&batchNum, &batchL2Data); err != nil {
 			return nil, err
 		}
 		batchL2DataMap[batchNum] = batchL2Data
 	}
+
 	return batchL2DataMap, nil
 }
