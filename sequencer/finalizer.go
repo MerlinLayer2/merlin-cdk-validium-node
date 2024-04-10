@@ -224,6 +224,17 @@ func (f *finalizer) checkL1InfoTreeUpdate(ctx context.Context) {
 	firstL1InfoRootUpdate := true
 	skipFirstSleep := true
 
+	if f.cfg.L1InfoTreeCheckInterval.Duration.Seconds() == 999999 { //nolint:gomnd
+		if !f.lastL1InfoTreeValid {
+			f.lastL1InfoTreeCond.L.Lock()
+			f.lastL1InfoTreeValid = true
+			f.lastL1InfoTreeCond.Broadcast()
+			f.lastL1InfoTreeCond.L.Unlock()
+		}
+
+		return
+	}
+
 	for {
 		if skipFirstSleep {
 			skipFirstSleep = false
@@ -271,9 +282,11 @@ func (f *finalizer) checkL1InfoTreeUpdate(ctx context.Context) {
 					continue
 				}
 				if l1BlockState.BlockHash != l1BlockEth.Hash() {
-					log.Warnf("skipping use of l1InfoTreeIndex %d, L1 block %d blockhash %s doesn't match blockhash on ethereum %s (L1 reorg?)",
+					warnmsg := fmt.Sprintf("invalid l1InfoTreeIndex %d, L1 block %d blockhash %s doesn't match blockhash on ethereum %s (L1 reorg?). Stopping syncing l1IntroTreeIndex",
 						l1InfoRoot.L1InfoTreeIndex, l1InfoRoot.BlockNumber, l1BlockState.BlockHash, l1BlockEth.Hash())
-					continue
+					log.Warn(warnmsg)
+					f.LogEvent(ctx, event.Level_Critical, event.EventID_InvalidInfoRoot, warnmsg, nil)
+					return
 				}
 			}
 
@@ -437,7 +450,7 @@ func (f *finalizer) processTransaction(ctx context.Context, tx *TxTracker, first
 		}
 	}
 
-	egpPercentage, err := f.effectiveGasPrice.CalculateEffectiveGasPricePercentage(txGasPrice, tx.EffectiveGasPrice)
+	egpPercentage, err := state.CalculateEffectiveGasPricePercentage(txGasPrice, tx.EffectiveGasPrice)
 	if err != nil {
 		if f.effectiveGasPrice.IsEnabled() {
 			return nil, err
@@ -550,7 +563,7 @@ func (f *finalizer) handleProcessTransactionResponse(ctx context.Context, tx *Tx
 
 			// If EffectiveGasPrice is disabled we will calculate the percentage and save it for later logging
 			if !egpEnabled {
-				effectivePercentage, err := f.effectiveGasPrice.CalculateEffectiveGasPricePercentage(txGasPrice, tx.EffectiveGasPrice)
+				effectivePercentage, err := state.CalculateEffectiveGasPricePercentage(txGasPrice, tx.EffectiveGasPrice)
 				if err != nil {
 					log.Warnf("effectiveGasPrice is disabled, but failed to calculate effective gas price percentage (#2), error: %v", err)
 					tx.EGPLog.Error = fmt.Sprintf("%s, CalculateEffectiveGasPricePercentage#2: %s", tx.EGPLog.Error, err)
