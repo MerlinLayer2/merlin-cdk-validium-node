@@ -114,7 +114,7 @@ func start(cliCtx *cli.Context) error {
 	}
 
 	// READ CHAIN ID FROM POE SC
-	tmpEthMan, err := etherman.NewClient(c.Etherman, c.NetworkConfig.L1Config, nil)
+	tmpEthMan, err := etherman.NewClient(c.Etherman, c.NetworkConfig.L1Config, nil, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -123,7 +123,7 @@ func start(cliCtx *cli.Context) error {
 		log.Fatal(err)
 	}
 
-	etherman, err := etherman.NewClient(c.Etherman, c.NetworkConfig.L1Config, nil)
+	etherman, err := etherman.NewClient(c.Etherman, c.NetworkConfig.L1Config, nil, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -291,7 +291,7 @@ func runMigrations(c db.Config, name string) {
 }
 
 func newEtherman(c config.Config, st *state.State) (*etherman.Client, error) {
-	ethman, err := etherman.NewClient(c.Etherman, c.NetworkConfig.L1Config, nil)
+	ethman, err := etherman.NewClient(c.Etherman, c.NetworkConfig.L1Config, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -299,7 +299,7 @@ func newEtherman(c config.Config, st *state.State) (*etherman.Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return etherman.NewClient(c.Etherman, c.NetworkConfig.L1Config, da)
+	return etherman.NewClient(c.Etherman, c.NetworkConfig.L1Config, da, st)
 }
 
 func newDataAvailability(c config.Config, st *state.State, etherman *etherman.Client, isSequenceSender bool) (*dataavailability.DataAvailability, error) {

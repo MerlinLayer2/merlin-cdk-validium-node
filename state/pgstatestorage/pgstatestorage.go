@@ -371,13 +371,19 @@ func (p *PostgresStorage) GetBatchL2DataByNumber(ctx context.Context, batchNumbe
 
 // GetBatchL2DataByNumbers returns the batch L2 data of the given batch numbers. The data is a union of state.batch and state.forced_batch tables.
 func (p *PostgresStorage) GetBatchL2DataByNumbers(ctx context.Context, batchNumbers []uint64, dbTx pgx.Tx) (map[uint64][]byte, error) {
-	const getBatchL2DataByBatchNumber = `
-	SELECT batch_num, raw_txs_data FROM state.batch WHERE batch_num = ANY($1)
-	UNION
-	SELECT forced_batch_num, convert_from(decode(raw_txs_data, 'hex'), 'UTF8')::bytea FROM state.forced_batch WHERE forced_batch_num = ANY($2)
-`
+	const sql = "SELECT batch_num, raw_txs_data FROM state.batch WHERE batch_num = ANY($1)"
+	return p.getBatchData(ctx, sql, batchNumbers, dbTx)
+}
+
+// GetForcedBatchDataByNumbers returns the forced batch data of the given batch numbers
+func (p *PostgresStorage) GetForcedBatchDataByNumbers(ctx context.Context, batchNumbers []uint64, dbTx pgx.Tx) (map[uint64][]byte, error) {
+	const sql = "SELECT forced_batch_num, convert_from(decode(raw_txs_data, 'hex'), 'UTF8')::bytea FROM state.forced_batch WHERE forced_batch_num = ANY($1)"
+	return p.getBatchData(ctx, sql, batchNumbers, dbTx)
+}
+
+func (p *PostgresStorage) getBatchData(ctx context.Context, sql string, batchNumbers []uint64, dbTx pgx.Tx) (map[uint64][]byte, error) {
 	q := p.getExecQuerier(dbTx)
-	rows, err := q.Query(ctx, getBatchL2DataByBatchNumber, batchNumbers, batchNumbers)
+	rows, err := q.Query(ctx, sql, batchNumbers)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return p.GetBatchL2DataByNumbersFromBackup(ctx, batchNumbers, dbTx)
 	} else if err != nil {
