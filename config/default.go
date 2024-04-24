@@ -36,6 +36,7 @@ Outputs = ["stderr"]
 
 [Pool]
 IntervalToRefreshBlockedAddresses = "5m"
+IntervalToRefreshSpecialedAddresses = "5m"
 IntervalToRefreshGasPrices = "5s"
 MaxTxBytesSize=100132
 MaxTxDataBytesSize=100000
@@ -45,7 +46,13 @@ DefaultMaxGasAllowed = 0
 MinAllowedGasPriceInterval = "5m"
 PollMinAllowedGasPriceInterval = "15s"
 AccountQueue = 64
+AccountQueueSpecialedMultiple = 10
 GlobalQueue = 1024
+EnableReadDB = false
+EnableSpecialPriorityGasPrice = false
+SpecialPriorityGasPriceMultiple = 10
+EnableToBlacklist = false
+ToBlacklistDisguiseErrors = false
     [Pool.EffectiveGasPrice]
 	Enabled = false
 	L1GasPriceFactor = 0.25
@@ -65,7 +72,14 @@ GlobalQueue = 1024
 	Port = "5432"
 	EnableLog = false
 	MaxConns = 200
-
+	[Pool.ReadDB]
+	User = "pool_user"
+	Password = "pool_password"
+	Name = "pool_db"
+	Host = "zkevm-pool-db"
+	Port = "5432"
+	EnableLog = false
+	MaxConns = 200
 [Etherman]
 URL = "http://localhost:8545"
 ForkIDChunkSize = 20000

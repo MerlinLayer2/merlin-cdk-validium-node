@@ -22,6 +22,12 @@ type Config struct {
 
 	// DB is the database configuration
 	DB db.Config `mapstructure:"DB"`
+	
+	// EnableReadDB enables using read instance for certain database queries
+	EnableReadDB bool `mapstructure:"EnableReadDB"`
+
+	// ReadDB is the connection of the read instance for certain database queries
+	ReadDB db.Config `mapstructure:"ReadDB"`
 
 	// DefaultMinGasPriceAllowed is the default min gas price to suggest
 	DefaultMinGasPriceAllowed uint64 `mapstructure:"DefaultMinGasPriceAllowed"`

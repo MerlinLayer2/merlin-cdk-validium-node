@@ -51,6 +51,7 @@ type Pool struct {
 	gasPrices               GasPrices
 	gasPricesMux            *sync.RWMutex
 	effectiveGasPrice       *EffectiveGasPrice
+	readStorage             storage
 }
 
 type preExecutionResponse struct {
@@ -104,6 +105,10 @@ func NewPool(cfg Config, batchConstraintsCfg state.BatchConstraintsCfg, s storag
 	}(&cfg, p)
 
 	return p
+}
+
+func (p *Pool) AddReadStorageCli(rs storage) {
+	p.readStorage = rs
 }
 
 // refresGasPRices refreshes the gas price
@@ -573,7 +578,12 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 
 	// try to get a transaction from the pool with the same nonce to check
 	// if the new one has a price bump
-	oldTxs, err := p.storage.GetTxsByFromAndNonce(ctx, from, poolTx.Nonce())
+	var oldTxs []Transaction
+	if p.cfg.EnableReadDB { // use read storage
+		oldTxs, err = p.readStorage.GetTxsByFromAndNonce(ctx, from, poolTx.Nonce())
+	} else {
+		oldTxs, err = p.storage.GetTxsByFromAndNonce(ctx, from, poolTx.Nonce())
+	}
 	if err != nil {
 		log.Errorf("failed to txs for the same account and nonce while adding tx to the pool", err)
 		return err
