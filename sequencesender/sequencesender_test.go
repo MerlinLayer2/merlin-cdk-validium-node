@@ -3,12 +3,26 @@ package sequencesender
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestTimestamp(t *testing.T) {
+	//1712056027
+	//1712056075
+
+	test := time.Unix(1712056027, 0)
+	fmt.Println(test)
+
+	test = time.Unix(1712056075, 0)
+	fmt.Println(test)
+
+	t.Fatal(1)
+}
 
 func TestIsSynced(t *testing.T) {
 	const (

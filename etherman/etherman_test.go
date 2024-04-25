@@ -124,6 +124,12 @@ func TestForcedBatchEvent(t *testing.T) {
 	assert.Equal(t, auth.From, blocks[0].ForcedBatches[0].Sequencer)
 }
 
+func TestTxHash(t *testing.T) {
+	rawTxs := "0b00003724000000000b00000004000000000b00000004000000000b00000004000000000b0000000400000000"
+	txsHash := crypto.Keccak256Hash(common.Hex2Bytes(rawTxs))
+	t.Fatal(txsHash)
+}
+
 func TestSequencedBatchesEvent(t *testing.T) {
 	// Set up testing environment
 	etherman, ethBackend, auth, _, br, da := newTestingEnv(t)

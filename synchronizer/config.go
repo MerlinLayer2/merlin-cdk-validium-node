@@ -22,6 +22,9 @@ type Config struct {
 	L1ParallelSynchronization L1ParallelSynchronizationConfig
 	// L2Synchronization Configuration for L2 synchronization
 	L2Synchronization l2_sync.Config `mapstructure:"L2Synchronization"`
+
+	// UpgradeEtrogBatchNumber is the number of the first batch after upgrading to etrog
+	UpgradeEtrogBatchNumber uint64 `mapstructure:"UpgradeEtrogBatchNumber"`
 }
 
 // L1ParallelSynchronizationConfig Configuration for parallel mode (if UL1SynchronizationMode equal to 'parallel')

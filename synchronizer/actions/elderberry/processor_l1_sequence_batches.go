@@ -33,18 +33,20 @@ type StateL1SequenceBatchesElderberry interface {
 // ProcessorL1SequenceBatchesElderberry is the processor for SequenceBatches for Elderberry
 type ProcessorL1SequenceBatchesElderberry struct {
 	actions.ProcessorBase[ProcessorL1SequenceBatchesElderberry]
-	previousProcessor PreviousProcessor
-	state             StateL1SequenceBatchesElderberry
+	previousProcessor       PreviousProcessor
+	state                   StateL1SequenceBatchesElderberry
+	upgradeEtrogBatchNumber uint64
 }
 
 // NewProcessorL1SequenceBatchesElderberry returns instance of a processor for SequenceBatchesOrder
-func NewProcessorL1SequenceBatchesElderberry(previousProcessor PreviousProcessor, state StateL1SequenceBatchesElderberry) *ProcessorL1SequenceBatchesElderberry {
+func NewProcessorL1SequenceBatchesElderberry(previousProcessor PreviousProcessor, state StateL1SequenceBatchesElderberry, upgradeEtrogBatchNumber uint64) *ProcessorL1SequenceBatchesElderberry {
 	return &ProcessorL1SequenceBatchesElderberry{
 		ProcessorBase: actions.ProcessorBase[ProcessorL1SequenceBatchesElderberry]{
 			SupportedEvent:    []etherman.EventOrder{etherman.SequenceBatchesOrder},
 			SupportedForkdIds: &actions.ForksIdOnlyElderberry},
-		previousProcessor: previousProcessor,
-		state:             state,
+		previousProcessor:       previousProcessor,
+		state:                   state,
+		upgradeEtrogBatchNumber: upgradeEtrogBatchNumber,
 	}
 }
 
@@ -59,25 +61,29 @@ func (g *ProcessorL1SequenceBatchesElderberry) Process(ctx context.Context, orde
 	}
 
 	sbatch := l1Block.SequencedBatches[order.Pos][0]
+	if g.upgradeEtrogBatchNumber == sbatch.BatchNumber {
+		return g.previousProcessor.Process(ctx, order, l1Block, dbTx)
+	} else {
 
-	if sbatch.SequencedBatchElderberryData == nil {
-		log.Errorf("No elderberry sequenced batch data for batch %d", sbatch.BatchNumber)
-		return fmt.Errorf("no elderberry sequenced batch data for batch %d", sbatch.BatchNumber)
+		if sbatch.SequencedBatchElderberryData == nil {
+			log.Errorf("No elderberry sequenced batch data for batch %d", sbatch.BatchNumber)
+			return fmt.Errorf("no elderberry sequenced batch data for batch %d", sbatch.BatchNumber)
+		}
+		// We need to check that the sequence match
+		err := g.sanityCheckExpectedSequence(sbatch.SequencedBatchElderberryData.InitSequencedBatchNumber, dbTx)
+		if err != nil {
+			return err
+		}
+		// We known that the MaxSequenceTimestamp is the same for all the batches so we can use the first one
+		err = g.previousProcessor.ProcessSequenceBatches(ctx, l1Block.SequencedBatches[order.Pos], l1Block.BlockNumber, time.Unix(int64(sbatch.SequencedBatchElderberryData.MaxSequenceTimestamp), 0), dbTx)
+		// The last L2block timestamp must match MaxSequenceTimestamp
+		if err != nil {
+			return err
+		}
+		// It checks the timestamp of the last L2 block, but it's just log an error instead of refusing the event
+		_ = g.sanityCheckTstampLastL2Block(sbatch.SequencedBatchElderberryData.MaxSequenceTimestamp, dbTx)
+		return nil
 	}
-	// We need to check that the sequence match
-	err := g.sanityCheckExpectedSequence(sbatch.SequencedBatchElderberryData.InitSequencedBatchNumber, dbTx)
-	if err != nil {
-		return err
-	}
-	// We known that the MaxSequenceTimestamp is the same for all the batches so we can use the first one
-	err = g.previousProcessor.ProcessSequenceBatches(ctx, l1Block.SequencedBatches[order.Pos], l1Block.BlockNumber, time.Unix(int64(sbatch.SequencedBatchElderberryData.MaxSequenceTimestamp), 0), dbTx)
-	// The last L2block timestamp must match MaxSequenceTimestamp
-	if err != nil {
-		return err
-	}
-	// It checks the timestamp of the last L2 block, but it's just log an error instead of refusing the event
-	_ = g.sanityCheckTstampLastL2Block(sbatch.SequencedBatchElderberryData.MaxSequenceTimestamp, dbTx)
-	return nil
 }
 
 func (g *ProcessorL1SequenceBatchesElderberry) sanityCheckExpectedSequence(initialBatchNumber uint64, dbTx pgx.Tx) error {
