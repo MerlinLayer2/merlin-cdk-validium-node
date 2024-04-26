@@ -360,67 +360,80 @@ func (s *ClientSynchronizer) Sync() error {
 			// Sync trusted state
 			// latestSyncedBatch -> Last batch on DB
 			// latestSequencedBatchNumber -> last batch on SMC
-			if latestSyncedBatch >= latestSequencedBatchNumber {
-				startTrusted := time.Now()
-				if s.syncTrustedStateExecutor != nil && !s.isTrustedSequencer {
-					log.Info("Syncing trusted state (permissionless)")
-					err = s.syncTrustedState(latestSyncedBatch)
-					metrics.FullTrustedSyncTime(time.Since(startTrusted))
-					if err != nil {
-						log.Warn("error syncing trusted state. Error: ", err)
-						s.CleanTrustedState()
-						if errors.Is(err, syncinterfaces.ErrFatalDesyncFromL1) {
-							l1BlockNumber := err.(*l2_shared.DeSyncPermissionlessAndTrustedNodeError).L1BlockNumber
-							log.Error("Trusted and permissionless desync! reseting to last common point: L1Block (%d-1)", l1BlockNumber)
-							err = s.resetState(l1BlockNumber - 1)
-							if err != nil {
-								log.Errorf("error resetting the state to a discrepancy block. Retrying... Err: %v", err)
+			if !s.cfg.SyncOnlyTrusted {
+				if latestSyncedBatch >= latestSequencedBatchNumber {
+					startTrusted := time.Now()
+					if s.syncTrustedStateExecutor != nil && !s.isTrustedSequencer {
+						log.Info("Syncing trusted state (permissionless)")
+						err = s.syncTrustedState(latestSyncedBatch)
+						metrics.FullTrustedSyncTime(time.Since(startTrusted))
+						if err != nil {
+							log.Warn("error syncing trusted state. Error: ", err)
+							s.CleanTrustedState()
+							if errors.Is(err, syncinterfaces.ErrFatalDesyncFromL1) {
+								l1BlockNumber := err.(*l2_shared.DeSyncPermissionlessAndTrustedNodeError).L1BlockNumber
+								log.Error("Trusted and permissionless desync! reseting to last common point: L1Block (%d-1)", l1BlockNumber)
+								err = s.resetState(l1BlockNumber - 1)
+								if err != nil {
+									log.Errorf("error resetting the state to a discrepancy block. Retrying... Err: %v", err)
+									continue
+								}
+							} else if errors.Is(err, syncinterfaces.ErrMissingSyncFromL1) {
+								log.Info("Syncing from trusted node need data from L1")
+							} else if errors.Is(err, syncinterfaces.ErrCantSyncFromL2) {
+								log.Info("Can't sync from L2, going to sync from L1")
+							} else {
+								// We break for resync from Trusted
+								log.Debug("Sleeping for 1 second to avoid respawn too fast, error: ", err)
+								time.Sleep(time.Second)
 								continue
 							}
-						} else if errors.Is(err, syncinterfaces.ErrMissingSyncFromL1) {
-							log.Info("Syncing from trusted node need data from L1")
-						} else if errors.Is(err, syncinterfaces.ErrCantSyncFromL2) {
-							log.Info("Can't sync from L2, going to sync from L1")
-						} else {
-							// We break for resync from Trusted
-							log.Debug("Sleeping for 1 second to avoid respawn too fast, error: ", err)
-							time.Sleep(time.Second)
-							continue
 						}
 					}
+					waitDuration = s.cfg.SyncInterval.Duration
 				}
-				waitDuration = s.cfg.SyncInterval.Duration
-			}
-			//Sync L1Blocks
-			startL1 := time.Now()
-			if s.l1SyncOrchestration != nil && (latestSyncedBatch < latestSequencedBatchNumber || !s.cfg.L1ParallelSynchronization.FallbackToSequentialModeOnSynchronized) {
-				log.Infof("Syncing L1 blocks in parallel lastEthBlockSynced=%d", lastEthBlockSynced.BlockNumber)
-				lastEthBlockSynced, err = s.syncBlocksParallel(lastEthBlockSynced)
-			} else {
-				if s.l1SyncOrchestration != nil {
-					log.Infof("Switching to sequential mode, stopping parallel sync and deleting object")
-					s.l1SyncOrchestration.Abort()
-					s.l1SyncOrchestration = nil
+				//Sync L1Blocks
+				startL1 := time.Now()
+				if s.l1SyncOrchestration != nil && (latestSyncedBatch < latestSequencedBatchNumber || !s.cfg.L1ParallelSynchronization.FallbackToSequentialModeOnSynchronized) {
+					log.Infof("Syncing L1 blocks in parallel lastEthBlockSynced=%d", lastEthBlockSynced.BlockNumber)
+					lastEthBlockSynced, err = s.syncBlocksParallel(lastEthBlockSynced)
+				} else {
+					if s.l1SyncOrchestration != nil {
+						log.Infof("Switching to sequential mode, stopping parallel sync and deleting object")
+						s.l1SyncOrchestration.Abort()
+						s.l1SyncOrchestration = nil
+					}
+					log.Infof("Syncing L1 blocks sequentially lastEthBlockSynced=%d", lastEthBlockSynced.BlockNumber)
+					lastEthBlockSynced, err = s.syncBlocksSequential(lastEthBlockSynced)
 				}
-				log.Infof("Syncing L1 blocks sequentially lastEthBlockSynced=%d", lastEthBlockSynced.BlockNumber)
-				lastEthBlockSynced, err = s.syncBlocksSequential(lastEthBlockSynced)
-			}
-			metrics.FullL1SyncTime(time.Since(startL1))
-			if err != nil {
-				log.Warn("error syncing blocks: ", err)
-				s.CleanTrustedState()
-				lastEthBlockSynced, err = s.state.GetLastBlock(s.ctx, nil)
+				metrics.FullL1SyncTime(time.Since(startL1))
 				if err != nil {
-					log.Fatal("error getting lastEthBlockSynced to resume the synchronization... Error: ", err)
+					log.Warn("error syncing blocks: ", err)
+					s.CleanTrustedState()
+					lastEthBlockSynced, err = s.state.GetLastBlock(s.ctx, nil)
+					if err != nil {
+						log.Fatal("error getting lastEthBlockSynced to resume the synchronization... Error: ", err)
+					}
+					if s.l1SyncOrchestration != nil {
+						// If have failed execution and get starting point from DB, we must reset parallel sync to this point
+						// producer must start requesting this block
+						s.l1SyncOrchestration.Reset(lastEthBlockSynced.BlockNumber)
+					}
+					if s.ctx.Err() != nil {
+						continue
+					}
 				}
-				if s.l1SyncOrchestration != nil {
-					// If have failed execution and get starting point from DB, we must reset parallel sync to this point
-					// producer must start requesting this block
-					s.l1SyncOrchestration.Reset(lastEthBlockSynced.BlockNumber)
-				}
-				if s.ctx.Err() != nil {
+			} else {
+				// Sync trusted state
+				startTrusted := time.Now()
+				log.Info("Syncing trusted state")
+				err = s.syncTrustedState(latestSyncedBatch)
+				metrics.FullTrustedSyncTime(time.Since(startTrusted))
+				if err != nil {
+					log.Warn("error syncing trusted state. Error: ", err)
 					continue
 				}
+				waitDuration = s.cfg.SyncInterval.Duration
 			}
 			metrics.FullSyncIterationTime(time.Since(start))
 			log.Info("L1 state fully synchronized")

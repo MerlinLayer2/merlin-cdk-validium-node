@@ -118,6 +118,7 @@ PreCheckEnabled = true
 [Synchronizer]
 SyncInterval = "1s"
 SyncChunkSize = 100
+SyncOnlyTrusted = false
 TrustedSequencerURL = "" # If it is empty or not specified, then the value is read from the smc
 L1SynchronizationMode = "sequential"
 	[Synchronizer.L1ParallelSynchronization]
