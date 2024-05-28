@@ -26,7 +26,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/umbracle/ethgo v0.1.4-0.20230712173909-df37dddf16f0
 	github.com/urfave/cli/v2 v2.26.0
-	go.uber.org/zap v1.26.0
+	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.18.0
 	golang.org/x/net v0.20.0
 	golang.org/x/sync v0.5.0
@@ -175,7 +175,6 @@ require (
 	github.com/0xPolygon/agglayer v0.0.1
 	github.com/0xPolygon/cdk-data-availability v0.0.5
 	github.com/fatih/color v1.16.0
-	github.com/joho/godotenv v1.5.1
 	github.com/prometheus/client_golang v1.18.0
 	golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa
 )
