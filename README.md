@@ -9,6 +9,13 @@ You can use the source code in this repo to build and run a Merlin external node
 3. Customize the RPC interface to provide personalized features.
 4. Understand the overall structure of the Merlin chain and contribute code to it.
 
+# Release
+If you need a stable release, use `releases/tag/v2.1.0`.
+
+For the cutting-edge development version with the latest features and changes, use the `main` branch. 
+
+Please note that the main branch may be less stable and is primarily intended for testing and development purposes.
+
 # Key Components
 
 Merlin Chain uses a modular approach to build blockchain, and all modules are listed in the following text with brief introductions. This repo primarily involves the Synchronizer and JSON RPC modules.
