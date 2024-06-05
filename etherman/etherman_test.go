@@ -127,7 +127,7 @@ func TestForcedBatchEvent(t *testing.T) {
 func TestTxHash(t *testing.T) {
 	rawTxs := "0b00003724000000000b00000004000000000b00000004000000000b00000004000000000b0000000400000000"
 	txsHash := crypto.Keccak256Hash(common.Hex2Bytes(rawTxs))
-	t.Fatal(txsHash)
+	t.Log(txsHash)
 }
 
 func TestSequencedBatchesEvent(t *testing.T) {
