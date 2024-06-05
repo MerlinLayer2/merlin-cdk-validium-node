@@ -64,7 +64,6 @@ func (g *ProcessorL1SequenceBatchesElderberry) Process(ctx context.Context, orde
 	if g.upgradeEtrogBatchNumber == sbatch.BatchNumber {
 		return g.previousProcessor.Process(ctx, order, l1Block, dbTx)
 	} else {
-
 		if sbatch.SequencedBatchElderberryData == nil {
 			log.Errorf("No elderberry sequenced batch data for batch %d", sbatch.BatchNumber)
 			return fmt.Errorf("no elderberry sequenced batch data for batch %d", sbatch.BatchNumber)
