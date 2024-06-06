@@ -13,7 +13,7 @@ require (
 	github.com/google/uuid v1.5.0
 	github.com/habx/pg-commands v0.6.1
 	github.com/hermeznetwork/tracerr v0.3.2
-	github.com/iden3/go-iden3-crypto v0.0.15
+	github.com/iden3/go-iden3-crypto v0.0.16
 	github.com/invopop/jsonschema v0.12.0
 	github.com/jackc/pgconn v1.14.1
 	github.com/jackc/pgx/v4 v4.18.1
@@ -175,7 +175,6 @@ require (
 	github.com/0xPolygon/agglayer v0.0.1
 	github.com/0xPolygon/cdk-data-availability v0.0.5
 	github.com/fatih/color v1.16.0
-	github.com/joho/godotenv v1.5.1
 	github.com/prometheus/client_golang v1.18.0
 	golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa
 )
