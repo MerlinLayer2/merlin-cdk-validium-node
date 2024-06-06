@@ -231,10 +231,62 @@
 					"type": "object",
 					"description": "DB is the database configuration"
 				},
+				"EnableReadDB": {
+					"type": "boolean",
+					"description": "EnableReadDB enables using read instance for certain database queries",
+					"default": false
+				},
+				"ReadDB": {
+					"properties": {
+						"Name": {
+							"type": "string",
+							"description": "Database name",
+							"default": "pool_db"
+						},
+						"User": {
+							"type": "string",
+							"description": "Database User name",
+							"default": "pool_user"
+						},
+						"Password": {
+							"type": "string",
+							"description": "Database Password of the user",
+							"default": "pool_password"
+						},
+						"Host": {
+							"type": "string",
+							"description": "Host address of database",
+							"default": "zkevm-pool-db"
+						},
+						"Port": {
+							"type": "string",
+							"description": "Port Number of database",
+							"default": "5432"
+						},
+						"EnableLog": {
+							"type": "boolean",
+							"description": "EnableLog",
+							"default": false
+						},
+						"MaxConns": {
+							"type": "integer",
+							"description": "MaxConns is the maximum number of connections in the pool.",
+							"default": 200
+						}
+					},
+					"additionalProperties": false,
+					"type": "object",
+					"description": "ReadDB is the connection of the read instance for certain database queries"
+				},
 				"DefaultMinGasPriceAllowed": {
 					"type": "integer",
 					"description": "DefaultMinGasPriceAllowed is the default min gas price to suggest",
 					"default": 1000000000
+				},
+				"DefaultMaxGasPriceAllowed": {
+					"type": "integer",
+					"description": "DefaultMaxGasPriceAllowed is the default max gas price to suggest",
+					"default": 0
 				},
 				"MinAllowedGasPriceInterval": {
 					"type": "string",
@@ -255,6 +307,11 @@
 						"1m",
 						"300ms"
 					]
+				},
+				"DefaultMaxGasAllowed": {
+					"type": "integer",
+					"description": "DefaultMaxGasAllowed is the max gas limit to suggest, set 0 to disable",
+					"default": 0
 				},
 				"AccountQueue": {
 					"type": "integer",
@@ -451,6 +508,11 @@
 					"description": "EnableHttpLog allows the user to enable or disable the logs related to the HTTP\nrequests to be captured by the server.",
 					"default": true
 				},
+				"PreCheckEnabled": {
+					"type": "boolean",
+					"description": "PreCheckEnabled External nodes are pre-checked in advance",
+					"default": true
+				},
 				"ZKCountersLimits": {
 					"properties": {
 						"MaxKeccakHashes": {
@@ -516,6 +578,11 @@
 					"type": "string",
 					"description": "TrustedSequencerURL is the rpc url to connect and sync the trusted state",
 					"default": ""
+				},
+				"SyncOnlyTrusted": {
+					"type": "boolean",
+					"description": "SyncOnlyTrusted option whether sync L1 block or not (for external node use)",
+					"default": false
 				},
 				"L1SynchronizationMode": {
 					"type": "string",
@@ -646,6 +713,11 @@
 					"additionalProperties": false,
 					"type": "object",
 					"description": "L2Synchronization Configuration for L2 synchronization"
+				},
+				"UpgradeEtrogBatchNumber": {
+					"type": "integer",
+					"description": "UpgradeEtrogBatchNumber is the number of the first batch after upgrading to etrog",
+					"default": 0
 				}
 			},
 			"additionalProperties": false,
@@ -898,6 +970,15 @@
 					"additionalProperties": false,
 					"type": "object",
 					"description": "StreamServerCfg is the config for the stream server"
+				},
+				"L2Coinbase": {
+					"items": {
+						"type": "integer"
+					},
+					"type": "array",
+					"maxItems": 20,
+					"minItems": 20,
+					"description": "L2Coinbase is the address receives the L2 fee, should be consistent with the  L2Coinbase in SequenceSender"
 				}
 			},
 			"additionalProperties": false,
@@ -1089,6 +1170,16 @@
 					"type": "string",
 					"description": "GeneratingProofCleanupThreshold represents the time interval after\nwhich a proof in generating state is considered to be stuck and\nallowed to be cleared.",
 					"default": "10m"
+				},
+				"GenerateProofDelay": {
+					"type": "string",
+					"title": "Duration",
+					"description": "GenerateProofDelay is the delay to start generating proof for a batch since the batch's timestamp",
+					"default": "0s",
+					"examples": [
+						"1m",
+						"300ms"
+					]
 				},
 				"GasOffset": {
 					"type": "integer",

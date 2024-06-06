@@ -107,6 +107,7 @@ func NewPool(cfg Config, batchConstraintsCfg state.BatchConstraintsCfg, s storag
 	return p
 }
 
+// AddReadStorageCli add read storage cli
 func (p *Pool) AddReadStorageCli(rs storage) {
 	p.readStorage = rs
 }
@@ -420,6 +421,7 @@ func (p *Pool) IsTxPending(ctx context.Context, hash common.Hash) (bool, error) 
 	return p.storage.IsTxPending(ctx, hash)
 }
 
+// ExternalValidateTx external validate tx
 func (p *Pool) ExternalValidateTx(ctx context.Context, tx types.Transaction, ip string) error {
 	poolTx := NewTransaction(tx, ip, false)
 	if err := p.validateTx(ctx, *poolTx); err != nil {

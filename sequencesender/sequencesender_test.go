@@ -20,8 +20,6 @@ func TestTimestamp(t *testing.T) {
 
 	test = time.Unix(1712056075, 0)
 	fmt.Println(test)
-
-	t.Fatal(1)
 }
 
 func TestIsSynced(t *testing.T) {

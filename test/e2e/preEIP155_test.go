@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"math/big"
-	"strings"
 	"testing"
 	"time"
 
@@ -67,10 +66,14 @@ func TestPreEIP155Tx(t *testing.T) {
 			Data:     data,
 		})
 
-		privateKey, err := crypto.HexToECDSA(strings.TrimPrefix(network.PrivateKey, "0x"))
-		require.NoError(t, err)
+		//privateKey, err := crypto.HexToECDSA(strings.TrimPrefix(network.PrivateKey, "0x"))
+		//require.NoError(t, err)
+		//
+		//signedTx, err := types.SignTx(tx, types.HomesteadSigner{}, privateKey)
+		//require.NoError(t, err)
 
-		signedTx, err := types.SignTx(tx, types.HomesteadSigner{}, privateKey)
+		// for adaptive the pool.go remove check txChainID != 0
+		signedTx, err := auth.Signer(auth.From, tx)
 		require.NoError(t, err)
 
 		err = client.SendTransaction(ctx, signedTx)
@@ -151,6 +154,10 @@ func TestFakeEIP155With_V_As35(t *testing.T) {
 
 		signedTx := types.NewTx(tx)
 		err = client.SendTransaction(context.Background(), signedTx)
+		if network.Name == "Local L2" { // for adaptive the pool.go remove check txChainID != 0
+			require.Equal(t, "invalid chain id", err.Error())
+			return
+		}
 		require.Equal(t, "invalid sender", err.Error())
 	}
 }

@@ -22,7 +22,7 @@ type Config struct {
 
 	// DB is the database configuration
 	DB db.Config `mapstructure:"DB"`
-	
+
 	// EnableReadDB enables using read instance for certain database queries
 	EnableReadDB bool `mapstructure:"EnableReadDB"`
 

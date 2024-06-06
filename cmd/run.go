@@ -44,7 +44,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/synchronizer/common/syncinterfaces"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-    "github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v2"
 )
 
 func start(cliCtx *cli.Context) error {
