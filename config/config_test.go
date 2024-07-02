@@ -70,6 +70,18 @@ func Test_Defaults(t *testing.T) {
 			expectedValue: []dataavailability.DataSourcePriority{"local", "trusted", "external"},
 		},
 		{
+			path:          "Synchronizer.L1BlockCheck.Enabled",
+			expectedValue: true,
+		},
+		{
+			path:          "Synchronizer.L1BlockCheck.PreCheckEnabled",
+			expectedValue: true,
+		},
+		{
+			path:          "Synchronizer.L2Synchronization.Enabled",
+			expectedValue: true,
+		},
+		{
 			path:          "Sequencer.DeletePoolTxsL1BlockConfirmations",
 			expectedValue: uint64(100),
 		},
@@ -138,6 +150,10 @@ func Test_Defaults(t *testing.T) {
 			expectedValue: types.NewDuration(1800 * time.Second),
 		},
 		{
+			path:          "Sequencer.Finalizer.FlushIdCheckInterval",
+			expectedValue: types.NewDuration(50 * time.Millisecond),
+		},
+		{
 			path:          "Sequencer.Finalizer.Metrics.Interval",
 			expectedValue: types.NewDuration(60 * time.Minute),
 		},
@@ -156,6 +172,10 @@ func Test_Defaults(t *testing.T) {
 		{
 			path:          "Sequencer.StreamServer.Version",
 			expectedValue: uint8(0),
+		},
+		{
+			path:          "Sequencer.StreamServer.WriteTimeout",
+			expectedValue: types.NewDuration(5 * time.Second),
 		},
 		{
 			path:          "Sequencer.StreamServer.Enabled",
@@ -184,6 +204,10 @@ func Test_Defaults(t *testing.T) {
 		{
 			path:          "SequenceSender.MaxBatchesForL1",
 			expectedValue: uint64(300),
+		},
+		{
+			path:          "SequenceSender.SequenceL1BlockConfirmations",
+			expectedValue: uint64(32),
 		},
 		{
 			path:          "Etherman.URL",
@@ -305,6 +329,10 @@ func Test_Defaults(t *testing.T) {
 		{
 			path:          "Pool.GlobalQueue",
 			expectedValue: uint64(1024),
+		},
+		{
+			path:          "Pool.TxFeeCap",
+			expectedValue: float64(1),
 		},
 		{
 			path:          "Pool.EffectiveGasPrice.Enabled",

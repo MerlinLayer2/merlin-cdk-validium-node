@@ -44,6 +44,7 @@ MinAllowedGasPriceInterval = "5m"
 PollMinAllowedGasPriceInterval = "15s"
 AccountQueue = 64
 GlobalQueue = 1024
+TxFeeCap = 1.0
     [Pool.EffectiveGasPrice]
 	Enabled = false
 	L1GasPriceFactor = 0.25
@@ -107,11 +108,11 @@ L1SynchronizationMode = "sequential"
 L1SyncCheckL2BlockHash = true
 L1SyncCheckL2BlockNumberhModulus = 600
 	[Synchronizer.L1BlockCheck]
-		Enable = true
+		Enabled = true
 		L1SafeBlockPoint = "finalized"
 		L1SafeBlockOffset = 0
 		ForceCheckBeforeStart = true
-		PreCheckEnable = true
+		PreCheckEnabled = true
 		L1PreSafeBlockPoint = "safe"
 		L1PreSafeBlockOffset = 0
 	[Synchronizer.L1ParallelSynchronization]
@@ -128,6 +129,7 @@ L1SyncCheckL2BlockNumberhModulus = 600
 			AceptableInacctivityTime = "5s"
 			ApplyAfterNumRollupReceived = 10
 	[Synchronizer.L2Synchronization]
+		Enabled = true
 		AcceptEmptyClosedBatches = false
 		ReprocessFullBatchOnClose = false
 		CheckLastL2BlockHashOnCloseBatch = true
@@ -151,6 +153,7 @@ StateConsistencyCheckInterval = "5s"
 		L2BlockMaxDeltaTimestamp = "3s"
 		ResourceExhaustedMarginPct = 10
 		StateRootSyncInterval = "3600s"
+		FlushIdCheckInterval = "50ms"
 		HaltOnBatchNumber = 0
 		SequentialBatchSanityCheck = false
 		SequentialProcessL2Block = false
@@ -161,6 +164,7 @@ StateConsistencyCheckInterval = "5s"
 		Port = 0
 		Filename = ""
 		Version = 0
+		WriteTimeout = "5s"
 		Enabled = false
 
 [SequenceSender]
@@ -168,6 +172,7 @@ WaitPeriodSendSequence = "5s"
 LastBatchVirtualizationTimeMaxWaitPeriod = "5s"
 L1BlockTimestampMargin = "30s"
 MaxTxSizeForL1 = 131072
+SequenceL1BlockConfirmations = 32
 L2Coinbase = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
 PrivateKey = {Path = "/pk/sequencer.keystore", Password = "testonly"}
 GasOffset = 80000

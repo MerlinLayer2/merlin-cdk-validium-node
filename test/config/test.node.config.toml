@@ -116,6 +116,7 @@ StateConsistencyCheckInterval = "5s"
 		L2BlockMaxDeltaTimestamp = "4s"
 		ResourceExhaustedMarginPct = 10
 		StateRootSyncInterval = "60s"
+		FlushIdCheckInterval = "50ms"
 		HaltOnBatchNumber = 0
 		SequentialBatchSanityCheck = false
 		SequentialProcessL2Block = false
@@ -127,6 +128,7 @@ StateConsistencyCheckInterval = "5s"
 		Filename = "/datastreamer/datastream.bin"
 		Version = 1
 		ChainID = 1337
+		WriteTimeout = "5s"
 		Enabled = true
 		
 
@@ -135,6 +137,7 @@ WaitPeriodSendSequence = "15s"
 LastBatchVirtualizationTimeMaxWaitPeriod = "10s"
 L1BlockTimestampMargin = "5s"
 MaxTxSizeForL1 = 131072
+SequenceL1BlockConfirmations = 2
 L2Coinbase = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
 PrivateKey = {Path = "/pk/sequencer.keystore", Password = "testonly"}
 	[SequenceSender.StreamClient]
