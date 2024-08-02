@@ -1074,6 +1074,8 @@ ForkID=0
 | - [EnableHttpLog](#RPC_EnableHttpLog )                                       | No      | boolean          | No         | -          | EnableHttpLog allows the user to enable or disable the logs related to the HTTP<br />requests to be captured by the server.                                                           |
 | - [PreCheckEnabled](#RPC_PreCheckEnabled )                                   | No      | boolean          | No         | -          | PreCheckEnabled External nodes are pre-checked in advance                                                                                                                             |
 | - [ZKCountersLimits](#RPC_ZKCountersLimits )                                 | No      | object           | No         | -          | ZKCountersLimits defines the ZK Counter limits                                                                                                                                        |
+| - [VerifierAddr](#RPC_VerifierAddr )                                         | No      | array of integer | No         | -          | VerifierAddr Address of the L1 verifier contract                                                                                                                                      |
+| - [TrustedAggregator](#RPC_TrustedAggregator )                               | No      | array of integer | No         | -          | TrustedAggregator trusted Aggregator that used for verify proof                                                                                                                       |
 
 ### <a name="RPC_Host"></a>8.1. `RPC.Host`
 
@@ -1501,6 +1503,16 @@ MaxSteps=0
 [RPC.ZKCountersLimits]
 MaxSHA256Hashes=0
 ```
+
+### <a name="RPC_VerifierAddr"></a>8.19. `RPC.VerifierAddr`
+
+**Type:** : `array of integer`
+**Description:** VerifierAddr Address of the L1 verifier contract
+
+### <a name="RPC_TrustedAggregator"></a>8.20. `RPC.TrustedAggregator`
+
+**Type:** : `array of integer`
+**Description:** TrustedAggregator trusted Aggregator that used for verify proof
 
 ## <a name="Synchronizer"></a>9. `[Synchronizer]`
 
