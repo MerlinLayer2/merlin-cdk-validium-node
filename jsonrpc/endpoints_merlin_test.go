@@ -12,41 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestVerify(t *testing.T) {
-	cfg := etherman.Config{
-		URL: "http://localhost:8545",
-	}
-
-	l1Config := etherman.L1Config{
-		L1ChainID:                 1337,
-		ZkEVMAddr:                 common.HexToAddress("0x8dAF17A20c9DBA35f005b6324F493785D239719d"),
-		RollupManagerAddr:         common.HexToAddress("0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e"),
-		PolAddr:                   common.HexToAddress("0x5FbDB2315678afecb367f032d93F642f64180aa3"),
-		GlobalExitRootManagerAddr: common.HexToAddress("0x8A791620dd6260079BF849Dc5567aDC3F2FdC318"),
-	}
-
-	ethermanClient, err := etherman.NewClient(cfg, l1Config, nil)
-	require.NoError(t, err)
-
-	conf := Config{
-		VerifierAddr:      common.HexToAddress("0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0"),
-		TrustedAggregator: common.HexToAddress("0xde56911b68fd77C305c23217fda4d5A66985E7ea"),
-	}
-	mpoints := NewMerlinEndpoints(conf, nil, ethermanClient)
-	txHash := common.HexToHash("0xd5cbf97a31b32cc4bd4decd72ec27c4949ff394437000f8dae8acaf4b27174cb")
-	zkp, err := mpoints.getZkProof(txHash)
-	require.NoError(t, err)
-	fmt.Println(*zkp)
-
-	roll, err := mpoints.etherman.RollupManager.RollupIDToRollupData(&bind.CallOpts{Pending: false}, zkp.RollupID)
-	require.NoError(t, err)
-	fmt.Println(roll.Verifier.String())
-
-	is, err := mpoints.VerifyProof(*zkp)
-	require.NoError(t, err)
-	require.Equal(t, true, is)
-}
-
 func TestVerifyTestnet(t *testing.T) {
 	cfg := etherman.Config{
 		URL: "http://103.231.86.44:7545",

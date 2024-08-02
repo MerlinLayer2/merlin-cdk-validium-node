@@ -74,6 +74,8 @@ WriteTimeout = "60s"
 MaxRequestsPerIPAndSecond = 5000
 SequencerNodeURI = ""
 EnableL2SuggestedGasPricePolling = true
+VerifierAddr = "0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0"
+TrustedAggregator  = "0xde56911b68fd77C305c23217fda4d5A66985E7ea"
 	[RPC.WebSockets]
 		Enabled = true
 		Port = 8133
