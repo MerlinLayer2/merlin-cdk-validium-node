@@ -68,6 +68,12 @@ type Config struct {
 
 	// ZKCountersLimits defines the ZK Counter limits
 	ZKCountersLimits ZKCountersLimits
+
+	// VerifierAddr Address of the L1 verifier contract
+	VerifierAddr common.Address
+
+	// TrustedAggregator trusted Aggregator that used for verify proof
+	TrustedAggregator common.Address
 }
 
 // ZKCountersLimits defines the ZK Counter limits

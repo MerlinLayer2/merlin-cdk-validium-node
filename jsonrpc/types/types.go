@@ -773,3 +773,16 @@ func NewZKCountersResponse(zkCounters state.ZKCounters, limits ZKCountersLimits,
 		OOCError:       oocErrMsg,
 	}
 }
+
+// ZKProof  zk proof
+type ZKProof struct {
+	RollupID         uint32          `json:"rollupID"`
+	PendingStateNum  uint64          `json:"pendingStateNum"`
+	InitNumBatch     uint64          `json:"countersUsed"`
+	FinalNewBatch    uint64          `json:"initNumBatch"`
+	NewLocalExitRoot common.Hash     `json:"newLocalExitRoot"`
+	NewStateRoot     common.Hash     `json:"newStateRoot"`
+	Beneficiary      common.Address  `json:"beneficiary"`
+	Proof            [24]common.Hash `json:"proof"`
+	PubSignals       [1]*big.Int     `json:"PubSignals"`
+}
