@@ -107,7 +107,7 @@ func TestVerifyTestnet(t *testing.T) {
 	zkp, err := mpoints.getZkProof(txHash, state.FORKID_ELDERBERRY)
 	require.NoError(t, err)
 
-	RollupData, err := mpoints.etherman.RollupManager.RollupIDToRollupData(&bind.CallOpts{Pending: false}, zkp.RollupID)
+	RollupData, err := mpoints.etherman.RollupManager.RollupIDToRollupData(&bind.CallOpts{Pending: false}, 1)
 	require.NoError(t, err)
 	fmt.Println("VerifierAddr", RollupData.Verifier.String(), "forkid", RollupData.ForkID)
 
@@ -158,7 +158,7 @@ func TestVerifyMainnet(t *testing.T) {
 	print, _ := json.MarshalIndent(zkp, "", "    ")
 	fmt.Println(string(print))
 
-	RollupData, err := mpoints.etherman.RollupManager.RollupIDToRollupData(&bind.CallOpts{Pending: false}, zkp.RollupID)
+	RollupData, err := mpoints.etherman.RollupManager.RollupIDToRollupData(&bind.CallOpts{Pending: false}, 1)
 	require.NoError(t, err)
 	fmt.Println("VerifierAddr", RollupData.Verifier.String(), "forkid", RollupData.ForkID)
 

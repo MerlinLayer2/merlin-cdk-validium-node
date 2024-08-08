@@ -12,7 +12,6 @@ import (
 	prm "github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/polygonrollupmanager"
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/smartcontracts/verifier"
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
-	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -96,23 +95,19 @@ func (m *MerlinEndpoints) GetZkProof(blockNumber types.ArgUint64) (interface{}, 
 			return nil, err
 		}
 		batchNum, err := m.state.BatchNumberByL2BlockNumber(ctx, uint64(blockNumber), dbTx)
-		if errors.Is(err, state.ErrNotFound) {
-			return nil, nil
-		} else if err != nil {
-			const errorMessage = "failed to get batch number from block number"
-			log.Errorf("%v: %v", errorMessage, err.Error())
-			return nil, types.NewRPCError(types.DefaultErrorCode, errorMessage)
+		if err != nil {
+			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("failed to get batch number from block number %v, %v", blockNumber, err.Error()), nil, true)
 		}
 
 		verifiedBatch, err := m.state.GetVerifiedBatch(ctx, batchNum, dbTx)
-		if err != nil && !errors.Is(err, state.ErrNotFound) {
-			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("couldn't load verify batch from state by number %v", batchNum), err, true)
+		if err != nil {
+			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("failed to load verified batch from state by block number %v, %v", blockNumber, err.Error()), nil, true)
 		}
 
 		forkID := m.state.GetForkIDByBatchNumber(batchNum)
 		zkp, err := m.getZkProof(verifiedBatch.TxHash, forkID)
 		if err != nil {
-			return RPCErrorResponse(types.DefaultErrorCode, "failed to get zk prrof", err, true)
+			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("failed to get zk prrof by block number %v, %v", blockNumber, err.Error()), nil, true)
 		}
 		return *zkp, nil
 	})
@@ -132,16 +127,9 @@ func (m *MerlinEndpoints) getZkProof(txHash common.Hash, forkID uint64) (*types.
 		pproofs[i] = vbp.proof[i]
 	}
 	return &types.ZKProof{
-		RollupID:         vbp.rollupID,
-		PendingStateNum:  vbp.pendingStateNum,
-		InitNumBatch:     vbp.initNumBatch,
-		FinalNewBatch:    vbp.finalNewBatch,
-		NewLocalExitRoot: vbp.newLocalExitRoot,
-		NewStateRoot:     vbp.newStateRoot,
-		Beneficiary:      vbp.beneficiary,
-		ForkID:           forkID,
-		Proof:            pproofs,
-		PubSignals:       [1]*big.Int{signal},
+		ForkID:     forkID,
+		Proof:      pproofs,
+		PubSignals: [1]*big.Int{signal},
 	}, nil
 }
 
@@ -253,12 +241,12 @@ func (m *MerlinEndpoints) getInputSnarkFromLocal(param *verifyBatchesTrustedAggr
 func (m *MerlinEndpoints) getOldSnarkParamFromDB(param *verifyBatchesTrustedAggregatorParam, sender common.Address) (interface{}, error) {
 	return m.txMan.NewDbTxScope(m.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {
 		oldBatch, err := m.state.GetBatchByNumber(ctx, param.initNumBatch, dbTx)
-		if err != nil && !errors.Is(err, state.ErrNotFound) {
-			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("couldn't load verify batch from state by number %v", param.initNumBatch), err, true)
+		if err != nil {
+			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("couldn't load verify batch from state by initNumBatch %v, %v", param.initNumBatch, err.Error()), nil, true)
 		}
 		newBatch, err := m.state.GetBatchByNumber(ctx, param.finalNewBatch, dbTx)
-		if err != nil && !errors.Is(err, state.ErrNotFound) {
-			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("couldn't load verify batch from state by number %v", param.initNumBatch), err, true)
+		if err != nil {
+			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("couldn't load verify batch from state by finalNewBatch %v, %v", param.finalNewBatch, err.Error()), nil, true)
 		}
 
 		forkID := m.state.GetForkIDByBatchNumber(param.finalNewBatch)
