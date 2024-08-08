@@ -269,8 +269,8 @@ func (m *MerlinEndpoints) getOldSnarkParamFromDB(param *verifyBatchesTrustedAggr
 	})
 }
 
-// VerifyProof returns VerifyProof
-func (m *MerlinEndpoints) VerifyProof(zkp types.ZKProof) (interface{}, types.Error) {
+// VerifyZkProof verify zk proof
+func (m *MerlinEndpoints) VerifyZkProof(zkp types.ZKProof) (interface{}, types.Error) {
 	if _, err := checkMerlinZkProofConfig(&m.cfg); err != nil {
 		return nil, err
 	}

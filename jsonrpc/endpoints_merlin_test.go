@@ -114,7 +114,7 @@ func TestVerifyTestnet(t *testing.T) {
 	mver, err := mockverifier.NewMockverifier(conf.VerifyZkProofConfigs[0].VerifierAddr, ethermanClient.OriEthClient)
 	require.NoError(t, err)
 
-	isv, err := mpoints.VerifyProof(*zkp)
+	isv, err := mpoints.VerifyZkProof(*zkp)
 	require.NoError(t, err)
 	require.Equal(t, true, isv)
 
@@ -162,7 +162,7 @@ func TestVerifyMainnet(t *testing.T) {
 	require.NoError(t, err)
 	fmt.Println("VerifierAddr", RollupData.Verifier.String(), "forkid", RollupData.ForkID)
 
-	isv, err := mpoints.VerifyProof(*zkp)
+	isv, err := mpoints.VerifyZkProof(*zkp)
 	require.NoError(t, err)
 	require.Equal(t, true, isv)
 
@@ -218,7 +218,7 @@ func TestVerifyMainnetForkID5(t *testing.T) {
 	print, _ := json.MarshalIndent(zkp, "", "    ")
 	fmt.Println(string(print))
 
-	isv, err := mpoints.VerifyProof(*zkp)
+	isv, err := mpoints.VerifyZkProof(*zkp)
 	require.NoError(t, err)
 	require.Equal(t, true, isv)
 }
