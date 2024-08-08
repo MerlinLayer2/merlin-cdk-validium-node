@@ -552,23 +552,38 @@
 					"type": "object",
 					"description": "ZKCountersLimits defines the ZK Counter limits"
 				},
-				"VerifierAddr": {
+				"VerifyZkProofConfigs": {
 					"items": {
-						"type": "integer"
+						"properties": {
+							"ForkID": {
+								"type": "integer",
+								"description": "ForkID this forkid of config"
+							},
+							"VerifierAddr": {
+								"items": {
+									"type": "integer"
+								},
+								"type": "array",
+								"maxItems": 20,
+								"minItems": 20,
+								"description": "VerifierAddr Address of the L1 verifier contract"
+							},
+							"TrustedAggregator": {
+								"items": {
+									"type": "integer"
+								},
+								"type": "array",
+								"maxItems": 20,
+								"minItems": 20,
+								"description": "TrustedAggregator trusted Aggregator that used for verify proof"
+							}
+						},
+						"additionalProperties": false,
+						"type": "object",
+						"description": "VerifyZkProofConfig verify zk proof config"
 					},
 					"type": "array",
-					"maxItems": 20,
-					"minItems": 20,
-					"description": "VerifierAddr Address of the L1 verifier contract"
-				},
-				"TrustedAggregator": {
-					"items": {
-						"type": "integer"
-					},
-					"type": "array",
-					"maxItems": 20,
-					"minItems": 20,
-					"description": "TrustedAggregator trusted Aggregator that used for verify proof"
+					"description": "VerifyZkProofConfigs verify zkproof config"
 				}
 			},
 			"additionalProperties": false,
