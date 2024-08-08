@@ -1,16 +1,83 @@
 package jsonrpc
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"math/big"
 	"testing"
 
 	"github.com/0xPolygonHermez/zkevm-node/etherman"
 	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/mockverifier"
+	"github.com/0xPolygonHermez/zkevm-node/hex"
+	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/client"
+	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
+	"github.com/0xPolygonHermez/zkevm-node/state"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/stretchr/testify/require"
 )
+
+type remote struct {
+	conf       *Config
+	rclient    *client.Client
+	ethClient  *ethclient.Client
+	rollupABIs map[uint64]*abi.ABI
+	blockHash  common.Hash
+	txindex    uint
+	chainId    uint64
+	forkID     uint64
+}
+
+func newRemoteTest(m *MerlinEndpoints, rclient *client.Client, blockHash common.Hash, txindex uint, chainId, forkID uint64) *remote {
+	return &remote{
+		conf:       &m.cfg,
+		rclient:    rclient,
+		ethClient:  m.etherman.OriEthClient,
+		rollupABIs: m.rollupABIs,
+		blockHash:  blockHash,
+		txindex:    txindex,
+		chainId:    chainId,
+		forkID:     forkID,
+	}
+}
+
+func (r *remote) getOldSnarkParamFromRemote(param *verifyBatchesTrustedAggregatorParam, sender common.Address) (interface{}, error) {
+	oldBatch, err := r.rclient.BatchByNumber(context.Background(), big.NewInt(0).SetUint64(param.initNumBatch))
+	if err != nil && !errors.Is(err, state.ErrNotFound) {
+		return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("couldn't load verify batch from state by number %v", param.initNumBatch), err, true)
+	}
+	newBatch, err := r.rclient.BatchByNumber(context.Background(), big.NewInt(0).SetUint64(param.finalNewBatch))
+	if err != nil && !errors.Is(err, state.ErrNotFound) {
+		return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("couldn't load verify batch from state by number %v", param.initNumBatch), err, true)
+	}
+	return InputSnark{
+		Sender:           sender,
+		OldStateRoot:     oldBatch.StateRoot,
+		OldAccInputHash:  oldBatch.AccInputHash,
+		InitNumBatch:     param.initNumBatch,
+		ChainId:          r.chainId,
+		ForkID:           r.forkID,
+		NewStateRoot:     newBatch.StateRoot,
+		NewAccInputHash:  newBatch.AccInputHash,
+		NewLocalExitRoot: newBatch.LocalExitRoot,
+		FinalNewBatch:    param.finalNewBatch,
+	}, nil
+}
+
+func (r *remote) getVerifyBatchesParam(blockHash common.Hash, forkID uint64) (*verifyBatchesTrustedAggregatorParam, error) {
+	tx, err := r.ethClient.TransactionInBlock(context.Background(), blockHash, r.txindex)
+	if err != nil {
+		return nil, err
+	}
+	if forkID < state.FORKID_ELDERBERRY {
+		return parseVerifyBatchesTrustedAggregatorOldInput(r.rollupABIs[state.FORKID_DRAGONFRUIT], tx.Data())
+	}
+	return parseVerifyBatchesTrustedAggregatorInput(r.rollupABIs[state.FORKID_ELDERBERRY], tx.Data())
+}
 
 func TestVerifyTestnet(t *testing.T) {
 	cfg := etherman.Config{
@@ -29,19 +96,22 @@ func TestVerifyTestnet(t *testing.T) {
 	require.NoError(t, err)
 
 	conf := Config{
-		TrustedAggregator: common.HexToAddress("0x719647fcce805a0dae3a80c4a607c1792cff5d3c"),
-		VerifierAddr:      common.HexToAddress("0xf81BC46a1277EF1e7BF0AC97C990d10131154458"), // 查到
+		VerifyZkProofConfigs: []*VerifyZkProofConfig{{
+			ForkID:            state.FORKID_ELDERBERRY,
+			VerifierAddr:      common.HexToAddress("0xf81BC46a1277EF1e7BF0AC97C990d10131154458"), //
+			TrustedAggregator: common.HexToAddress("0x719647fcce805a0dae3a80c4a607c1792cff5d3c"), //
+		}},
 	}
 	mpoints := NewMerlinEndpoints(conf, nil, ethermanClient)
 	txHash := common.HexToHash("0x980343c480c0653eb0ce0b9c0787cd0bac6c64ec73300c0c87ecb0693d66d46b")
-	zkp, err := mpoints.getZkProof(txHash)
+	zkp, err := mpoints.getZkProof(txHash, state.FORKID_ELDERBERRY)
 	require.NoError(t, err)
 
 	RollupData, err := mpoints.etherman.RollupManager.RollupIDToRollupData(&bind.CallOpts{Pending: false}, zkp.RollupID)
 	require.NoError(t, err)
 	fmt.Println("VerifierAddr", RollupData.Verifier.String(), "forkid", RollupData.ForkID)
 
-	mver, err := mockverifier.NewMockverifier(conf.VerifierAddr, ethermanClient.OriEthClient)
+	mver, err := mockverifier.NewMockverifier(conf.VerifyZkProofConfigs[0].VerifierAddr, ethermanClient.OriEthClient)
 	require.NoError(t, err)
 
 	isv, err := mpoints.VerifyProof(*zkp)
@@ -74,12 +144,15 @@ func TestVerifyMainnet(t *testing.T) {
 	require.NoError(t, err)
 
 	conf := Config{
-		TrustedAggregator: common.HexToAddress("0xe76cc099094d484e67cd7b777d22a93afc2920cc"),
-		VerifierAddr:      common.HexToAddress("0x65f25cED51CfDe249f307Cf6fC60A9988D249A69"),
+		VerifyZkProofConfigs: []*VerifyZkProofConfig{{
+			ForkID:            state.FORKID_ELDERBERRY,
+			VerifierAddr:      common.HexToAddress("0x65f25cED51CfDe249f307Cf6fC60A9988D249A69"), //
+			TrustedAggregator: common.HexToAddress("0xe76cc099094d484e67cd7b777d22a93afc2920cc"), //
+		}},
 	}
 	mpoints := NewMerlinEndpoints(conf, nil, ethermanClient)
 	txHash := common.HexToHash("0xa20870c72bf925d832b6da488aa5242af8d1fb9223c0e87b8c345ebc2bb944b8")
-	zkp, err := mpoints.getZkProof(txHash)
+	zkp, err := mpoints.getZkProof(txHash, state.FORKID_ELDERBERRY)
 	require.NoError(t, err)
 
 	print, _ := json.MarshalIndent(zkp, "", "    ")
@@ -93,7 +166,7 @@ func TestVerifyMainnet(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, true, isv)
 
-	mver, err := mockverifier.NewMockverifier(conf.VerifierAddr, ethermanClient.OriEthClient)
+	mver, err := mockverifier.NewMockverifier(conf.VerifyZkProofConfigs[0].VerifierAddr, ethermanClient.OriEthClient)
 	require.NoError(t, err)
 
 	var pproofs [24][32]byte
@@ -105,5 +178,93 @@ func TestVerifyMainnet(t *testing.T) {
 	require.Equal(t, true, isv)
 }
 
-//curl http://18.142.49.94:8545 -X POST -H "Content-Type: application/json" --data '{"method":"debug_traceTransaction","params":["0xa20870c72bf925d832b6da488aa5242af8d1fb9223c0e87b8c345ebc2bb944b8", {"tracer": "callTracer"}], "id":1,"jsonrpc":"2.0"}'
-//{"jsonrpc":"2.0","id":1,"result":{"from":"0xe76cc099094d484e67cd7b777d22a93afc2920cc","gas":"0x52179","gasUsed":"0x50fb0","to":"0x68ddbe6638d7514a9ed0b9b2980b65970e532cdb","input":"0x1489ed100000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001b11e500000000000000000000000000000000000000000000000000000000001b11e9000000000000000000000000000000000000000000000000000000000000000097b2f0666edfff8c6eb8315c0161db5a10ae11342ba7f34da46d581bcb70e376000000000000000000000000e76cc099094d484e67cd7b777d22a93afc2920cc2df047ac570cad92ed2826eff6a2ccd87e4dfce8ff474631f15f04a1e646ed090c25b53181477369f5371991cc334febb1a3f331fce84e53c269359c14c5a68222b1ae66ff60e762406c77a8af919bb72a3febce6331637d2e5d456f63a274940299b856937ee9d7ca42140564aea40de1b162740896f8733d55c8dfb6466bc40e4f333afbd4e4232ac2086f66d3e9459d84d3935df5f9f4bdd7a3bcb257fc620d8fd4affa1978906950ba78a100bcdb347617eb891d559accc239e058412aee0faa3bffff2ed911a9c6268890168ee620588c968c1f95d65db5f87901e4e706114137daed48c6783c879cf8ea68b82e56cf574e7d514c3816d7d327b1ebf1662a09abcd6ce09923731f3d630ce9739df49f59816ed7a5ddd4229e9bf06e3d6418557d9ecd0075c8ddc58581828e63d17540bba3f8d7fd48e9beeaaeb3b8db860f775e8a8840ea9043c165885a417c0d867a9ea01b249372dc7011c25f3cfaaa23472c3aaf4c5ff8c3bd74e82957e47ef403b94c0a940dc1ead45c97b675740c04e4d43f25d35e40986e8d5bf64d350ac75b8fcc4be56d178b2bb0f1a03a28952deea19a2f70a854a2feb0741e5b7316c38e13a20c501eb333a1ca947daec1c110e9bffa78b3b1d8b7ca454ad8101730196eca983641c35613b581e08c8d9ad90b61fa7e109edd3320a0e4a890fbe0c9db220f84d9cc146e8be89640d2a3e4930b2cc5241aed152b66c50a194f2bc114111f330b33434df167d4440e14cb7292097bc1ae33c486a880b2a6218bb8b77cb9f3da5909347bb16789b02fcb0cd32e0017a5ed0bbd778a892e241c19370d3a01fb590d94c30c2f3ef2df7fd6c1d3de0263a34b3fd611b307cc7bc3264910c2370189f1ab375d42af88ddaee8a3ed132d3a4c1361af57154d56a89a0be974c06e88cf65212da01f4663261da062d2fe062b01e9d0f35cb048d58e2205b80129b2aad0c81ef21d5ae45fd8b318b6e2c802cb0662fbaa046b3a6d3eee5badc56916c2fbff8c3784b0895c969e3cd242e5217ffd40454cad9215101b384f86559fdb1bb83497d60e1033486c852c8fd583","calls":[{"from":"0x68ddbe6638d7514a9ed0b9b2980b65970e532cdb","gas":"0x46a01","gasUsed":"0x46a01","to":"0xc079c474eb9f250561501c1a675fe6762ea878e8","input":"0x1489ed100000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001b11e500000000000000000000000000000000000000000000000000000000001b11e9000000000000000000000000000000000000000000000000000000000000000097b2f0666edfff8c6eb8315c0161db5a10ae11342ba7f34da46d581bcb70e376000000000000000000000000e76cc099094d484e67cd7b777d22a93afc2920cc2df047ac570cad92ed2826eff6a2ccd87e4dfce8ff474631f15f04a1e646ed090c25b53181477369f5371991cc334febb1a3f331fce84e53c269359c14c5a68222b1ae66ff60e762406c77a8af919bb72a3febce6331637d2e5d456f63a274940299b856937ee9d7ca42140564aea40de1b162740896f8733d55c8dfb6466bc40e4f333afbd4e4232ac2086f66d3e9459d84d3935df5f9f4bdd7a3bcb257fc620d8fd4affa1978906950ba78a100bcdb347617eb891d559accc239e058412aee0faa3bffff2ed911a9c6268890168ee620588c968c1f95d65db5f87901e4e706114137daed48c6783c879cf8ea68b82e56cf574e7d514c3816d7d327b1ebf1662a09abcd6ce09923731f3d630ce9739df49f59816ed7a5ddd4229e9bf06e3d6418557d9ecd0075c8ddc58581828e63d17540bba3f8d7fd48e9beeaaeb3b8db860f775e8a8840ea9043c165885a417c0d867a9ea01b249372dc7011c25f3cfaaa23472c3aaf4c5ff8c3bd74e82957e47ef403b94c0a940dc1ead45c97b675740c04e4d43f25d35e40986e8d5bf64d350ac75b8fcc4be56d178b2bb0f1a03a28952deea19a2f70a854a2feb0741e5b7316c38e13a20c501eb333a1ca947daec1c110e9bffa78b3b1d8b7ca454ad8101730196eca983641c35613b581e08c8d9ad90b61fa7e109edd3320a0e4a890fbe0c9db220f84d9cc146e8be89640d2a3e4930b2cc5241aed152b66c50a194f2bc114111f330b33434df167d4440e14cb7292097bc1ae33c486a880b2a6218bb8b77cb9f3da5909347bb16789b02fcb0cd32e0017a5ed0bbd778a892e241c19370d3a01fb590d94c30c2f3ef2df7fd6c1d3de0263a34b3fd611b307cc7bc3264910c2370189f1ab375d42af88ddaee8a3ed132d3a4c1361af57154d56a89a0be974c06e88cf65212da01f4663261da062d2fe062b01e9d0f35cb048d58e2205b80129b2aad0c81ef21d5ae45fd8b318b6e2c802cb0662fbaa046b3a6d3eee5badc56916c2fbff8c3784b0895c969e3cd242e5217ffd40454cad9215101b384f86559fdb1bb83497d60e1033486c852c8fd583","calls":[{"from":"0x68ddbe6638d7514a9ed0b9b2980b65970e532cdb","gas":"0x40a22","gasUsed":"0x90","to":"0x0000000000000000000000000000000000000002","input":"0xe76cc099094d484e67cd7b777d22a93afc2920ccbc26b56bbd4fa7c91c97a0e0fea120b7d26eba75daa2cc3035b5edcc2b5c6630ab07cc71710e24d280bcd070abf25eb01b99788c985c9cd3ede196a5e958667200000000001b11e50000000000001068000000000000000897b2f0666edfff8c6eb8315c0161db5a10ae11342ba7f34da46d581bcb70e3760db4014d73587d6ef5f9dfabdc9a14ebafddeee91f6da5fba029f9f84bfd1631000000000000000000000000000000000000000000000000000000000000000000000000001b11e9","output":"0x3efdc2c0e445e818847f1c26ecadff97a4d3925e28727bb968b728259ce9bb27","type":"STATICCALL"},{"from":"0x68ddbe6638d7514a9ed0b9b2980b65970e532cdb","gas":"0x3fc90","gasUsed":"0x28c08","to":"0x65f25ced51cfde249f307cf6fc60a9988d249a69","input":"0x9121da8a2df047ac570cad92ed2826eff6a2ccd87e4dfce8ff474631f15f04a1e646ed090c25b53181477369f5371991cc334febb1a3f331fce84e53c269359c14c5a68222b1ae66ff60e762406c77a8af919bb72a3febce6331637d2e5d456f63a274940299b856937ee9d7ca42140564aea40de1b162740896f8733d55c8dfb6466bc40e4f333afbd4e4232ac2086f66d3e9459d84d3935df5f9f4bdd7a3bcb257fc620d8fd4affa1978906950ba78a100bcdb347617eb891d559accc239e058412aee0faa3bffff2ed911a9c6268890168ee620588c968c1f95d65db5f87901e4e706114137daed48c6783c879cf8ea68b82e56cf574e7d514c3816d7d327b1ebf1662a09abcd6ce09923731f3d630ce9739df49f59816ed7a5ddd4229e9bf06e3d6418557d9ecd0075c8ddc58581828e63d17540bba3f8d7fd48e9beeaaeb3b8db860f775e8a8840ea9043c165885a417c0d867a9ea01b249372dc7011c25f3cfaaa23472c3aaf4c5ff8c3bd74e82957e47ef403b94c0a940dc1ead45c97b675740c04e4d43f25d35e40986e8d5bf64d350ac75b8fcc4be56d178b2bb0f1a03a28952deea19a2f70a854a2feb0741e5b7316c38e13a20c501eb333a1ca947daec1c110e9bffa78b3b1d8b7ca454ad8101730196eca983641c35613b581e08c8d9ad90b61fa7e109edd3320a0e4a890fbe0c9db220f84d9cc146e8be89640d2a3e4930b2cc5241aed152b66c50a194f2bc114111f330b33434df167d4440e14cb7292097bc1ae33c486a880b2a6218bb8b77cb9f3da5909347bb16789b02fcb0cd32e0017a5ed0bbd778a892e241c19370d3a01fb590d94c30c2f3ef2df7fd6c1d3de0263a34b3fd611b307cc7bc3264910c2370189f1ab375d42af88ddaee8a3ed132d3a4c1361af57154d56a89a0be974c06e88cf65212da01f4663261da062d2fe062b01e9d0f35cb048d58e2205b80129b2aad0c81ef21d5ae45fd8b318b6e2c802cb0662fbaa046b3a6d3eee5badc56916c2fbff8c3784b0895c969e3cd242e5217ffd40454cad9215101b384f86559fdb1bb83497d60e1033486c852c8fd5830e99744e031447eecc2ed6706b2ca73a7c9faa15aeb90b2824d53291ace9bb26","output":"0x0000000000000000000000000000000000000000000000000000000000000001","calls":[{"from":"0x65f25ced51cfde249f307cf6fc60a9988d249a69","gas":"0x3a0d2","gasUsed":"0x1770","to":"0x0000000000000000000000000000000000000007","input":"0x2df047ac570cad92ed2826eff6a2ccd87e4dfce8ff474631f15f04a1e646ed090c25b53181477369f5371991cc334febb1a3f331fce84e53c269359c14c5a6821c904f3c4fc85ecb8a78ba5ee805dd9578c50e665c434c754ca7b9bd285c7052","output":"0x2b167c2c8636a0cd6a380d4a57e758286788fb7a6ca36a87a45197fbadc7579324daed6e561a42ec718a7071181e4efcacd1aef9721ff59d938efb0cabd30871","type":"STATICCALL"},{"from":"0x65f25ced51cfde249f307cf6fc60a9988d249a69","gas":"0x38908","gasUsed":"0x96","to":"0x0000000000000000000000000000000000000006","input":"0x2b167c2c8636a0cd6a380d4a57e758286788fb7a6ca36a87a45197fbadc7579324daed6e561a42ec718a7071181e4efcacd1aef9721ff59d938efb0cabd308712ec8834f535d441c0fba27f2e1a4f25f2b0e2eced5ac224b4c6810bc386dbacb21854418fcd10614b00b220f3ebe61a0a5c8f3b0b499de2686743f9a8aaa3859","output":"0x12fec4f5a6de39ab00e0cd4d896086e67597fdbf53d01a5674b719e44cd9621718b5e645da3bf34937060db7ce2f75a4c994515c94ffc335b33ad39fb40d9feb","type":"STATICCALL"},{"from":"0x65f25ced51cfde249f307cf6fc60a9988d249a69","gas":"0x3877a","gasUsed":"0x1770","to":"0x0000000000000000000000000000000000000007","input":"0x22b1ae66ff60e762406c77a8af919bb72a3febce6331637d2e5d456f63a274940299b856937ee9d7ca42140564aea40de1b162740896f8733d55c8dfb6466bc4162a44d5d25a17ee89a7a236576974023dc9104fac0fd2f2d5f6b22b4ab3411a","output":"0x03516b3d9e50d24b7a8f7f4c2137546158571143804953af308b7a9390a6a3e52ac01678634c18170de22e3430d179b08be2a3331236d4fa36f031587d69d3d4","type":"STATICCALL"},{"from":"0x65f25ced51cfde249f307cf6fc60a9988d249a69","gas":"0x36fb0","gasUsed":"0x96","to":"0x0000000000000000000000000000000000000006","input":"0x03516b3d9e50d24b7a8f7f4c2137546158571143804953af308b7a9390a6a3e52ac01678634c18170de22e3430d179b08be2a3331236d4fa36f031587d69d3d412fec4f5a6de39ab00e0cd4d896086e67597fdbf53d01a5674b719e44cd9621718b5e645da3bf34937060db7ce2f75a4c994515c94ffc335b33ad39fb40d9feb","output":"0x2bbf986264de4c478ca3d9687ecf82a9066f055444a09ff9a55d863b9c845f92020f791c603d628e8bee670d3675208a461cc733b0884b40ec426c3e63d6542c","type":"STATICCALL"},{"from":"0x65f25ced51cfde249f307cf6fc60a9988d249a69","gas":"0x36dd9","gasUsed":"0x1770","to":"0x0000000000000000000000000000000000000007","input":"0x000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000021e24b1285cd3b466a1c0801a674500469f18d91b00ebe15d45359118d516d997","output":"0x20f9c9e5c5334eab858634b566e06bb140461dcaae228df7c10374c7f44e69a3164aab703cbe257544b01fe6db5f7d7b1397a45705a52ca69dc44dba44a9ebbb","type":"STATICCALL"},{"from":"0x65f25ced51cfde249f307cf6fc60a9988d249a69","gas":"0x3560f","gasUsed":"0x96","to":"0x0000000000000000000000000000000000000006","input":"0x20f9c9e5c5334eab858634b566e06bb140461dcaae228df7c10374c7f44e69a3164aab703cbe257544b01fe6db5f7d7b1397a45705a52ca69dc44dba44a9ebbb00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000","output":"0x20f9c9e5c5334eab858634b566e06bb140461dcaae228df7c10374c7f44e69a3164aab703cbe257544b01fe6db5f7d7b1397a45705a52ca69dc44dba44a9ebbb","type":"STATICCALL"},{"from":"0x65f25ced51cfde249f307cf6fc60a9988d249a69","gas":"0x3547d","gasUsed":"0x1770","to":"0x0000000000000000000000000000000000000007","input":"0x0e4f333afbd4e4232ac2086f66d3e9459d84d3935df5f9f4bdd7a3bcb257fc620d8fd4affa1978906950ba78a100bcdb347617eb891d559accc239e058412aee174542f44c4200565660bf818d7b291aea5b771728f6232014c41dd5c80d641b","output":"0x0cc937357af111b7afbab886c9ce5d89f17ad76ef9df5a0cc9bad6507aa9163110e6f2e54906cb15a5d27ce7218c91a9b7edf89a9980c34109ad6f960ffca89e","type":"STATICCALL"},{"from":"0x65f25ced51cfde249f307cf6fc60a9988d249a69","gas":"0x33cb3","gasUsed":"0x96","to":"0x0000000000000000000000000000000000000006","input":"0x0cc937357af111b7afbab886c9ce5d89f17ad76ef9df5a0cc9bad6507aa9163110e6f2e54906cb15a5d27ce7218c91a9b7edf89a9980c34109ad6f960ffca89e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000","output":"0x0cc937357af111b7afbab886c9ce5d89f17ad76ef9df5a0cc9bad6507aa9163110e6f2e54906cb15a5d27ce7218c91a9b7edf89a9980c34109ad6f960ffca89e","type":"STATICCALL"},{"from":"0x65f25ced51cfde249f307cf6fc60a9988d249a69","gas":"0x33a88","gasUsed":"0x96","to":"0x0000000000000000000000000000000000000006","input":"0x2bbf986264de4c478ca3d9687ecf82a9066f055444a09ff9a55d863b9c845f92020f791c603d628e8bee670d3675208a461cc733b0884b40ec426c3e63d6542c20f9c9e5c5334eab858634b566e06bb140461dcaae228df7c10374c7f44e69a31a19a302a4737ab473a025cfa621dae283e9c63a62cc9de69e5c3e5c93d3118c","output":"0x08c7a19c5366bbb84b9053a26d777120857060b07ac6c65a5e7efae391e44c9119f268fa0bd1975d4776e4bfb44c1528dc59d67b9925ddd68b50d91f4701a796","type":"STATICCALL"},{"from":"0x65f25ced51cfde249f307cf6fc60a9988d249a69","gas":"0x338e4","gasUsed":"0x96","to":"0x0000000000000000000000000000000000000006","input":"0x08c7a19c5366bbb84b9053a26d777120857060b07ac6c65a5e7efae391e44c9119f268fa0bd1975d4776e4bfb44c1528dc59d67b9925ddd68b50d91f4701a7960cc937357af111b7afbab886c9ce5d89f17ad76ef9df5a0cc9bad6507aa916311f7d5b8d982ad514127dc8cf5ff4c6b3df9371f6cef1074c32731c80c88054a9","output":"0x0ee2a1a8ef014bff7d458593d857a873134d5d0f5b5816ce34aa0d62c0cebae01b11f2b3a64ad32756fbb75559156ca5f0ce43ef113a30f633a835a3592d5409","type":"STATICCALL"},{"from":"0x65f25ced51cfde249f307cf6fc60a9988d249a69","gas":"0x33751","gasUsed":"0x1770","to":"0x0000000000000000000000000000000000000007","input":"0x0faa3bffff2ed911a9c6268890168ee620588c968c1f95d65db5f87901e4e706114137daed48c6783c879cf8ea68b82e56cf574e7d514c3816d7d327b1ebf1660baf3d7d7d58a729de2e4d760d723182b3dd68a06593b04b65bee42a41b16169","output":"0x0ebad13cfb32d7aea9d4a528f81eb1946ea1c8779563c73482870de66def14872a0c894a7340cb8fedd604f181cd33d977ad0f7266687e72e09132d91f1bcd9f","type":"STATICCALL"},{"from":"0x65f25ced51cfde249f307cf6fc60a9988d249a69","gas":"0x31f87","gasUsed":"0x96","to":"0x0000000000000000000000000000000000000006","input":"0x0ebad13cfb32d7aea9d4a528f81eb1946ea1c8779563c73482870de66def14872a0c894a7340cb8fedd604f181cd33d977ad0f7266687e72e09132d91f1bcd9f0ee2a1a8ef014bff7d458593d857a873134d5d0f5b5816ce34aa0d62c0cebae01b11f2b3a64ad32756fbb75559156ca5f0ce43ef113a30f633a835a3592d5409","output":"0x1bea6012cefcc6e0d1fe8d7fc70cd47c02cc24bc16589021103752aa37cabb8f1a7af5a435ddd66e27efe994e49ed82eba9d2ba72c29f1d7b08f79b3f4c77c12","type":"STATICCALL"},{"from":"0x65f25ced51cfde249f307cf6fc60a9988d249a69","gas":"0x31d78","gasUsed":"0x1b968","to":"0x0000000000000000000000000000000000000008","input":"0x1bea6012cefcc6e0d1fe8d7fc70cd47c02cc24bc16589021103752aa37cabb8f1a7af5a435ddd66e27efe994e49ed82eba9d2ba72c29f1d7b08f79b3f4c77c12198e9393920d483a7260bfb731fb5d25f1aa493335a9e71297e485b7aef312c21800deef121f1e76426a00665e5c4479674322d4f75edadd46debd5cd992f6ed090689d0585ff075ec9e99ad690c3395bc4b313370b38ef355acdadcd122975b12c85ea5db8c6deb4aab71808dcb408fe3d1e7690c43d37b4ce6cc0166fa7daa0faa3bffff2ed911a9c6268890168ee620588c968c1f95d65db5f87901e4e7061f231697f3e8d9b17bc8a8bd9718a02f40b21342eb207e552548b8ef26910be126186a2d65ee4d2f9c9a5b91f86597d35f192cd120caf7e935d8443d1938e23d30441fd1b5d3370482c42152a8899027716989a6996c2535bc9f7fee8aaef79e1970ea81dd6992adfbc571effb03503adbbb6a857f578403c6c40e22d65b3c02054793348f12c0cf5622c340573cb277586319de359ab9389778f689786b1e48","output":"0x0000000000000000000000000000000000000000000000000000000000000001","type":"STATICCALL"}],"type":"STATICCALL"},{"from":"0x68ddbe6638d7514a9ed0b9b2980b65970e532cdb","gas":"0x16ee6","gasUsed":"0x9f6","to":"0x9e2bc6eb2c9396ccbcc66353da011b67a0ff4604","input":"0x70a0823100000000000000000000000068ddbe6638d7514a9ed0b9b2980b65970e532cdb","output":"0x00000000000000000000000000000000000000000000000024150e3980040000","type":"STATICCALL"},{"from":"0x68ddbe6638d7514a9ed0b9b2980b65970e532cdb","gas":"0x15775","gasUsed":"0x29ac","to":"0x9e2bc6eb2c9396ccbcc66353da011b67a0ff4604","input":"0xa9059cbb000000000000000000000000e76cc099094d484e67cd7b777d22a93afc2920cc000000000000000000000000000000000000000000000000058d15e176280000","output":"0x0000000000000000000000000000000000000000000000000000000000000001","value":"0x0","type":"CALL"},{"from":"0x68ddbe6638d7514a9ed0b9b2980b65970e532cdb","gas":"0x112e6","gasUsed":"0x1cca","to":"0xbf4b031eb29fc34e2bcb4327f9304bed3600cc46","input":"0x32c2d15300000000000000000000000000000000000000000000000000000000001b11e997b2f0666edfff8c6eb8315c0161db5a10ae11342ba7f34da46d581bcb70e376000000000000000000000000e76cc099094d484e67cd7b777d22a93afc2920cc","calls":[{"from":"0xbf4b031eb29fc34e2bcb4327f9304bed3600cc46","gas":"0xfb90","gasUsed":"0x94c","to":"0xadf353f347fde77ed9e09cfdb8384e59608c728f","input":"0x32c2d15300000000000000000000000000000000000000000000000000000000001b11e997b2f0666edfff8c6eb8315c0161db5a10ae11342ba7f34da46d581bcb70e376000000000000000000000000e76cc099094d484e67cd7b777d22a93afc2920cc","value":"0x0","type":"DELEGATECALL"}],"value":"0x0","type":"CALL"},{"from":"0x68ddbe6638d7514a9ed0b9b2980b65970e532cdb","gas":"0x40c1","gasUsed":"0x3831","to":"0x8b97bf5c42739c375a2db080813e9b4c9a4a2c9a","input":"0x33d6247d27ae5ba08d7291c96c8cbddcc148bf48a6d68c7974b94356f53754ef6171d757","calls":[{"from":"0x8b97bf5c42739c375a2db080813e9b4c9a4a2c9a","gas":"0x23c2","gasUsed":"0x1b9d","to":"0x90cfd57322297f52bb6340f39ec2ec3fbefc470c","input":"0x33d6247d27ae5ba08d7291c96c8cbddcc148bf48a6d68c7974b94356f53754ef6171d757","value":"0x0","type":"DELEGATECALL"}],"value":"0x0","type":"CALL"}],"value":"0x0","type":"DELEGATECALL"}],"value":"0x0","type":"CALL"}}
+func TestVerifyMainnetForkID5(t *testing.T) {
+	cfg := etherman.Config{
+		URL: "http://18.142.49.94:8545",
+	}
+
+	l1Config := etherman.L1Config{
+		L1ChainID:                 202401,
+		ZkEVMAddr:                 common.HexToAddress("0xBf4B031eb29fc34E2bCb4327F9304BED3600cc46"),
+		RollupManagerAddr:         common.HexToAddress("0x68DdbE6638d7514a9Ed0B9B2980B65970e532cdB"),
+		PolAddr:                   common.HexToAddress("0x9e2bC6EB2c9396ccbCC66353da011b67A0ff4604"),
+		GlobalExitRootManagerAddr: common.HexToAddress("0x8b97BF5C42739C375a2db080813E9b4C9A4a2c9A"),
+	}
+
+	ethermanClient, err := etherman.NewClient(cfg, l1Config, nil)
+	require.NoError(t, err)
+	conf := Config{
+		VerifyZkProofConfigs: []*VerifyZkProofConfig{{
+			ForkID:            state.FORKID_DRAGONFRUIT,
+			VerifierAddr:      common.HexToAddress("0x7d72cc8E89B187a93581ee44FB1884b498989A40"), //旧的 0x7d72cc8E89B187a93581ee44FB1884b498989A40  //新的 0x65f25cED51CfDe249f307Cf6fC60A9988D249A69
+			TrustedAggregator: common.HexToAddress("0xe76cc099094d484e67cd7b777d22a93afc2920cc"), //
+		}},
+	}
+	mpoints := NewMerlinEndpoints(conf, nil, ethermanClient)
+	client := client.NewClient("https://rpc.merlinchain.io")
+
+	//blockHash := common.HexToHash("0x756bd43b6d85f5fae4008cd92f7fa9198a6e6ec6b0979e7db1f323de60d522b3") //00
+	blockHash := common.HexToHash("0xaa21a9814bd65c8a129e5f328e11a43ac3b7e55e38fda9d4a41f6549f6d689bc") //01
+	//blockHash := common.HexToHash("0xdc6ba51440d94d69c8a4184b1a353e8bc302e6bcb0f2a4e30883b7ecd7393cc1")
+	txindex := uint(0)
+	chainID, err := mpoints.etherman.GetL2ChainID()
+	require.NoError(t, err)
+	ret := newRemoteTest(mpoints, client, blockHash, txindex, chainID, state.FORKID_DRAGONFRUIT)
+	mpoints.setRemote(ret)
+
+	zkp, err := mpoints.getZkProof(blockHash, state.FORKID_DRAGONFRUIT)
+	require.NoError(t, err)
+
+	print, _ := json.MarshalIndent(zkp, "", "    ")
+	fmt.Println(string(print))
+
+	isv, err := mpoints.VerifyProof(*zkp)
+	require.NoError(t, err)
+	require.Equal(t, true, isv)
+}
+
+func TestVerifyGetInputSnarkBytes(t *testing.T) {
+	type testcase struct {
+		input  *InputSnark
+		result string
+	}
+	testcases := []*testcase{
+		//{
+		//	input: &InputSnark{
+		//		Sender:           common.HexToAddress("0xe76cc099094d484e67cd7b777d22a93afc2920cc"),
+		//		OldStateRoot:     common.HexToHash("0xbc26b56bbd4fa7c91c97a0e0fea120b7d26eba75daa2cc3035b5edcc2b5c6630"),
+		//		OldAccInputHash:  common.HexToHash("0xab07cc71710e24d280bcd070abf25eb01b99788c985c9cd3ede196a5e9586672"),
+		//		InitNumBatch:     10,
+		//		ChainId:          1001,
+		//		ForkID:           8,
+		//		NewStateRoot:     common.HexToHash("0x97b2f0666edfff8c6eb8315c0161db5a10ae11342ba7f34da46d581bcb70e376"),
+		//		NewAccInputHash:  common.HexToHash("0x0db4014d73587d6ef5f9dfabdc9a14ebafddeee91f6da5fba029f9f84bfd1631"),
+		//		NewLocalExitRoot: common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000000"),
+		//		FinalNewBatch:    15,
+		//	},
+		//	result: "0x000000000000000000000000e76cc099094d484e67cd7b777d22a93afc2920ccbc26b56bbd4fa7c91c97a0e0fea120b7d26eba75daa2cc3035b5edcc2b5c6630ab07cc71710e24d280bcd070abf25eb01b99788c985c9cd3ede196a5e9586672000000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000003e9000000000000000000000000000000000000000000000000000000000000000897b2f0666edfff8c6eb8315c0161db5a10ae11342ba7f34da46d581bcb70e3760db4014d73587d6ef5f9dfabdc9a14ebafddeee91f6da5fba029f9f84bfd16310000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000f",
+		//},
+		{
+			input: &InputSnark{
+				Sender:           common.HexToAddress("0xe76cc099094d484e67cd7b777d22a93afc2920cc"),
+				OldStateRoot:     common.HexToHash("0xbc26b56bbd4fa7c91c97a0e0fea120b7d26eba75daa2cc3035b5edcc2b5c6630"),
+				OldAccInputHash:  common.HexToHash("0xab07cc71710e24d280bcd070abf25eb01b99788c985c9cd3ede196a5e9586672"),
+				InitNumBatch:     1774053,
+				ChainId:          4200,
+				ForkID:           8,
+				NewStateRoot:     common.HexToHash("0x97b2f0666edfff8c6eb8315c0161db5a10ae11342ba7f34da46d581bcb70e376"),
+				NewAccInputHash:  common.HexToHash("0x0db4014d73587d6ef5f9dfabdc9a14ebafddeee91f6da5fba029f9f84bfd1631"),
+				NewLocalExitRoot: common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000000"),
+				FinalNewBatch:    1774057,
+			},
+			result: "0xe76cc099094d484e67cd7b777d22a93afc2920ccbc26b56bbd4fa7c91c97a0e0fea120b7d26eba75daa2cc3035b5edcc2b5c6630ab07cc71710e24d280bcd070abf25eb01b99788c985c9cd3ede196a5e958667200000000001b11e50000000000001068000000000000000897b2f0666edfff8c6eb8315c0161db5a10ae11342ba7f34da46d581bcb70e3760db4014d73587d6ef5f9dfabdc9a14ebafddeee91f6da5fba029f9f84bfd1631000000000000000000000000000000000000000000000000000000000000000000000000001b11e9",
+		},
+	}
+
+	for _, tc := range testcases {
+		snark, err := getInputSnarkBytes(tc.input)
+		require.NoError(t, err)
+		fmt.Println("snark", len(hex.EncodeToString(snark)), len(tc.result), hex.EncodeToString(snark))
+		require.Equal(t, tc.result, hex.EncodeToHex(snark))
+	}
+}
