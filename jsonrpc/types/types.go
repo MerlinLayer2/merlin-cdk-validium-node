@@ -776,7 +776,9 @@ func NewZKCountersResponse(zkCounters state.ZKCounters, limits ZKCountersLimits,
 
 // ZKProof  zk proof
 type ZKProof struct {
-	ForkID     uint64          `json:"forkID"`
-	Proof      [24]common.Hash `json:"proof"`
-	PubSignals [1]*big.Int     `json:"PubSignals"`
+	ForkID        uint64          `json:"forkID"`
+	Proof         [24]common.Hash `json:"proof"`
+	PubSignals    [1]*big.Int     `json:"pubSignals"`
+	StartBlockNum uint64          `json:"startBlockNum"`
+	EndBlockNum   uint64          `json:"endBlockNum"`
 }

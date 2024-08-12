@@ -79,6 +79,32 @@ func (r *remote) getVerifyBatchesParam(blockHash common.Hash, forkID uint64) (*v
 	return parseVerifyBatchesTrustedAggregatorInput(r.rollupABIs[state.FORKID_ELDERBERRY], tx.Data())
 }
 
+func (r *remote) getVerifyBlockNumRange(startBatch, endBatch uint64) (interface{}, types.Error) {
+	oldBatch, err := r.rclient.BatchByNumber(context.Background(), big.NewInt(0).SetUint64(startBatch))
+	if err != nil && !errors.Is(err, state.ErrNotFound) {
+		return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("couldn't load verify batch from state by number %v", startBatch), err, true)
+	}
+	statBlkNum := uint64(0)
+	endBlkNum := uint64(0)
+	if len(oldBatch.Blocks) != 0 {
+		statBlkNum = uint64(oldBatch.Blocks[0].Block.Number)
+		endBlkNum = uint64(oldBatch.Blocks[len(oldBatch.Blocks)-1].Block.Number)
+	}
+	if startBatch != endBatch {
+		newBatch, err := r.rclient.BatchByNumber(context.Background(), big.NewInt(0).SetUint64(endBatch))
+		if err != nil && !errors.Is(err, state.ErrNotFound) {
+			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("couldn't load verify batch from state by number %v", endBatch), err, true)
+		}
+		if len(newBatch.Blocks) != 0 {
+			endBlkNum = uint64(newBatch.Blocks[len(newBatch.Blocks)-1].Block.Number)
+		}
+	}
+	return blockRange{
+		start: statBlkNum,
+		end:   endBlkNum,
+	}, nil
+}
+
 func TestVerifyTestnet(t *testing.T) {
 	cfg := etherman.Config{
 		URL: "http://103.231.86.44:7545",
@@ -104,7 +130,7 @@ func TestVerifyTestnet(t *testing.T) {
 	}
 	mpoints := NewMerlinEndpoints(conf, nil, ethermanClient)
 	txHash := common.HexToHash("0x980343c480c0653eb0ce0b9c0787cd0bac6c64ec73300c0c87ecb0693d66d46b")
-	zkp, err := mpoints.getZkProof(txHash, state.FORKID_ELDERBERRY)
+	zkp, err := mpoints.getZkProofMeta(txHash, state.FORKID_ELDERBERRY)
 	require.NoError(t, err)
 
 	RollupData, err := mpoints.etherman.RollupManager.RollupIDToRollupData(&bind.CallOpts{Pending: false}, 1)
@@ -114,15 +140,15 @@ func TestVerifyTestnet(t *testing.T) {
 	mver, err := mockverifier.NewMockverifier(conf.VerifyZkProofConfigs[0].VerifierAddr, ethermanClient.OriEthClient)
 	require.NoError(t, err)
 
-	isv, err := mpoints.VerifyZkProof(*zkp)
+	isv, err := mpoints.VerifyZkProof(zkp.forkID, zkp.proof, zkp.pubSignals)
 	require.NoError(t, err)
 	require.Equal(t, true, isv)
 
 	var pproofs [24][32]byte
-	for i := range zkp.Proof {
-		pproofs[i] = zkp.Proof[i]
+	for i := range zkp.proof {
+		pproofs[i] = zkp.proof[i]
 	}
-	isv, err = mver.VerifyProof(&bind.CallOpts{Pending: true}, pproofs, zkp.PubSignals)
+	isv, err = mver.VerifyProof(&bind.CallOpts{Pending: true}, pproofs, zkp.pubSignals)
 	require.NoError(t, err)
 	require.Equal(t, true, isv)
 }
@@ -152,17 +178,17 @@ func TestVerifyMainnet(t *testing.T) {
 	}
 	mpoints := NewMerlinEndpoints(conf, nil, ethermanClient)
 	txHash := common.HexToHash("0xa20870c72bf925d832b6da488aa5242af8d1fb9223c0e87b8c345ebc2bb944b8")
-	zkp, err := mpoints.getZkProof(txHash, state.FORKID_ELDERBERRY)
+	zkp, err := mpoints.getZkProofMeta(txHash, state.FORKID_ELDERBERRY)
 	require.NoError(t, err)
 
-	print, _ := json.MarshalIndent(zkp, "", "    ")
+	print, _ := json.MarshalIndent(*zkp, "", "    ")
 	fmt.Println(string(print))
 
 	RollupData, err := mpoints.etherman.RollupManager.RollupIDToRollupData(&bind.CallOpts{Pending: false}, 1)
 	require.NoError(t, err)
 	fmt.Println("VerifierAddr", RollupData.Verifier.String(), "forkid", RollupData.ForkID)
 
-	isv, err := mpoints.VerifyZkProof(*zkp)
+	isv, err := mpoints.VerifyZkProof(zkp.forkID, zkp.proof, zkp.pubSignals)
 	require.NoError(t, err)
 	require.Equal(t, true, isv)
 
@@ -170,10 +196,10 @@ func TestVerifyMainnet(t *testing.T) {
 	require.NoError(t, err)
 
 	var pproofs [24][32]byte
-	for i := range zkp.Proof {
-		pproofs[i] = zkp.Proof[i]
+	for i := range zkp.proof {
+		pproofs[i] = zkp.proof[i]
 	}
-	isv, err = mver.VerifyProof(&bind.CallOpts{Pending: true}, pproofs, zkp.PubSignals)
+	isv, err = mver.VerifyProof(&bind.CallOpts{Pending: true}, pproofs, zkp.pubSignals)
 	require.NoError(t, err)
 	require.Equal(t, true, isv)
 }
@@ -212,13 +238,18 @@ func TestVerifyMainnetForkID5(t *testing.T) {
 	ret := newRemoteTest(mpoints, client, blockHash, txindex, chainID, state.FORKID_DRAGONFRUIT)
 	mpoints.setRemote(ret)
 
-	zkp, err := mpoints.getZkProof(blockHash, state.FORKID_DRAGONFRUIT)
+	zkm, err := mpoints.getZkProofMeta(blockHash, state.FORKID_DRAGONFRUIT)
 	require.NoError(t, err)
 
-	print, _ := json.MarshalIndent(zkp, "", "    ")
+	blr, errd := ret.getVerifyBlockNumRange(zkm.initNumBatch+1, zkm.finalNewBatch)
+	require.NoError(t, errd)
+	require.NotNil(t, blr)
+	fmt.Println("start block", blr.(blockRange).start, "end block", blr.(blockRange).end)
+
+	print, _ := json.MarshalIndent(*zkm, "", "    ")
 	fmt.Println(string(print))
 
-	isv, err := mpoints.VerifyZkProof(*zkp)
+	isv, err := mpoints.VerifyZkProof(zkm.forkID, zkm.proof, zkm.pubSignals)
 	require.NoError(t, err)
 	require.Equal(t, true, isv)
 }

@@ -89,31 +89,69 @@ func NewMerlinEndpoints(cfg Config, statei types.StateInterface, etherman *ether
 }
 
 // GetZkProof returns current zk proof
-func (m *MerlinEndpoints) GetZkProof(blockNumber types.ArgUint64) (interface{}, types.Error) {
+func (m *MerlinEndpoints) GetZkProof(number types.BlockNumber) (interface{}, types.Error) {
 	return m.txMan.NewDbTxScope(m.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {
 		if _, err := checkMerlinZkProofConfig(&m.cfg); err != nil {
 			return nil, err
 		}
-		batchNum, err := m.state.BatchNumberByL2BlockNumber(ctx, uint64(blockNumber), dbTx)
-		if err != nil {
-			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("failed to get batch number from block number %v, %v", blockNumber, err.Error()), nil, true)
+
+		numeric, rpcErr := number.GetNumericBlockNumber(ctx, m.state, m.etherman, dbTx)
+		if rpcErr != nil {
+			return nil, rpcErr
+		}
+		if number == 0 || numeric == 0 {
+			return RPCErrorResponse(types.DefaultErrorCode, "the block number = 0 or earliest, not have verify proof, should block number > 0", nil, true)
+		}
+
+		var batchNum uint64
+		var err error
+		if number > 0 {
+			batchNum, err = m.state.BatchNumberByL2BlockNumber(ctx, uint64(number), dbTx)
+			if err != nil {
+				return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("failed to get batch number from block number %v, %v", number, err.Error()), nil, true)
+			}
+		} else {
+			//get latest verify batch
+			lastBatch, err := m.state.GetLastVerifiedBatch(ctx, dbTx)
+			if err != nil {
+				return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("failed to get the last verified batch from state %v", err.Error()), nil, true)
+			}
+			batchNum = lastBatch.BatchNumber
 		}
 
 		verifiedBatch, err := m.state.GetVerifiedBatch(ctx, batchNum, dbTx)
 		if err != nil {
-			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("failed to load verified batch from state by block number %v, %v", blockNumber, err.Error()), nil, true)
+			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("failed to load verified batch from state by batch number %v, %v", batchNum, err.Error()), nil, true)
 		}
 
 		forkID := m.state.GetForkIDByBatchNumber(batchNum)
-		zkp, err := m.getZkProof(verifiedBatch.TxHash, forkID)
+		zkm, err := m.getZkProofMeta(verifiedBatch.TxHash, forkID)
 		if err != nil {
-			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("failed to get zk prrof by block number %v, %v", blockNumber, err.Error()), nil, true)
+			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("failed to get zk prrof by batch number %v, %v", batchNum, err.Error()), nil, true)
 		}
-		return *zkp, nil
+		blks, errd := m.getVerifyBlockNumRange(zkm.initNumBatch+1, zkm.finalNewBatch)
+		if err != nil {
+			return nil, errd
+		}
+		return types.ZKProof{
+			ForkID:        zkm.forkID,
+			Proof:         zkm.proof,
+			PubSignals:    zkm.pubSignals,
+			StartBlockNum: blks.(blockRange).start,
+			EndBlockNum:   blks.(blockRange).end,
+		}, nil
 	})
 }
 
-func (m *MerlinEndpoints) getZkProof(txHash common.Hash, forkID uint64) (*types.ZKProof, error) {
+type zkProofMeta struct {
+	forkID        uint64
+	proof         [24]common.Hash
+	pubSignals    [1]*big.Int
+	initNumBatch  uint64
+	finalNewBatch uint64
+}
+
+func (m *MerlinEndpoints) getZkProofMeta(txHash common.Hash, forkID uint64) (*zkProofMeta, error) {
 	vbp, err := m.getVerifyBatchesParam(txHash, forkID)
 	if err != nil {
 		return nil, fmt.Errorf("failed getVerifyBatchesParam %v", err)
@@ -126,11 +164,46 @@ func (m *MerlinEndpoints) getZkProof(txHash common.Hash, forkID uint64) (*types.
 	for i := range vbp.proof {
 		pproofs[i] = vbp.proof[i]
 	}
-	return &types.ZKProof{
-		ForkID:     forkID,
-		Proof:      pproofs,
-		PubSignals: [1]*big.Int{signal},
+	return &zkProofMeta{
+		forkID:        forkID,
+		proof:         pproofs,
+		pubSignals:    [1]*big.Int{signal},
+		initNumBatch:  vbp.initNumBatch,
+		finalNewBatch: vbp.finalNewBatch,
 	}, nil
+}
+
+type blockRange struct {
+	start uint64
+	end   uint64
+}
+
+func (m *MerlinEndpoints) getVerifyBlockNumRange(startBatch, endBatch uint64) (interface{}, types.Error) {
+	return m.txMan.NewDbTxScope(m.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {
+		startBlock, err := m.state.GetL2BlocksByBatchNumber(ctx, startBatch, dbTx)
+		if err != nil {
+			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("failed to get L2 blocks by batch number %v, %v", startBatch, err.Error()), nil, true)
+		}
+		statBlkNum := uint64(0)
+		endBlkNum := uint64(0)
+		if len(startBlock) != 0 {
+			statBlkNum = startBlock[0].Number().Uint64()
+			endBlkNum = startBlock[len(startBlock)-1].Number().Uint64()
+		}
+		if startBatch != endBatch {
+			endBlock, err := m.state.GetL2BlocksByBatchNumber(ctx, endBatch, dbTx)
+			if err != nil {
+				return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("failed to get L2 blocks by batch number %v, %v", endBatch, err.Error()), nil, true)
+			}
+			if len(endBlock) != 0 {
+				endBlkNum = endBlock[len(endBlock)-1].Number().Uint64()
+			}
+		}
+		return blockRange{
+			start: statBlkNum,
+			end:   endBlkNum,
+		}, nil
+	})
 }
 
 func (m *MerlinEndpoints) getVerifyBatchesParam(txHash common.Hash, forkID uint64) (*verifyBatchesTrustedAggregatorParam, error) {
@@ -270,12 +343,11 @@ func (m *MerlinEndpoints) getOldSnarkParamFromDB(param *verifyBatchesTrustedAggr
 }
 
 // VerifyZkProof verify zk proof
-func (m *MerlinEndpoints) VerifyZkProof(zkp types.ZKProof) (interface{}, types.Error) {
+func (m *MerlinEndpoints) VerifyZkProof(forkID uint64, proofs [24]common.Hash, pubSignals [1]*big.Int) (interface{}, types.Error) {
 	if _, err := checkMerlinZkProofConfig(&m.cfg); err != nil {
 		return nil, err
 	}
-	forkID := zkp.ForkID
-	if zkp.ForkID < state.FORKID_ELDERBERRY {
+	if forkID < state.FORKID_ELDERBERRY {
 		forkID = state.FORKID_DRAGONFRUIT
 	}
 	verifer, ok := m.verifers[forkID]
@@ -284,10 +356,10 @@ func (m *MerlinEndpoints) VerifyZkProof(zkp types.ZKProof) (interface{}, types.E
 	}
 
 	var pproofs [24][32]byte
-	for i, p := range zkp.Proof {
+	for i, p := range proofs {
 		pproofs[i] = p
 	}
-	isv, err := verifer.VerifyProof(&bind.CallOpts{Pending: false}, pproofs, zkp.PubSignals)
+	isv, err := verifer.VerifyProof(&bind.CallOpts{Pending: false}, pproofs, pubSignals)
 	if err != nil {
 		return RPCErrorResponse(types.DefaultErrorCode, "failed to verify proof", err, true)
 	}
@@ -302,6 +374,7 @@ func (m *MerlinEndpoints) setRemote(rt RemoteT) {
 type RemoteT interface {
 	getOldSnarkParamFromRemote(param *verifyBatchesTrustedAggregatorParam, sender common.Address) (interface{}, error)
 	getVerifyBatchesParam(blockHash common.Hash, forkID uint64) (*verifyBatchesTrustedAggregatorParam, error)
+	getVerifyBlockNumRange(startBatch, endBatch uint64) (interface{}, types.Error)
 }
 
 func checkMerlinZkProofConfig(cfg *Config) (interface{}, types.Error) {
