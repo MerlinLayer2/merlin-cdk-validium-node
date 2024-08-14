@@ -112,7 +112,7 @@ func (p *Pool) AddReadStorageCli(rs storage) {
 	p.readStorage = rs
 }
 
-// refresGasPRices refreshes the gas price
+// refreshGasPrices refreshes the gas price
 func (p *Pool) refreshGasPrices() {
 	gasPrices, err := p.GetGasPrices(context.Background())
 	if err != nil {

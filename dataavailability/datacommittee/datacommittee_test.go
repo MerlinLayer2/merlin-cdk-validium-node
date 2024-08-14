@@ -83,7 +83,7 @@ func newTestingEnv(t *testing.T) (
 	return dac, ethBackend, auth, da
 }
 
-// NewSimulatedEtherman creates an etherman that uses a simulated blockchain. It's important to notice that the ChainID of the auth
+// newSimulatedDacman creates an etherman that uses a simulated blockchain. It's important to notice that the ChainID of the auth
 // must be 1337. The address that holds the auth will have an initial balance of 10 ETH
 func newSimulatedDacman(t *testing.T, auth *bind.TransactOpts) (
 	dacman *DataCommitteeBackend,

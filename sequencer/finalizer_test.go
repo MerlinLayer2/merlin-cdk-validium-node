@@ -941,7 +941,7 @@ func TestNewFinalizer(t *testing.T) {
 	}
 }*/
 
-// TestFinalizer_closeBatch tests the closeBatch method.
+// TestFinalizer_closeWIPBatch tests the closeBatch method.
 func TestFinalizer_closeWIPBatch(t *testing.T) {
 	// arrange
 	f = setupFinalizer(true)
