@@ -36,15 +36,24 @@ Outputs = ["stderr"]
 
 [Pool]
 IntervalToRefreshBlockedAddresses = "5m"
+IntervalToRefreshSpecialedAddresses = "5m"
 IntervalToRefreshGasPrices = "5s"
 MaxTxBytesSize=100132
 MaxTxDataBytesSize=100000
 DefaultMinGasPriceAllowed = 1000000000
+DefaultMaxGasPriceAllowed = 0
+DefaultMaxGasAllowed = 0
 MinAllowedGasPriceInterval = "5m"
 PollMinAllowedGasPriceInterval = "15s"
 AccountQueue = 64
+AccountQueueSpecialedMultiple = 10
 GlobalQueue = 1024
 TxFeeCap = 1.0
+EnableReadDB = false
+EnableSpecialPriorityGasPrice = false
+SpecialPriorityGasPriceMultiple = 10
+EnableToBlacklist = false
+ToBlacklistDisguiseErrors = false
     [Pool.EffectiveGasPrice]
 	Enabled = false
 	L1GasPriceFactor = 0.25
@@ -64,7 +73,14 @@ TxFeeCap = 1.0
 	Port = "5432"
 	EnableLog = false
 	MaxConns = 200
-
+	[Pool.ReadDB]
+	User = "pool_user"
+	Password = "pool_password"
+	Name = "pool_db"
+	Host = "zkevm-pool-db"
+	Port = "5432"
+	EnableLog = false
+	MaxConns = 200
 [Etherman]
 URL = "http://localhost:8545"
 ForkIDChunkSize = 20000
@@ -93,6 +109,7 @@ MaxLogsCount = 10000
 MaxLogsBlockRange = 10000
 MaxNativeBlockHashBlockRange = 60000
 EnableHttpLog = true
+PreCheckEnabled = true
 	[RPC.WebSockets]
 		Enabled = true
 		Host = "0.0.0.0"
@@ -102,6 +119,7 @@ EnableHttpLog = true
 [Synchronizer]
 SyncInterval = "1s"
 SyncChunkSize = 100
+SyncOnlyTrusted = false
 TrustedSequencerURL = "" # If it is empty or not specified, then the value is read from the smc
 SyncBlockProtection = "safe" # latest, finalized, safe
 L1SynchronizationMode = "sequential"
