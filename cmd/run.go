@@ -651,6 +651,14 @@ func createPool(cfgPool pool.Config, constraintsCfg state.BatchConstraintsCfg, l
 		log.Fatal(err)
 	}
 	poolInstance := pool.NewPool(cfgPool, constraintsCfg, poolStorage, st, l2ChainID, eventLog)
+	if cfgPool.EnableReadDB {
+		log.Info("Read DB Enabled!")
+		poolReadStorage, err := pgpoolstorage.NewPostgresPoolStorage(cfgPool.ReadDB)
+		if err != nil {
+			log.Fatal(err)
+		}
+		poolInstance.AddReadStorageCli(poolReadStorage)
+	}
 	return poolInstance
 }
 
