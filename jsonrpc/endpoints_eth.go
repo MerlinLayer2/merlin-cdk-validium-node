@@ -920,11 +920,37 @@ func (e *EthEndpoints) newPendingTransactionFilter(wsConn *concurrentWsConn) (in
 	// return id, nil
 }
 
+func (e *EthEndpoints) getSourceIP(httpRequest *http.Request) string {
+	ip := ""
+	ips := httpRequest.Header.Get("X-Forwarded-For")
+
+	// TODO: this is temporary patch remove this log
+	realIp := httpRequest.Header.Get("X-Real-IP")
+	log.Infof("X-Forwarded-For: %s, X-Real-IP: %s", ips, realIp)
+
+	if ips != "" {
+		ip = strings.Split(ips, ",")[0]
+	}
+	return ip
+}
+
 // SendRawTransaction has two different ways to handle new transactions:
 // - for Sequencer nodes it tries to add the tx to the pool
 // - for Non-Sequencer nodes it relays the Tx to the Sequencer node
 func (e *EthEndpoints) SendRawTransaction(httpRequest *http.Request, input string) (interface{}, types.Error) {
+	ip := e.getSourceIP(httpRequest)
 	if e.cfg.SequencerNodeURI != "" {
+		if e.cfg.PreCheckEnabled {
+			tx, err := hexToTx(input)
+			if err != nil {
+				return RPCErrorResponse(types.InvalidParamsErrorCode, "invalid tx input", err, false)
+			}
+
+			log.Infof("advance verification of trx:%v sent to trusted nodes", tx.Hash().Hex())
+			if err := e.pool.ExternalValidateTx(context.Background(), *tx, ip); err != nil {
+				return RPCErrorResponse(types.DefaultErrorCode, err.Error(), nil, false)
+			}
+		}
 		return e.relayTxToSequencerNode(input)
 	} else {
 		if err := checkPolicy(context.Background(), e.pool, input); err != nil {

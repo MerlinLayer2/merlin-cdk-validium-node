@@ -63,6 +63,9 @@ type Config struct {
 	// requests to be captured by the server.
 	EnableHttpLog bool `mapstructure:"EnableHttpLog"`
 
+	// PreCheckEnabled External nodes are pre-checked in advance
+	PreCheckEnabled bool `mapstructure:"PreCheckEnabled"`
+
 	// ZKCountersLimits defines the ZK Counter limits
 	ZKCountersLimits ZKCountersLimits
 }
