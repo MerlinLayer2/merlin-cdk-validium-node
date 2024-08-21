@@ -64,6 +64,7 @@ type Aggregator struct {
 	TimeCleanupLockedProofs types.Duration
 	StateDBMutex            *sync.Mutex
 	TimeSendFinalProofMutex *sync.RWMutex
+	GenerateProofDelay      types.Duration
 
 	finalProof     chan finalProofMsg
 	verifyingProof bool
@@ -103,6 +104,7 @@ func New(
 		StateDBMutex:            &sync.Mutex{},
 		TimeSendFinalProofMutex: &sync.RWMutex{},
 		TimeCleanupLockedProofs: cfg.CleanupLockedProofsInterval,
+		GenerateProofDelay:      cfg.GenerateProofDelay,
 
 		finalProof: make(chan finalProofMsg),
 
@@ -196,7 +198,7 @@ func (a *Aggregator) Channel(stream prover.AggregatorService_ChannelServer) erro
 	log.Info("Establishing stream connection with prover")
 
 	// Check if prover supports the required Fork ID
-	if !prover.SupportsForkID(forkId9) {
+	if !prover.SupportsForkID(a.cfg.ForkId) {
 		err := errors.New("prover does not support required fork ID")
 		log.Warn(FirstToUpper(err.Error()))
 		return err
@@ -900,6 +902,13 @@ func (a *Aggregator) getAndLockBatchToProve(ctx context.Context, prover proverIn
 		return nil, nil, err
 	}
 
+	// check delay for generating proof, if not reaches delay, pretend that we didn't find batch to prove
+	if batchToVerify.Timestamp.Add(a.GenerateProofDelay.Duration).After(time.Now()) {
+		log.Debugf("Found virtual batch %d, batch timestamp %v, expected to start generating proof after %v",
+			batchToVerify.BatchNumber, batchToVerify.Timestamp.Unix(), batchToVerify.Timestamp.Add(a.GenerateProofDelay.Duration).Unix())
+		return nil, nil, state.ErrNotFound
+	}
+
 	log.Infof("Found virtual batch %d pending to generate proof", batchToVerify.BatchNumber)
 	log = log.WithFields("batch", batchToVerify.BatchNumber)
 
@@ -1214,7 +1223,7 @@ func (a *Aggregator) buildInputProver(ctx context.Context, batchToVerify *state.
 			OldAccInputHash:   previousBatch.AccInputHash.Bytes(),
 			OldBatchNum:       previousBatch.BatchNumber,
 			ChainId:           a.cfg.ChainID,
-			ForkId:            forkId9,
+			ForkId:            a.cfg.ForkId,
 			BatchL2Data:       batchToVerify.BatchL2Data,
 			L1InfoRoot:        l1InfoRoot.Bytes(),
 			TimestampLimit:    uint64(batchToVerify.Timestamp.Unix()),
