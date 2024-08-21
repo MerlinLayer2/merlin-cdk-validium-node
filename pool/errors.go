@@ -30,6 +30,9 @@ var (
 	// ErrBlockedSender is returned if the transaction is sent by a blocked account.
 	ErrBlockedSender = errors.New("blocked sender")
 
+	// ErrBlockedTo is returned if the transaction is to by a blocked account.
+	ErrBlockedTo = errors.New("blocked to")
+
 	// ErrGasLimit is returned if a transaction's requested gas limit exceeds the
 	// maximum allowance of the current block.
 	ErrGasLimit = errors.New("exceeds block gas limit")
@@ -64,6 +67,12 @@ var (
 
 	// ErrGasPrice is returned if the transaction has specified lower gas price than the minimum allowed.
 	ErrGasPrice = errors.New("gas price too low")
+
+	// ErrGasPriceTooHigh Returned if the gas price specified by the transaction is higher than the maximum price allowed.
+	ErrGasPriceTooHigh = errors.New("gas price too high")
+
+	// ErrGasTooHigh is returned if the transaction has specified higher gas price than the max allowed.
+	ErrGasTooHigh = errors.New("gas limit too high")
 
 	// ErrReceivedZeroL1GasPrice is returned if the L1 gas price is 0.
 	ErrReceivedZeroL1GasPrice = errors.New("received L1 gas price 0")

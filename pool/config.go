@@ -11,6 +11,10 @@ type Config struct {
 	// blocked address list from db to memory
 	IntervalToRefreshBlockedAddresses types.Duration `mapstructure:"IntervalToRefreshBlockedAddresses"`
 
+	// IntervalToRefreshSpecialedAddresses is the time it takes to sync the
+	// Specialed address list from db to memory
+	IntervalToRefreshSpecialedAddresses types.Duration `mapstructure:"IntervalToRefreshSpecialedAddresses"`
+
 	// IntervalToRefreshGasPrices is the time to wait to refresh the gas prices
 	IntervalToRefreshGasPrices types.Duration `mapstructure:"IntervalToRefreshGasPrices"`
 
@@ -23,8 +27,17 @@ type Config struct {
 	// DB is the database configuration
 	DB db.Config `mapstructure:"DB"`
 
+	// EnableReadDB enables using read instance for certain database queries
+	EnableReadDB bool `mapstructure:"EnableReadDB"`
+
+	// ReadDB is the connection of the read instance for certain database queries
+	ReadDB db.Config `mapstructure:"ReadDB"`
+
 	// DefaultMinGasPriceAllowed is the default min gas price to suggest
 	DefaultMinGasPriceAllowed uint64 `mapstructure:"DefaultMinGasPriceAllowed"`
+
+	// DefaultMaxGasPriceAllowed is the default max gas price to suggest
+	DefaultMaxGasPriceAllowed uint64 `mapstructure:"DefaultMaxGasPriceAllowed"`
 
 	// MinAllowedGasPriceInterval is the interval to look back of the suggested min gas price for a tx
 	MinAllowedGasPriceInterval types.Duration `mapstructure:"MinAllowedGasPriceInterval"`
@@ -32,11 +45,29 @@ type Config struct {
 	// PollMinAllowedGasPriceInterval is the interval to poll the suggested min gas price for a tx
 	PollMinAllowedGasPriceInterval types.Duration `mapstructure:"PollMinAllowedGasPriceInterval"`
 
+	// DefaultMaxGasAllowed is the max gas limit to suggest, set 0 to disable
+	DefaultMaxGasAllowed uint64 `mapstructure:"DefaultMaxGasAllowed"`
+
 	// AccountQueue represents the maximum number of non-executable transaction slots permitted per account
 	AccountQueue uint64 `mapstructure:"AccountQueue"`
 
+	// AccountQueueSpecialedMultiple Amplification factor for addresses in the Specialed
+	AccountQueueSpecialedMultiple uint64 `mapstructure:"AccountQueueSpecialedMultiple"`
+
 	// GlobalQueue represents the maximum number of non-executable transaction slots for all accounts
 	GlobalQueue uint64 `mapstructure:"GlobalQueue"`
+
+	// EnableSpecialPriorityGasPrice Whether to activate priority adjustment based on special price
+	EnableSpecialPriorityGasPrice bool `mapstructure:"EnableSpecialPriorityGasPrice"`
+
+	// SpecialPriorityGasPriceMultiple When the price exceeds the recommended price by several times, a special priority is triggered
+	SpecialPriorityGasPriceMultiple uint64 `mapstructure:"SpecialPriorityGasPriceMultiple"`
+
+	// EnableToBlacklist Whether to enable interception when the to address is in the blacklist
+	EnableToBlacklist bool `mapstructure:"EnableToBlacklist"`
+
+	// ToBlacklistDisguiseErrors Whether to disguise errors that prohibit the to address
+	ToBlacklistDisguiseErrors bool `mapstructure:"ToBlacklistDisguiseErrors"`
 
 	// EffectiveGasPrice is the config for the effective gas price calculation
 	EffectiveGasPrice EffectiveGasPriceCfg `mapstructure:"EffectiveGasPrice"`

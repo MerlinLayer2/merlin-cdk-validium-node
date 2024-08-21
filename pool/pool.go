@@ -45,13 +45,16 @@ type Pool struct {
 	cfg                     Config
 	batchConstraintsCfg     state.BatchConstraintsCfg
 	blockedAddresses        sync.Map
+	specialedAddresses      sync.Map
 	minSuggestedGasPrice    *big.Int
 	minSuggestedGasPriceMux *sync.RWMutex
+	maxSuggestedGasPrice    *big.Int
 	eventLog                *event.EventLog
 	startTimestamp          time.Time
 	gasPrices               GasPrices
 	gasPricesMux            *sync.RWMutex
 	effectiveGasPrice       *EffectiveGasPrice
+	readStorage             storage
 }
 
 type preExecutionResponse struct {
@@ -83,6 +86,7 @@ func NewPool(cfg Config, batchConstraintsCfg state.BatchConstraintsCfg, s storag
 		blockedAddresses:        sync.Map{},
 		minSuggestedGasPriceMux: new(sync.RWMutex),
 		minSuggestedGasPrice:    big.NewInt(int64(cfg.DefaultMinGasPriceAllowed)),
+		maxSuggestedGasPrice:    big.NewInt(int64(cfg.DefaultMaxGasPriceAllowed)),
 		eventLog:                eventLog,
 		gasPrices:               GasPrices{0, 0},
 		gasPricesMux:            new(sync.RWMutex),
@@ -103,7 +107,19 @@ func NewPool(cfg Config, batchConstraintsCfg state.BatchConstraintsCfg, s storag
 		}
 	}(&cfg, p)
 
+	p.refreshSpecialedAddresses()
+	go func(cfg *Config, p *Pool) {
+		for {
+			time.Sleep(cfg.IntervalToRefreshSpecialedAddresses.Duration)
+			p.refreshSpecialedAddresses()
+		}
+	}(&cfg, p)
+
 	return p
+}
+
+func (p *Pool) AddReadStorageCli(rs storage) {
+	p.readStorage = rs
 }
 
 // refresGasPRices refreshes the gas price
@@ -160,6 +176,37 @@ func (p *Pool) refreshBlockedAddresses() {
 
 	for _, unblockedAddress := range unblockedAddresses {
 		p.blockedAddresses.Delete(unblockedAddress)
+	}
+}
+
+// refreshSpecialedAddresses refreshes the list of specialed addresses for the provided instance of pool
+func (p *Pool) refreshSpecialedAddresses() {
+	whitelistAddresses, err := p.storage.GetAllAddressesSpecialed(context.Background())
+	if err != nil {
+		log.Error("failed to load specialed addresses")
+		return
+	}
+
+	whitelistAddressesMap := sync.Map{}
+	for _, whitelistAddress := range whitelistAddresses {
+		whitelistAddressesMap.Store(whitelistAddress.String(), 1)
+		p.specialedAddresses.Store(whitelistAddress.String(), 1)
+	}
+
+	unspecialedAddresses := []string{}
+	p.specialedAddresses.Range(func(key, value any) bool {
+		addrHex := key.(string)
+		_, found := whitelistAddressesMap.Load(addrHex)
+		if found {
+			return true
+		}
+
+		unspecialedAddresses = append(unspecialedAddresses, addrHex)
+		return true
+	})
+
+	for _, unspecialedAddress := range unspecialedAddresses {
+		p.specialedAddresses.Delete(unspecialedAddress)
 	}
 }
 
@@ -251,6 +298,19 @@ func (p *Pool) StoreTx(ctx context.Context, tx types.Transaction, ip string, isW
 	poolTx.ZKCounters = preExecutionResponse.usedZKCounters
 	poolTx.ReservedZKCounters = preExecutionResponse.reservedZKCounters
 
+	from, err := state.GetSender(poolTx.Transaction)
+	if err != nil {
+		return ErrInvalidSender
+	}
+	_, whitelisted := p.specialedAddresses.Load(from.String())
+	if whitelisted {
+		poolTx.Priority = 1
+	}
+	if p.cfg.EnableSpecialPriorityGasPrice {
+		if tx.GasPrice().Uint64() > p.gasPrices.L2GasPrice*p.cfg.SpecialPriorityGasPriceMultiple {
+			poolTx.Priority = 2
+		}
+	}
 	return p.storage.AddTx(ctx, *poolTx)
 }
 
@@ -415,6 +475,14 @@ func (p *Pool) IsTxPending(ctx context.Context, hash common.Hash) (bool, error) 
 	return p.storage.IsTxPending(ctx, hash)
 }
 
+func (p *Pool) ExternalValidateTx(ctx context.Context, tx types.Transaction, ip string) error {
+	poolTx := NewTransaction(tx, ip, false)
+	if err := p.validateTx(ctx, *poolTx); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 	// Make sure the IP is valid.
 	if poolTx.IP != "" && !IsValidIP(poolTx.IP) {
@@ -475,7 +543,19 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 		log.Infof("%v: %v", ErrBlockedSender.Error(), from.String())
 		return ErrBlockedSender
 	}
-
+	if p.cfg.EnableToBlacklist {
+		// check if to is blocked
+		if poolTx.Transaction.To() != nil {
+			_, toBlocked := p.blockedAddresses.Load(poolTx.Transaction.To().String())
+			if toBlocked {
+				log.Infof("%v: %v", ErrBlockedTo.Error(), poolTx.Transaction.To().String())
+				if p.cfg.ToBlacklistDisguiseErrors {
+					return ErrTxPoolOverflow
+				}
+				return ErrBlockedTo
+			}
+		}
+	}
 	lastL2Block, err := p.state.GetLastL2Block(ctx, nil)
 	if err != nil {
 		log.Errorf("failed to load last l2 block while adding tx to the pool", err)
@@ -503,7 +583,13 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 		// }
 
 		// Ensure the transaction does not jump out of the expected AccountQueue
-		if poolTx.Nonce() > currentNonce+p.cfg.AccountQueue-1 {
+		// check if sender is whitelisted
+		_, specialed := p.specialedAddresses.Load(from.String())
+		accountQueue := p.cfg.AccountQueue
+		if specialed && p.cfg.AccountQueueSpecialedMultiple > 0 {
+			accountQueue *= p.cfg.AccountQueueSpecialedMultiple
+		}
+		if poolTx.Nonce() > currentNonce+accountQueue-1 {
 			log.Infof("%v: %v", ErrNonceTooHigh.Error(), from.String())
 			return ErrNonceTooHigh
 		}
@@ -532,6 +618,13 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 		return ErrGasPrice
 	}
 
+	if p.maxSuggestedGasPrice.Uint64() > 0 {
+		gasPriceCmp := poolTx.GasPrice().Cmp(p.maxSuggestedGasPrice)
+		if gasPriceCmp > 0 {
+			return ErrGasPriceTooHigh
+		}
+	}
+
 	// Transactor should have enough funds to cover the costs
 	// cost == V + GP * GL
 	balance, err := p.state.GetBalance(ctx, from, lastL2Block.Root())
@@ -542,6 +635,13 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 
 	if balance.Cmp(poolTx.Cost()) < 0 {
 		return ErrInsufficientFunds
+	}
+
+	// max gas limit check
+	if p.cfg.DefaultMaxGasAllowed > 0 {
+		if poolTx.Gas() > p.cfg.DefaultMaxGasAllowed {
+			return ErrGasTooHigh
+		}
 	}
 
 	// Ensure the transaction has more gas than the basic poolTx fee.
@@ -555,7 +655,12 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 
 	// try to get a transaction from the pool with the same nonce to check
 	// if the new one has a price bump
-	oldTxs, err := p.storage.GetTxsByFromAndNonce(ctx, from, poolTx.Nonce())
+	var oldTxs []Transaction
+	if p.cfg.EnableReadDB { // use read storage
+		oldTxs, err = p.readStorage.GetTxsByFromAndNonce(ctx, from, poolTx.Nonce())
+	} else {
+		oldTxs, err = p.storage.GetTxsByFromAndNonce(ctx, from, poolTx.Nonce())
+	}
 	if err != nil {
 		log.Errorf("failed to txs for the same account and nonce while adding tx to the pool", err)
 		return err
