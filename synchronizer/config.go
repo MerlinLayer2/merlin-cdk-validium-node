@@ -33,6 +33,11 @@ type Config struct {
 	L1ParallelSynchronization L1ParallelSynchronizationConfig
 	// L2Synchronization Configuration for L2 synchronization
 	L2Synchronization l2_sync.Config `mapstructure:"L2Synchronization"`
+	// Merlin specific
+	// SyncOnlyTrusted option whether sync L1 block or not (for external node use)
+	SyncOnlyTrusted bool `mapstructure:"SyncOnlyTrusted"`
+	// UpgradeEtrogBatchNumber is the number of the first batch after upgrading to etrog
+	UpgradeEtrogBatchNumber uint64 `mapstructure:"UpgradeEtrogBatchNumber"`
 }
 
 // L1BlockCheckConfig Configuration for L1 Block Checker

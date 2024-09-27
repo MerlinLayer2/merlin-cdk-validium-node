@@ -21,8 +21,13 @@ func defaultsL1EventProcessors(sync *ClientSynchronizer, l2Blockchecker *actions
 	p.Register(actions.NewCheckL2BlockDecorator(sequenceBatchesProcessor, l2Blockchecker))
 	p.Register(incaberry.NewProcessorL1VerifyBatch(sync.state))
 	p.Register(etrog.NewProcessorL1UpdateEtrogSequence(sync.state, sync, common.DefaultTimeProvider{}))
-	p.Register(actions.NewCheckL2BlockDecorator(elderberry.NewProcessorL1SequenceBatchesElderberry(sequenceBatchesProcessor, sync.state), l2Blockchecker))
+	p.Register(actions.NewCheckL2BlockDecorator(elderberry.NewProcessorL1SequenceBatchesElderberry(sequenceBatchesProcessor, sync.state, sync.cfg.UpgradeEtrogBatchNumber), l2Blockchecker))
 	// intialSequence is process in ETROG by the same class, this is just a wrapper to pass directly to ETROG
 	p.Register(elderberry.NewProcessorL1InitialSequenceBatchesElderberry(sequenceBatchesProcessor))
+
+	// Merlin specific
+	p.Register(elderberry.NewProcessorL1UpdateEtrogSequence(sync.state, sync, common.DefaultTimeProvider{}))
+	// TODO 检查是否与 p.Register(actions.NewCheckL2BlockDecorator 冲突
+	p.Register(elderberry.NewProcessorL1SequenceBatchesElderberry(sequenceBatchesProcessor, sync.state, sync.cfg.UpgradeEtrogBatchNumber))
 	return p.Build()
 }

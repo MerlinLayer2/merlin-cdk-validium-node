@@ -1,6 +1,8 @@
 package processor_manager
 
 import (
+	"fmt"
+
 	"github.com/0xPolygonHermez/zkevm-node/etherman"
 	// "github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/synchronizer/actions"
@@ -47,6 +49,7 @@ func (p *L1EventProcessorsBuilder) Set(forkID actions.ForkIdType, event etherman
 		p.result.processors[forkID] = make(map[etherman.EventOrder]actions.L1EventProcessor)
 	}
 	if _, ok := p.result.processors[forkID][event]; ok && panicIfExists {
+		fmt.Println(forkID, event)
 		panic("processor already set")
 	}
 	p.result.processors[forkID][event] = processor
