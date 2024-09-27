@@ -92,7 +92,7 @@ type workerInterface interface {
 	DeleteTx(txHash common.Hash, from common.Address)
 	MoveTxPendingToStore(txHash common.Hash, addr common.Address)
 	DeleteTxPendingToStore(txHash common.Hash, addr common.Address)
-	NewTxTracker(tx types.Transaction, usedZKcounters state.ZKCounters, reservedZKCouners state.ZKCounters, ip string) (*TxTracker, error)
+	NewTxTracker(tx types.Transaction, usedZKcounters state.ZKCounters, reservedZKCouners state.ZKCounters, ip string, priority uint64) (*TxTracker, error)
 	AddForcedTx(txHash common.Hash, addr common.Address)
 	DeleteForcedTx(txHash common.Hash, addr common.Address)
 	RestoreTxsPendingToStore(ctx context.Context) ([]*TxTracker, []*TxTracker)
