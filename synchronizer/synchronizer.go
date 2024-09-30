@@ -212,12 +212,12 @@ func NewSynchronizer(
 
 func decodeSyncBlockProtection(sBP string) (rpc.BlockNumber, error) {
 	switch sBP {
-	case "latest":
+	case "latest", "finalized", "safe":
 		return rpc.LatestBlockNumber, nil
-	case "finalized":
-		return rpc.FinalizedBlockNumber, nil
-	case "safe":
-		return rpc.SafeBlockNumber, nil
+	//case "finalized":
+	//	return rpc.FinalizedBlockNumber, nil
+	//case "safe":
+	//	return rpc.SafeBlockNumber, nil
 	default:
 		return 0, fmt.Errorf("error decoding SyncBlockProtection. Unknown value")
 	}
@@ -444,109 +444,96 @@ func (s *ClientSynchronizer) Sync() error {
 			// Sync trusted state
 			// latestSyncedBatch -> Last batch on DB
 			// latestSequencedBatchNumber -> last batch on SMC
-			if !s.cfg.SyncOnlyTrusted {
-				if latestSyncedBatch >= latestSequencedBatchNumber {
-					startTrusted := time.Now()
-					if s.syncTrustedStateExecutor != nil {
-						log.Info("Syncing trusted state (permissionless)")
-						//Sync Trusted State
-						log.Debug("Doing reorg check before L2 sync")
-						resetDone, lastEthBlockSynced, err = s.checkReorgAndExecuteReset(lastEthBlockSynced)
-						if resetDone || err != nil {
-							log.Infof("Reset done before L2 sync")
-							continue
-						}
-						err = s.syncTrustedState(latestSyncedBatch)
-						metrics.FullTrustedSyncTime(time.Since(startTrusted))
-						if err != nil {
-							log.Warn("error syncing trusted state. Error: ", err)
-							s.CleanTrustedState()
-							if errors.Is(err, syncinterfaces.ErrFatalDesyncFromL1) {
-								l1BlockNumber := err.(*l2_shared.DeSyncPermissionlessAndTrustedNodeError).L1BlockNumber
-								log.Error("Trusted and permissionless desync! reseting to last common point: L1Block (%d-1)", l1BlockNumber)
-								for {
-									resetDone, lastEthBlockSynced, err = s.detectedReorgBadBlockExecuteReset(lastEthBlockSynced, syncCommon.GetReorgErrorBlockNumber(err))
-									if resetDone {
-										break
-									} else {
-										log.Error("reorg isn't done, retrying...")
-										time.Sleep(time.Second)
-									}
-								}
-							} else if errors.Is(err, syncinterfaces.ErrMissingSyncFromL1) {
-								log.Info("Syncing from trusted node need data from L1")
-							} else if errors.Is(err, syncinterfaces.ErrCantSyncFromL2) {
-								log.Info("Can't sync from L2, going to sync from L1")
-							} else {
-								// We break for resync from Trusted
-								log.Debug("Sleeping for 1 second to avoid respawn too fast, error: ", err)
-								time.Sleep(time.Second)
-								continue
-							}
-						}
-					}
-					waitDuration = s.cfg.SyncInterval.Duration
-				}
-				//Sync L1Blocks
-				resetDone, lastEthBlockSynced, err = s.checkReorgAndExecuteReset(lastEthBlockSynced)
-				if resetDone || err != nil {
-					continue
-				}
-
-				startL1 := time.Now()
-				if s.l1SyncOrchestration != nil && (latestSyncedBatch < latestSequencedBatchNumber || !s.cfg.L1ParallelSynchronization.FallbackToSequentialModeOnSynchronized) {
-					log.Infof("Syncing L1 blocks in parallel lastEthBlockSynced=%d", lastEthBlockSynced.BlockNumber)
-					lastEthBlockSynced, err = s.syncBlocksParallel(lastEthBlockSynced)
-				} else {
-					if s.l1SyncOrchestration != nil {
-						log.Infof("Switching to sequential mode, stopping parallel sync and deleting object")
-						s.l1SyncOrchestration.Abort()
-						s.l1SyncOrchestration = nil
-					}
-					log.Infof("Syncing L1 blocks sequentially lastEthBlockSynced=%d", lastEthBlockSynced.BlockNumber)
-					lastEthBlockSynced, err = s.syncBlocksSequential(lastEthBlockSynced)
-				}
-				metrics.FullL1SyncTime(time.Since(startL1))
-				if syncCommon.IsReorgError(err) {
-					log.Warnf("error syncing blocks: %s", err.Error())
-					for {
-						resetDone, lastEthBlockSynced, err = s.detectedReorgBadBlockExecuteReset(lastEthBlockSynced, syncCommon.GetReorgErrorBlockNumber(err))
-						if resetDone {
-							break
-						} else {
-							log.Error("reorg isn't done, retrying...")
-							time.Sleep(time.Second)
-						}
-					}
-					continue
-				}
-				if err != nil {
-					log.Warn("error syncing blocks: ", err)
-					s.CleanTrustedState()
-					lastEthBlockSynced, err = s.state.GetLastBlock(s.ctx, nil)
-					if err != nil {
-						log.Fatal("error getting lastEthBlockSynced to resume the synchronization... Error: ", err)
-					}
-					if s.l1SyncOrchestration != nil {
-						// If have failed execution and get starting point from DB, we must reset parallel sync to this point
-						// producer must start requesting this block
-						s.l1SyncOrchestration.Reset(lastEthBlockSynced.BlockNumber)
-					}
-					if s.ctx.Err() != nil {
+			if latestSyncedBatch >= latestSequencedBatchNumber {
+				startTrusted := time.Now()
+				if s.syncTrustedStateExecutor != nil {
+					log.Info("Syncing trusted state (permissionless)")
+					//Sync Trusted State
+					log.Debug("Doing reorg check before L2 sync")
+					resetDone, lastEthBlockSynced, err = s.checkReorgAndExecuteReset(lastEthBlockSynced)
+					if resetDone || err != nil {
+						log.Infof("Reset done before L2 sync")
 						continue
 					}
-				}
-			} else {
-				// Sync trusted state
-				startTrusted := time.Now()
-				log.Info("Syncing trusted state")
-				err = s.syncTrustedState(latestSyncedBatch)
-				metrics.FullTrustedSyncTime(time.Since(startTrusted))
-				if err != nil {
-					log.Warn("error syncing trusted state. Error: ", err)
-					continue
+					err = s.syncTrustedState(latestSyncedBatch)
+					metrics.FullTrustedSyncTime(time.Since(startTrusted))
+					if err != nil {
+						log.Warn("error syncing trusted state. Error: ", err)
+						s.CleanTrustedState()
+						if errors.Is(err, syncinterfaces.ErrFatalDesyncFromL1) {
+							l1BlockNumber := err.(*l2_shared.DeSyncPermissionlessAndTrustedNodeError).L1BlockNumber
+							log.Error("Trusted and permissionless desync! reseting to last common point: L1Block (%d-1)", l1BlockNumber)
+							for {
+								resetDone, lastEthBlockSynced, err = s.detectedReorgBadBlockExecuteReset(lastEthBlockSynced, syncCommon.GetReorgErrorBlockNumber(err))
+								if resetDone {
+									break
+								} else {
+									log.Error("reorg isn't done, retrying...")
+									time.Sleep(time.Second)
+								}
+							}
+						} else if errors.Is(err, syncinterfaces.ErrMissingSyncFromL1) {
+							log.Info("Syncing from trusted node need data from L1")
+						} else if errors.Is(err, syncinterfaces.ErrCantSyncFromL2) {
+							log.Info("Can't sync from L2, going to sync from L1")
+						} else {
+							// We break for resync from Trusted
+							log.Debug("Sleeping for 1 second to avoid respawn too fast, error: ", err)
+							time.Sleep(time.Second)
+							continue
+						}
+					}
 				}
 				waitDuration = s.cfg.SyncInterval.Duration
+			}
+			//Sync L1Blocks
+			resetDone, lastEthBlockSynced, err = s.checkReorgAndExecuteReset(lastEthBlockSynced)
+			if resetDone || err != nil {
+				continue
+			}
+
+			startL1 := time.Now()
+			if s.l1SyncOrchestration != nil && (latestSyncedBatch < latestSequencedBatchNumber || !s.cfg.L1ParallelSynchronization.FallbackToSequentialModeOnSynchronized) {
+				log.Infof("Syncing L1 blocks in parallel lastEthBlockSynced=%d", lastEthBlockSynced.BlockNumber)
+				lastEthBlockSynced, err = s.syncBlocksParallel(lastEthBlockSynced)
+			} else {
+				if s.l1SyncOrchestration != nil {
+					log.Infof("Switching to sequential mode, stopping parallel sync and deleting object")
+					s.l1SyncOrchestration.Abort()
+					s.l1SyncOrchestration = nil
+				}
+				log.Infof("Syncing L1 blocks sequentially lastEthBlockSynced=%d", lastEthBlockSynced.BlockNumber)
+				lastEthBlockSynced, err = s.syncBlocksSequential(lastEthBlockSynced)
+			}
+			metrics.FullL1SyncTime(time.Since(startL1))
+			if syncCommon.IsReorgError(err) {
+				log.Warnf("error syncing blocks: %s", err.Error())
+				for {
+					resetDone, lastEthBlockSynced, err = s.detectedReorgBadBlockExecuteReset(lastEthBlockSynced, syncCommon.GetReorgErrorBlockNumber(err))
+					if resetDone {
+						break
+					} else {
+						log.Error("reorg isn't done, retrying...")
+						time.Sleep(time.Second)
+					}
+				}
+				continue
+			}
+			if err != nil {
+				log.Warn("error syncing blocks: ", err)
+				s.CleanTrustedState()
+				lastEthBlockSynced, err = s.state.GetLastBlock(s.ctx, nil)
+				if err != nil {
+					log.Fatal("error getting lastEthBlockSynced to resume the synchronization... Error: ", err)
+				}
+				if s.l1SyncOrchestration != nil {
+					// If have failed execution and get starting point from DB, we must reset parallel sync to this point
+					// producer must start requesting this block
+					s.l1SyncOrchestration.Reset(lastEthBlockSynced.BlockNumber)
+				}
+				if s.ctx.Err() != nil {
+					continue
+				}
 			}
 			metrics.FullSyncIterationTime(time.Since(start))
 			log.Info("L1 state fully synchronized")
@@ -609,6 +596,7 @@ func (s *ClientSynchronizer) syncBlocksParallel(lastEthBlockSynced *state.Block)
 // This function syncs the node from a specific block to the latest
 func (s *ClientSynchronizer) syncBlocksSequential(lastEthBlockSynced *state.Block) (*state.Block, error) {
 	// Call the blockchain to retrieve data
+	fmt.Println("adf", s.syncBlockProtection.Int64())
 	header, err := s.etherMan.HeaderByNumber(s.ctx, big.NewInt(s.syncBlockProtection.Int64()))
 	if err != nil {
 		log.Error("error getting header of the latest block in L1. Error: ", err)
@@ -1166,3 +1154,4 @@ const (
 	//L2BlockHeaderForGenesis = "0b73e6af6f00000000"
 	L2BlockHeaderForGenesis = "0b0000000000000000"
 )
+

@@ -57,12 +57,12 @@ func StringToL1BlockPoint(s string) L1BlockPoint {
 // ToGethRequest converts a L1BlockPoint to a big.Int used for request to GETH
 func (v L1BlockPoint) ToGethRequest() *big.Int {
 	switch v {
-	case FinalizedBlockNumber:
-		return big.NewInt(int64(rpc.FinalizedBlockNumber))
+	//case FinalizedBlockNumber:
+	//	return big.NewInt(int64(rpc.FinalizedBlockNumber))
 	case PendingBlockNumber:
 		return big.NewInt(int64(rpc.PendingBlockNumber))
-	case SafeBlockNumber:
-		return big.NewInt(int64(rpc.SafeBlockNumber))
+	//case SafeBlockNumber:
+	//	return big.NewInt(int64(rpc.SafeBlockNumber))
 	case LastBlockNumber:
 		return nil
 	}
@@ -118,3 +118,4 @@ func (p *SafeL1BlockNumberFetch) GetSafeBlockNumber(ctx context.Context, request
 func (p *SafeL1BlockNumberFetch) String() string {
 	return fmt.Sprintf("SafeBlockPoint: %s, Offset: %d", p.SafeBlockPoint.ToString(), p.Offset)
 }
+

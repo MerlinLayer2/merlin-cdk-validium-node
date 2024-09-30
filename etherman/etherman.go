@@ -1800,7 +1800,8 @@ func (etherMan *Client) GetSafeBlockNumber(ctx context.Context) (uint64, error) 
 
 // GetFinalizedBlockNumber gets the Finalized block number from the ethereum
 func (etherMan *Client) GetFinalizedBlockNumber(ctx context.Context) (uint64, error) {
-	return etherMan.getBlockNumber(ctx, rpc.FinalizedBlockNumber)
+	//return etherMan.getBlockNumber(ctx, rpc.FinalizedBlockNumber)
+	return etherMan.getBlockNumber(ctx, rpc.LatestBlockNumber)
 }
 
 // getBlockNumber gets the block header by the provided block number from the ethereum
