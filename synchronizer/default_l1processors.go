@@ -28,6 +28,6 @@ func defaultsL1EventProcessors(sync *ClientSynchronizer, l2Blockchecker *actions
 	// Merlin specific
 	p.Register(elderberry.NewProcessorL1UpdateEtrogSequence(sync.state, sync, common.DefaultTimeProvider{}))
 	// TODO 检查是否与 p.Register(actions.NewCheckL2BlockDecorator 冲突
-	p.Register(elderberry.NewProcessorL1SequenceBatchesElderberry(sequenceBatchesProcessor, sync.state, sync.cfg.UpgradeEtrogBatchNumber))
+	//p.Register(elderberry.NewProcessorL1SequenceBatchesElderberry(sequenceBatchesProcessor, sync.state, sync.cfg.UpgradeEtrogBatchNumber))
 	return p.Build()
 }
