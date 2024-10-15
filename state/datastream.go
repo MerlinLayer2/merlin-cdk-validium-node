@@ -315,7 +315,7 @@ func GenerateDataStreamFile(ctx context.Context, streamServer *datastreamer.Stre
 	}
 
 	var err error
-	const limit = 10000
+	const limit = 100
 
 	log.Infof("Current entry number: %d", entry)
 	log.Infof("Current batch number: %d", currentBatchNumber)
