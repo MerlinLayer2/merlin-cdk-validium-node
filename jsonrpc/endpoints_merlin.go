@@ -89,7 +89,7 @@ func NewMerlinEndpoints(cfg Config, statei types.StateInterface, etherman *ether
 }
 
 // GetZkProof returns current zk proof
-func (m *MerlinEndpoints) GetZkProof(number types.BlockNumber) (interface{}, types.Error) {
+func (m *MerlinEndpoints) GetZkProof(number types.BlockNumber, withRawPubSignals bool) (interface{}, types.Error) {
 	return m.txMan.NewDbTxScope(m.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {
 		if _, err := checkMerlinZkProofConfig(&m.cfg); err != nil {
 			return nil, err
@@ -125,7 +125,7 @@ func (m *MerlinEndpoints) GetZkProof(number types.BlockNumber) (interface{}, typ
 		}
 
 		forkID := m.state.GetForkIDByBatchNumber(batchNum)
-		zkm, err := m.getZkProofMeta(verifiedBatch.TxHash, forkID)
+		zkm, snark, err := m.getZkProofMeta(verifiedBatch.TxHash, forkID)
 		if err != nil {
 			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("failed to get zk prrof by batch number %v, %v", batchNum, err.Error()), nil, true)
 		}
@@ -133,10 +133,18 @@ func (m *MerlinEndpoints) GetZkProof(number types.BlockNumber) (interface{}, typ
 		if err != nil {
 			return nil, errd
 		}
+		var rawPubs *types.RawPubSignals
+		if withRawPubSignals {
+			rawPubs = &types.RawPubSignals{
+				Snark:  snark,
+				Rfield: RFIELD,
+			}
+		}
 		return types.ZKProof{
 			ForkID:        zkm.forkID,
 			Proof:         zkm.proof,
 			PubSignals:    zkm.pubSignals,
+			RpubSignals:   rawPubs,
 			StartBlockNum: blks.(blockRange).start,
 			EndBlockNum:   blks.(blockRange).end,
 		}, nil
@@ -151,14 +159,20 @@ type zkProofMeta struct {
 	finalNewBatch uint64
 }
 
-func (m *MerlinEndpoints) getZkProofMeta(txHash common.Hash, forkID uint64) (*zkProofMeta, error) {
+func (m *MerlinEndpoints) getZkProofMeta(txHash common.Hash, forkID uint64) (*zkProofMeta, *types.InputSnark, error) {
 	vbp, err := m.getVerifyBatchesParam(txHash, forkID)
 	if err != nil {
-		return nil, fmt.Errorf("failed getVerifyBatchesParam %v", err)
+		return nil, nil, err
 	}
-	signal, err := m.getSnarkSignal(vbp, forkID)
+
+	snark, err := m.getInputSnark(vbp, forkID)
 	if err != nil {
-		return nil, fmt.Errorf("failed getInputSnark %v", err)
+		return nil, nil, err
+	}
+
+	signal, err := m.getSnarkSignal(snark)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed getInputSnark %v", err)
 	}
 	var pproofs [24]common.Hash
 	for i := range vbp.proof {
@@ -170,7 +184,7 @@ func (m *MerlinEndpoints) getZkProofMeta(txHash common.Hash, forkID uint64) (*zk
 		pubSignals:    [1]*big.Int{signal},
 		initNumBatch:  vbp.initNumBatch,
 		finalNewBatch: vbp.finalNewBatch,
-	}, nil
+	}, snark, nil
 }
 
 type blockRange struct {
@@ -236,15 +250,12 @@ func (m *MerlinEndpoints) getVerifyBatchesParam(txHash common.Hash, forkID uint6
 	return nil, errors.New("failed getVerifyBatchesParam")
 }
 
-func (m *MerlinEndpoints) getSnarkSignal(param *verifyBatchesTrustedAggregatorParam, forkID uint64) (*big.Int, error) {
-	if _, err := checkMerlinZkProofConfig(&m.cfg); err != nil {
-		return nil, err
-	}
-	snark, err := m.getInputSnark(param, forkID)
+func (m *MerlinEndpoints) getSnarkSignal(snark *types.InputSnark) (*big.Int, error) {
+	d, err := getInputSnarkBytes(snark)
 	if err != nil {
 		return nil, err
 	}
-	hsnark := sha256.Sum256(snark)
+	hsnark := sha256.Sum256(d)
 	a := new(big.Int)
 	a.SetBytes(hsnark[:])
 	b := new(big.Int)
@@ -254,43 +265,27 @@ func (m *MerlinEndpoints) getSnarkSignal(param *verifyBatchesTrustedAggregatorPa
 	return signal, nil
 }
 
-func (m *MerlinEndpoints) getInputSnark(param *verifyBatchesTrustedAggregatorParam, forkID uint64) ([]byte, error) {
+func (m *MerlinEndpoints) getInputSnark(param *verifyBatchesTrustedAggregatorParam, forkID uint64) (*types.InputSnark, error) {
+	if _, err := checkMerlinZkProofConfig(&m.cfg); err != nil {
+		return nil, err
+	}
+	var conf *VerifyZkProofConfig
+	var ok bool
 	if forkID < state.FORKID_ELDERBERRY {
-		sender, ok := m.verifysConf[state.FORKID_DRAGONFRUIT]
+		conf, ok = m.verifysConf[state.FORKID_DRAGONFRUIT]
 		if !ok {
 			return nil, ErrNoMatchForkIDVerifier
 		}
-		return m.getInputSnarkFromLocal(param, sender.TrustedAggregator)
+	} else {
+		conf, ok = m.verifysConf[forkID]
+		if !ok {
+			return nil, ErrNoMatchForkIDVerifier
+		}
 	}
-	sender, ok := m.verifysConf[forkID]
-	if !ok {
-		return nil, ErrNoMatchForkIDVerifier
-	}
-	snark, err := m.getInputSnarkFromL1(param, sender.TrustedAggregator)
-	if err == nil {
-		return snark, nil
-	}
-	return m.getInputSnarkFromLocal(param, sender.TrustedAggregator)
+	return m.getInputSnarkFromLocal(param, conf.TrustedAggregator)
 }
 
-func (m *MerlinEndpoints) getInputSnarkFromL1(param *verifyBatchesTrustedAggregatorParam, sender common.Address) ([]byte, error) {
-	callOpts := &bind.CallOpts{Pending: false, From: sender}
-	oldStateRoot, err := m.etherman.RollupManager.GetRollupBatchNumToStateRoot(callOpts, param.rollupID, param.initNumBatch)
-	if err != nil {
-		return nil, err
-	}
-	return m.etherman.RollupManager.GetInputSnarkBytes(
-		callOpts,
-		param.rollupID,
-		param.initNumBatch,
-		param.finalNewBatch,
-		param.newLocalExitRoot,
-		oldStateRoot,
-		param.newStateRoot,
-	)
-}
-
-func (m *MerlinEndpoints) getInputSnarkFromLocal(param *verifyBatchesTrustedAggregatorParam, sender common.Address) ([]byte, error) {
+func (m *MerlinEndpoints) getInputSnarkFromLocal(param *verifyBatchesTrustedAggregatorParam, sender common.Address) (*types.InputSnark, error) {
 	var rep interface{}
 	var err error
 	if m.re != nil {
@@ -304,11 +299,11 @@ func (m *MerlinEndpoints) getInputSnarkFromLocal(param *verifyBatchesTrustedAggr
 			return nil, err
 		}
 	}
-	ins, ok := rep.(InputSnark)
+	ins, ok := rep.(types.InputSnark)
 	if !ok {
 		return nil, ErrNoMatchParam
 	}
-	return getInputSnarkBytes(&ins)
+	return &ins, nil
 }
 
 func (m *MerlinEndpoints) getOldSnarkParamFromDB(param *verifyBatchesTrustedAggregatorParam, sender common.Address) (interface{}, error) {
@@ -327,7 +322,7 @@ func (m *MerlinEndpoints) getOldSnarkParamFromDB(param *verifyBatchesTrustedAggr
 		if err != nil {
 			return RPCErrorResponse(types.DefaultErrorCode, "couldn't get l2 chainID", err, true)
 		}
-		return InputSnark{
+		return types.InputSnark{
 			Sender:           sender,
 			OldStateRoot:     oldBatch.StateRoot,
 			OldAccInputHash:  oldBatch.AccInputHash,
@@ -343,7 +338,7 @@ func (m *MerlinEndpoints) getOldSnarkParamFromDB(param *verifyBatchesTrustedAggr
 }
 
 // VerifyZkProof verify zk proof
-func (m *MerlinEndpoints) VerifyZkProof(forkID uint64, proofs [24]common.Hash, pubSignals [1]*big.Int) (interface{}, types.Error) {
+func (m *MerlinEndpoints) VerifyZkProof(forkID uint64, proof [24]common.Hash, pubSignals [1]*big.Int) (interface{}, types.Error) {
 	if _, err := checkMerlinZkProofConfig(&m.cfg); err != nil {
 		return nil, err
 	}
@@ -356,7 +351,7 @@ func (m *MerlinEndpoints) VerifyZkProof(forkID uint64, proofs [24]common.Hash, p
 	}
 
 	var pproofs [24][32]byte
-	for i, p := range proofs {
+	for i, p := range proof {
 		pproofs[i] = p
 	}
 	isv, err := verifer.VerifyProof(&bind.CallOpts{Pending: false}, pproofs, pubSignals)
@@ -494,21 +489,7 @@ func decodeInputParam(abia *abi.ABI, methodName string, data []byte) ([]interfac
 	return method.Inputs.Unpack(data[solInputLength:])
 }
 
-// InputSnark input snark
-type InputSnark struct {
-	Sender           common.Address
-	OldStateRoot     common.Hash
-	OldAccInputHash  common.Hash
-	InitNumBatch     uint64
-	ChainId          uint64
-	ForkID           uint64
-	NewStateRoot     common.Hash
-	NewAccInputHash  common.Hash
-	NewLocalExitRoot common.Hash
-	FinalNewBatch    uint64
-}
-
-func getInputSnarkBytes(input *InputSnark) ([]byte, error) {
+func getInputSnarkBytes(input *types.InputSnark) ([]byte, error) {
 	var result []byte
 	common.LeftPadBytes(big.NewInt(0).SetUint64(input.InitNumBatch).Bytes(), common.HashLength)
 	result = append(result, input.Sender[:]...)

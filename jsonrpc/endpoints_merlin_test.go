@@ -54,7 +54,7 @@ func (r *remote) getOldSnarkParamFromRemote(param *verifyBatchesTrustedAggregato
 	if err != nil && !errors.Is(err, state.ErrNotFound) {
 		return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("couldn't load verify batch from state by number %v", param.initNumBatch), err, true)
 	}
-	return InputSnark{
+	return types.InputSnark{
 		Sender:           sender,
 		OldStateRoot:     oldBatch.StateRoot,
 		OldAccInputHash:  oldBatch.AccInputHash,
@@ -129,8 +129,16 @@ func TestVerifyTestnet(t *testing.T) {
 		}},
 	}
 	mpoints := NewMerlinEndpoints(conf, nil, ethermanClient)
-	txHash := common.HexToHash("0x980343c480c0653eb0ce0b9c0787cd0bac6c64ec73300c0c87ecb0693d66d46b")
-	zkp, err := mpoints.getZkProofMeta(txHash, state.FORKID_ELDERBERRY)
+	client := client.NewClient("https://testnet-rpc.merlinchain.io")
+
+	blockHash := common.HexToHash("0xd538e2d6e98ffe176f60ea3401ffb54d0c0c3fbbf05bcef442cb7f6018fbe4e0")
+	txindex := uint(0)
+	chainID, err := mpoints.etherman.GetL2ChainID()
+	require.NoError(t, err)
+	ret := newRemoteTest(mpoints, client, blockHash, txindex, chainID, state.FORKID_ELDERBERRY)
+	mpoints.setRemote(ret)
+
+	zkp, _, err := mpoints.getZkProofMeta(blockHash, state.FORKID_ELDERBERRY)
 	require.NoError(t, err)
 
 	RollupData, err := mpoints.etherman.RollupManager.RollupIDToRollupData(&bind.CallOpts{Pending: false}, 1)
@@ -176,12 +184,25 @@ func TestVerifyMainnet(t *testing.T) {
 			TrustedAggregator: common.HexToAddress("0xe76cc099094d484e67cd7b777d22a93afc2920cc"), //
 		}},
 	}
+	client := client.NewClient("https://rpc.merlinchain.io")
 	mpoints := NewMerlinEndpoints(conf, nil, ethermanClient)
-	txHash := common.HexToHash("0xa20870c72bf925d832b6da488aa5242af8d1fb9223c0e87b8c345ebc2bb944b8")
-	zkp, err := mpoints.getZkProofMeta(txHash, state.FORKID_ELDERBERRY)
+	blockHash := common.HexToHash("0xfb10076988cc8fee0ef51a2afd93c3433333d7977e2058e370a0b29eb52363dc") // 0x30f569
+	txindex := uint(0)
+	chainID, err := mpoints.etherman.GetL2ChainID()
+	require.NoError(t, err)
+	ret := newRemoteTest(mpoints, client, blockHash, txindex, chainID, state.FORKID_ELDERBERRY)
+	mpoints.setRemote(ret)
+
+	zkp, snark, err := mpoints.getZkProofMeta(blockHash, state.FORKID_ELDERBERRY)
 	require.NoError(t, err)
 
-	print, _ := json.MarshalIndent(*zkp, "", "    ")
+	zkpp := types.ZKProof{
+		ForkID:      zkp.forkID,
+		Proof:       zkp.proof,
+		PubSignals:  zkp.pubSignals,
+		RpubSignals: &types.RawPubSignals{Snark: snark, Rfield: RFIELD},
+	}
+	print, _ := json.MarshalIndent(zkpp, "", "    ")
 	fmt.Println(string(print))
 
 	RollupData, err := mpoints.etherman.RollupManager.RollupIDToRollupData(&bind.CallOpts{Pending: false}, 1)
@@ -238,7 +259,7 @@ func TestVerifyMainnetForkID5(t *testing.T) {
 	ret := newRemoteTest(mpoints, client, blockHash, txindex, chainID, state.FORKID_DRAGONFRUIT)
 	mpoints.setRemote(ret)
 
-	zkm, err := mpoints.getZkProofMeta(blockHash, state.FORKID_DRAGONFRUIT)
+	zkm, snark, err := mpoints.getZkProofMeta(blockHash, state.FORKID_DRAGONFRUIT)
 	require.NoError(t, err)
 
 	blr, errd := ret.getVerifyBlockNumRange(zkm.initNumBatch+1, zkm.finalNewBatch)
@@ -246,7 +267,15 @@ func TestVerifyMainnetForkID5(t *testing.T) {
 	require.NotNil(t, blr)
 	fmt.Println("start block", blr.(blockRange).start, "end block", blr.(blockRange).end)
 
-	print, _ := json.MarshalIndent(*zkm, "", "    ")
+	zkpp := types.ZKProof{
+		ForkID:        zkm.forkID,
+		Proof:         zkm.proof,
+		PubSignals:    zkm.pubSignals,
+		RpubSignals:   &types.RawPubSignals{Snark: snark, Rfield: RFIELD},
+		StartBlockNum: blr.(blockRange).start,
+		EndBlockNum:   blr.(blockRange).end,
+	}
+	print, _ := json.MarshalIndent(zkpp, "", "    ")
 	fmt.Println(string(print))
 
 	isv, err := mpoints.VerifyZkProof(zkm.forkID, zkm.proof, zkm.pubSignals)
@@ -256,27 +285,12 @@ func TestVerifyMainnetForkID5(t *testing.T) {
 
 func TestVerifyGetInputSnarkBytes(t *testing.T) {
 	type testcase struct {
-		input  *InputSnark
+		input  *types.InputSnark
 		result string
 	}
 	testcases := []*testcase{
-		//{
-		//	input: &InputSnark{
-		//		Sender:           common.HexToAddress("0xe76cc099094d484e67cd7b777d22a93afc2920cc"),
-		//		OldStateRoot:     common.HexToHash("0xbc26b56bbd4fa7c91c97a0e0fea120b7d26eba75daa2cc3035b5edcc2b5c6630"),
-		//		OldAccInputHash:  common.HexToHash("0xab07cc71710e24d280bcd070abf25eb01b99788c985c9cd3ede196a5e9586672"),
-		//		InitNumBatch:     10,
-		//		ChainId:          1001,
-		//		ForkID:           8,
-		//		NewStateRoot:     common.HexToHash("0x97b2f0666edfff8c6eb8315c0161db5a10ae11342ba7f34da46d581bcb70e376"),
-		//		NewAccInputHash:  common.HexToHash("0x0db4014d73587d6ef5f9dfabdc9a14ebafddeee91f6da5fba029f9f84bfd1631"),
-		//		NewLocalExitRoot: common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000000"),
-		//		FinalNewBatch:    15,
-		//	},
-		//	result: "0x000000000000000000000000e76cc099094d484e67cd7b777d22a93afc2920ccbc26b56bbd4fa7c91c97a0e0fea120b7d26eba75daa2cc3035b5edcc2b5c6630ab07cc71710e24d280bcd070abf25eb01b99788c985c9cd3ede196a5e9586672000000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000003e9000000000000000000000000000000000000000000000000000000000000000897b2f0666edfff8c6eb8315c0161db5a10ae11342ba7f34da46d581bcb70e3760db4014d73587d6ef5f9dfabdc9a14ebafddeee91f6da5fba029f9f84bfd16310000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000f",
-		//},
 		{
-			input: &InputSnark{
+			input: &types.InputSnark{
 				Sender:           common.HexToAddress("0xe76cc099094d484e67cd7b777d22a93afc2920cc"),
 				OldStateRoot:     common.HexToHash("0xbc26b56bbd4fa7c91c97a0e0fea120b7d26eba75daa2cc3035b5edcc2b5c6630"),
 				OldAccInputHash:  common.HexToHash("0xab07cc71710e24d280bcd070abf25eb01b99788c985c9cd3ede196a5e9586672"),
