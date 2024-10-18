@@ -474,6 +474,13 @@ func runJSONRPCServer(c config.Config, etherman *etherman.Client, chainID uint64
 		})
 	}
 
+	if _, ok := apis[jsonrpc.APIMerlin]; ok {
+		services = append(services, jsonrpc.Service{
+			Name:    jsonrpc.APIMerlin,
+			Service: jsonrpc.NewMerlinEndpoints(c.RPC, st, etherman),
+		})
+	}
+
 	if err := jsonrpc.NewServer(c.RPC, chainID, pool, st, storage, services).Start(); err != nil {
 		log.Fatal(err)
 	}

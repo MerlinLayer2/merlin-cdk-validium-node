@@ -209,6 +209,8 @@ type Client struct {
 	auth  map[common.Address]bind.TransactOpts // empty in case of read-only client
 
 	da dataavailability.BatchDataProvider
+
+	OriEthClient *ethclient.Client
 }
 
 // NewClient creates a new etherman.
@@ -301,10 +303,11 @@ func NewClient(cfg Config, l1Config L1Config, da dataavailability.BatchDataProvi
 			MultiGasProvider: cfg.MultiGasProvider,
 			Providers:        gProviders,
 		},
-		l1Cfg: l1Config,
-		cfg:   cfg,
-		auth:  map[common.Address]bind.TransactOpts{},
-		da:    da,
+		l1Cfg:        l1Config,
+		cfg:          cfg,
+		auth:         map[common.Address]bind.TransactOpts{},
+		da:           da,
+		OriEthClient: ethClient,
 	}, nil
 }
 
@@ -2041,4 +2044,9 @@ func (etherMan *Client) SetDataAvailabilityProtocol(from, daAddress common.Addre
 // GetRollupId returns the rollup id
 func (etherMan *Client) GetRollupId() uint32 {
 	return etherMan.RollupID
+}
+
+// GetOriginalEthClient return the original ethClient
+func (etherMan *Client) GetOriginalEthClient() *ethclient.Client {
+	return etherMan.OriEthClient
 }
