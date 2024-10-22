@@ -127,12 +127,12 @@ L1SyncCheckL2BlockHash = true
 L1SyncCheckL2BlockNumberhModulus = 600
 	[Synchronizer.L1BlockCheck]
 		Enabled = true
-		L1SafeBlockPoint = "finalized"
-		L1SafeBlockOffset = 0
+		L1SafeBlockPoint = "latest"
+		L1SafeBlockOffset = -5
 		ForceCheckBeforeStart = true
 		PreCheckEnabled = true
-		L1PreSafeBlockPoint = "safe"
-		L1PreSafeBlockOffset = 0
+		L1PreSafeBlockPoint = "latest"
+		L1PreSafeBlockOffset = -5
 	[Synchronizer.L1ParallelSynchronization]
 		MaxClients = 10
 		MaxPendingNoProcessedBlocks = 25
