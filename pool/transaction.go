@@ -46,6 +46,7 @@ type Transaction struct {
 	IsWIP                 bool
 	IP                    string
 	FailedReason          *string
+	Priority              uint64
 }
 
 // NewTransaction creates a new transaction

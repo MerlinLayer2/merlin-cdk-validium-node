@@ -24,6 +24,10 @@ func (_m *stateSyncTrustedStateExecutorSelector) EXPECT() *stateSyncTrustedState
 func (_m *stateSyncTrustedStateExecutorSelector) GetForkIDByBatchNumber(batchNumber uint64) uint64 {
 	ret := _m.Called(batchNumber)
 
+	if len(ret) == 0 {
+		panic("no return value specified for GetForkIDByBatchNumber")
+	}
+
 	var r0 uint64
 	if rf, ok := ret.Get(0).(func(uint64) uint64); ok {
 		r0 = rf(batchNumber)
@@ -65,6 +69,10 @@ func (_c *stateSyncTrustedStateExecutorSelector_GetForkIDByBatchNumber_Call) Run
 // GetForkIDInMemory provides a mock function with given fields: forkId
 func (_m *stateSyncTrustedStateExecutorSelector) GetForkIDInMemory(forkId uint64) *state.ForkIDInterval {
 	ret := _m.Called(forkId)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetForkIDInMemory")
+	}
 
 	var r0 *state.ForkIDInterval
 	if rf, ok := ret.Get(0).(func(uint64) *state.ForkIDInterval); ok {

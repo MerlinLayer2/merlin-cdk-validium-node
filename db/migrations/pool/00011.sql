@@ -6,3 +6,4 @@ CREATE TABLE pool.whitelist
 
 -- +migrate Down
 DROP TABLE pool.whitelist;
+

@@ -58,6 +58,10 @@ func (_c *SyncTrustedStateExecutor_CleanTrustedState_Call) RunAndReturn(run func
 func (_m *SyncTrustedStateExecutor) GetCachedBatch(batchNumber uint64) *state.Batch {
 	ret := _m.Called(batchNumber)
 
+	if len(ret) == 0 {
+		panic("no return value specified for GetCachedBatch")
+	}
+
 	var r0 *state.Batch
 	if rf, ok := ret.Get(0).(func(uint64) *state.Batch); ok {
 		r0 = rf(batchNumber)
@@ -101,6 +105,10 @@ func (_c *SyncTrustedStateExecutor_GetCachedBatch_Call) RunAndReturn(run func(ui
 // SyncTrustedState provides a mock function with given fields: ctx, latestSyncedBatch, maximumBatchNumberToProcess
 func (_m *SyncTrustedStateExecutor) SyncTrustedState(ctx context.Context, latestSyncedBatch uint64, maximumBatchNumberToProcess uint64) error {
 	ret := _m.Called(ctx, latestSyncedBatch, maximumBatchNumberToProcess)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SyncTrustedState")
+	}
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64) error); ok {

@@ -3,24 +3,12 @@ package sequencesender
 import (
 	"context"
 	"errors"
-	"fmt"
 	"testing"
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestTimestamp(t *testing.T) {
-	//1712056027
-	//1712056075
-
-	test := time.Unix(1712056027, 0)
-	fmt.Println(test)
-
-	test = time.Unix(1712056075, 0)
-	fmt.Println(test)
-}
 
 func TestIsSynced(t *testing.T) {
 	const (
@@ -47,7 +35,7 @@ func TestIsSynced(t *testing.T) {
 
 	testCases := []IsSyncedTestCase{
 		{
-			name:                   "is synced",
+			name:                   "sanity check ok",
 			lastVirtualBatchNum:    10,
 			lastTrustedBatchClosed: 12,
 			lastSCBatchNum:         []uint64{10},
@@ -55,11 +43,11 @@ func TestIsSynced(t *testing.T) {
 			err:                    nil,
 		},
 		{
-			name:                   "not synced",
+			name:                   "sanity check ok",
 			lastVirtualBatchNum:    9,
 			lastTrustedBatchClosed: 12,
 			lastSCBatchNum:         []uint64{10},
-			expectedResult:         false,
+			expectedResult:         true,
 			err:                    nil,
 		},
 		{
@@ -79,7 +67,7 @@ func TestIsSynced(t *testing.T) {
 			err:                    ErrSyncVirtualGreaterSequenced,
 		},
 		{
-			name:                   "is synced, sc sequenced retries",
+			name:                   "sanity check ok: sc sequenced retries",
 			lastVirtualBatchNum:    11,
 			lastTrustedBatchClosed: 12,
 			lastSCBatchNum:         []uint64{10, 10, 11},
@@ -87,7 +75,7 @@ func TestIsSynced(t *testing.T) {
 			err:                    nil,
 		},
 		{
-			name:                   "is synced, sc sequenced retries (last)",
+			name:                   "sanity check ok: sc sequenced retries (last)",
 			lastVirtualBatchNum:    11,
 			lastTrustedBatchClosed: 12,
 			lastSCBatchNum:         []uint64{10, 10, 10, 11},
@@ -146,7 +134,7 @@ func TestIsSynced(t *testing.T) {
 				}
 			}
 
-			synced, err := ssender.isSynced(context.Background(), retries, waitRetry)
+			synced, err := ssender.sanityCheck(context.Background(), retries, waitRetry)
 
 			assert.EqualValues(t, tc.expectedResult, synced)
 			assert.EqualValues(t, tc.err, err)

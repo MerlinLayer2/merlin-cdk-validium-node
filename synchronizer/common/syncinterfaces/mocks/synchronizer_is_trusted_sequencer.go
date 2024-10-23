@@ -21,6 +21,10 @@ func (_m *SynchronizerIsTrustedSequencer) EXPECT() *SynchronizerIsTrustedSequenc
 func (_m *SynchronizerIsTrustedSequencer) IsTrustedSequencer() bool {
 	ret := _m.Called()
 
+	if len(ret) == 0 {
+		panic("no return value specified for IsTrustedSequencer")
+	}
+
 	var r0 bool
 	if rf, ok := ret.Get(0).(func() bool); ok {
 		r0 = rf()

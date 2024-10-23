@@ -30,6 +30,9 @@ var (
 	// ErrBlockedSender is returned if the transaction is sent by a blocked account.
 	ErrBlockedSender = errors.New("blocked sender")
 
+	// ErrBlockedTo is returned if the transaction is to by a blocked account.
+	ErrBlockedTo = errors.New("blocked to")
+
 	// ErrGasLimit is returned if a transaction's requested gas limit exceeds the
 	// maximum allowance of the current block.
 	ErrGasLimit = errors.New("exceeds block gas limit")

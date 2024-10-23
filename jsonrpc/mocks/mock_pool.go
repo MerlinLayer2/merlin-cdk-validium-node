@@ -172,24 +172,6 @@ func (_m *PoolMock) EffectiveGasPriceEnabled() bool {
 	return r0
 }
 
-// ExternalValidateTx provides a mock function with given fields: ctx, tx, ip
-func (_m *PoolMock) ExternalValidateTx(ctx context.Context, tx types.Transaction, ip string) error {
-	ret := _m.Called(ctx, tx, ip)
-
-	if len(ret) == 0 {
-		panic("no return value specified for ExternalValidateTx")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.Transaction, string) error); ok {
-		r0 = rf(ctx, tx, ip)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // GetGasPrices provides a mock function with given fields: ctx
 func (_m *PoolMock) GetGasPrices(ctx context.Context) (pool.GasPrices, error) {
 	ret := _m.Called(ctx)
