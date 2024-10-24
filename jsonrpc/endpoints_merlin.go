@@ -16,7 +16,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/jackc/pgx/v4"
 )
 
 const (
@@ -43,7 +42,6 @@ type MerlinEndpoints struct {
 	rollupABIs  map[uint64]*abi.ABI
 	verifers    map[uint64]*verifier.Verifier
 	state       types.StateInterface
-	txMan       DBTxManager
 	verifysConf map[uint64]*VerifyZkProofConfig
 	re          RemoteT // this just for test case
 }
@@ -90,65 +88,64 @@ func NewMerlinEndpoints(cfg Config, statei types.StateInterface, etherman *ether
 
 // GetZkProof returns current zk proof
 func (m *MerlinEndpoints) GetZkProof(number types.BlockNumber, withRawPubSignals bool) (interface{}, types.Error) {
-	return m.txMan.NewDbTxScope(m.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {
-		if _, err := checkMerlinZkProofConfig(&m.cfg); err != nil {
-			return nil, err
-		}
+	ctx := context.Background()
+	if _, err := checkMerlinZkProofConfig(&m.cfg); err != nil {
+		return nil, err
+	}
 
-		numeric, rpcErr := number.GetNumericBlockNumber(ctx, m.state, m.etherman, dbTx)
-		if rpcErr != nil {
-			return nil, rpcErr
-		}
-		if number == 0 || numeric == 0 {
-			return RPCErrorResponse(types.DefaultErrorCode, "the block number = 0 or earliest, not have verify proof, should block number > 0", nil, true)
-		}
+	numeric, rpcErr := number.GetNumericBlockNumber(ctx, m.state, m.etherman, nil)
+	if rpcErr != nil {
+		return nil, rpcErr
+	}
+	if number == 0 || numeric == 0 {
+		return RPCErrorResponse(types.DefaultErrorCode, "the block number = 0 or earliest, not have verify proof, should block number > 0", nil, true)
+	}
 
-		var batchNum uint64
-		var err error
-		if number > 0 {
-			batchNum, err = m.state.BatchNumberByL2BlockNumber(ctx, uint64(number), dbTx)
-			if err != nil {
-				return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("failed to get batch number from block number %v, %v", number, err.Error()), nil, true)
-			}
-		} else {
-			//get latest verify batch
-			lastBatch, err := m.state.GetLastVerifiedBatch(ctx, dbTx)
-			if err != nil {
-				return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("failed to get the last verified batch from state %v", err.Error()), nil, true)
-			}
-			batchNum = lastBatch.BatchNumber
-		}
-
-		verifiedBatch, err := m.state.GetVerifiedBatch(ctx, batchNum, dbTx)
+	var batchNum uint64
+	var err error
+	if number > 0 {
+		batchNum, err = m.state.BatchNumberByL2BlockNumber(ctx, uint64(number), nil)
 		if err != nil {
-			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("failed to load verified batch from state by batch number %v, %v", batchNum, err.Error()), nil, true)
+			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("failed to get batch number from block number %v, %v", number, err.Error()), nil, true)
 		}
+	} else {
+		//get latest verify batch
+		lastBatch, err := m.state.GetLastVerifiedBatch(ctx, nil)
+		if err != nil {
+			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("failed to get the last verified batch from state %v", err.Error()), nil, true)
+		}
+		batchNum = lastBatch.BatchNumber
+	}
 
-		forkID := m.state.GetForkIDByBatchNumber(batchNum)
-		zkm, snark, err := m.getZkProofMeta(verifiedBatch.TxHash, forkID)
-		if err != nil {
-			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("failed to get zk prrof by batch number %v, %v", batchNum, err.Error()), nil, true)
+	verifiedBatch, err := m.state.GetVerifiedBatch(ctx, batchNum, nil)
+	if err != nil {
+		return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("failed to load verified batch from state by batch number %v, %v", batchNum, err.Error()), nil, true)
+	}
+
+	forkID := m.state.GetForkIDByBatchNumber(batchNum)
+	zkm, snark, err := m.getZkProofMeta(verifiedBatch.TxHash, forkID)
+	if err != nil {
+		return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("failed to get zk prrof by batch number %v, %v", batchNum, err.Error()), nil, true)
+	}
+	blks, errd := m.getVerifyBlockNumRange(zkm.initNumBatch+1, zkm.finalNewBatch)
+	if err != nil {
+		return nil, errd
+	}
+	var rawPubs *types.RawPubSignals
+	if withRawPubSignals {
+		rawPubs = &types.RawPubSignals{
+			Snark:  snark,
+			Rfield: RFIELD,
 		}
-		blks, errd := m.getVerifyBlockNumRange(zkm.initNumBatch+1, zkm.finalNewBatch)
-		if err != nil {
-			return nil, errd
-		}
-		var rawPubs *types.RawPubSignals
-		if withRawPubSignals {
-			rawPubs = &types.RawPubSignals{
-				Snark:  snark,
-				Rfield: RFIELD,
-			}
-		}
-		return types.ZKProof{
-			ForkID:        zkm.forkID,
-			Proof:         zkm.proof,
-			PubSignals:    zkm.pubSignals,
-			RpubSignals:   rawPubs,
-			StartBlockNum: blks.(blockRange).start,
-			EndBlockNum:   blks.(blockRange).end,
-		}, nil
-	})
+	}
+	return types.ZKProof{
+		ForkID:        zkm.forkID,
+		Proof:         zkm.proof,
+		PubSignals:    zkm.pubSignals,
+		RpubSignals:   rawPubs,
+		StartBlockNum: blks.(blockRange).start,
+		EndBlockNum:   blks.(blockRange).end,
+	}, nil
 }
 
 type zkProofMeta struct {
@@ -193,31 +190,30 @@ type blockRange struct {
 }
 
 func (m *MerlinEndpoints) getVerifyBlockNumRange(startBatch, endBatch uint64) (interface{}, types.Error) {
-	return m.txMan.NewDbTxScope(m.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {
-		startBlock, err := m.state.GetL2BlocksByBatchNumber(ctx, startBatch, dbTx)
+	ctx := context.Background()
+	startBlock, err := m.state.GetL2BlocksByBatchNumber(ctx, startBatch, nil)
+	if err != nil {
+		return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("failed to get L2 blocks by batch number %v, %v", startBatch, err.Error()), nil, true)
+	}
+	statBlkNum := uint64(0)
+	endBlkNum := uint64(0)
+	if len(startBlock) != 0 {
+		statBlkNum = startBlock[0].Number().Uint64()
+		endBlkNum = startBlock[len(startBlock)-1].Number().Uint64()
+	}
+	if startBatch != endBatch {
+		endBlock, err := m.state.GetL2BlocksByBatchNumber(ctx, endBatch, nil)
 		if err != nil {
-			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("failed to get L2 blocks by batch number %v, %v", startBatch, err.Error()), nil, true)
+			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("failed to get L2 blocks by batch number %v, %v", endBatch, err.Error()), nil, true)
 		}
-		statBlkNum := uint64(0)
-		endBlkNum := uint64(0)
-		if len(startBlock) != 0 {
-			statBlkNum = startBlock[0].Number().Uint64()
-			endBlkNum = startBlock[len(startBlock)-1].Number().Uint64()
+		if len(endBlock) != 0 {
+			endBlkNum = endBlock[len(endBlock)-1].Number().Uint64()
 		}
-		if startBatch != endBatch {
-			endBlock, err := m.state.GetL2BlocksByBatchNumber(ctx, endBatch, dbTx)
-			if err != nil {
-				return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("failed to get L2 blocks by batch number %v, %v", endBatch, err.Error()), nil, true)
-			}
-			if len(endBlock) != 0 {
-				endBlkNum = endBlock[len(endBlock)-1].Number().Uint64()
-			}
-		}
-		return blockRange{
-			start: statBlkNum,
-			end:   endBlkNum,
-		}, nil
-	})
+	}
+	return blockRange{
+		start: statBlkNum,
+		end:   endBlkNum,
+	}, nil
 }
 
 func (m *MerlinEndpoints) getVerifyBatchesParam(txHash common.Hash, forkID uint64) (*verifyBatchesTrustedAggregatorParam, error) {
@@ -307,34 +303,33 @@ func (m *MerlinEndpoints) getInputSnarkFromLocal(param *verifyBatchesTrustedAggr
 }
 
 func (m *MerlinEndpoints) getOldSnarkParamFromDB(param *verifyBatchesTrustedAggregatorParam, sender common.Address) (interface{}, error) {
-	return m.txMan.NewDbTxScope(m.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {
-		oldBatch, err := m.state.GetBatchByNumber(ctx, param.initNumBatch, dbTx)
-		if err != nil {
-			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("couldn't load verify batch from state by initNumBatch %v, %v", param.initNumBatch, err.Error()), nil, true)
-		}
-		newBatch, err := m.state.GetBatchByNumber(ctx, param.finalNewBatch, dbTx)
-		if err != nil {
-			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("couldn't load verify batch from state by finalNewBatch %v, %v", param.finalNewBatch, err.Error()), nil, true)
-		}
+	ctx := context.Background()
+	oldBatch, err := m.state.GetBatchByNumber(ctx, param.initNumBatch, nil)
+	if err != nil {
+		return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("couldn't load verify batch from state by initNumBatch %v, %v", param.initNumBatch, err.Error()), nil, true)
+	}
+	newBatch, err := m.state.GetBatchByNumber(ctx, param.finalNewBatch, nil)
+	if err != nil {
+		return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("couldn't load verify batch from state by finalNewBatch %v, %v", param.finalNewBatch, err.Error()), nil, true)
+	}
 
-		forkID := m.state.GetForkIDByBatchNumber(param.finalNewBatch)
-		chainID, err := m.etherman.GetL2ChainID()
-		if err != nil {
-			return RPCErrorResponse(types.DefaultErrorCode, "couldn't get l2 chainID", err, true)
-		}
-		return types.InputSnark{
-			Sender:           sender,
-			OldStateRoot:     oldBatch.StateRoot,
-			OldAccInputHash:  oldBatch.AccInputHash,
-			InitNumBatch:     param.initNumBatch,
-			ChainId:          chainID,
-			ForkID:           forkID,
-			NewStateRoot:     newBatch.StateRoot,
-			NewAccInputHash:  newBatch.AccInputHash,
-			NewLocalExitRoot: newBatch.LocalExitRoot,
-			FinalNewBatch:    param.finalNewBatch,
-		}, nil
-	})
+	forkID := m.state.GetForkIDByBatchNumber(param.finalNewBatch)
+	chainID, err := m.etherman.GetL2ChainID()
+	if err != nil {
+		return RPCErrorResponse(types.DefaultErrorCode, "couldn't get l2 chainID", err, true)
+	}
+	return types.InputSnark{
+		Sender:           sender,
+		OldStateRoot:     oldBatch.StateRoot,
+		OldAccInputHash:  oldBatch.AccInputHash,
+		InitNumBatch:     param.initNumBatch,
+		ChainId:          chainID,
+		ForkID:           forkID,
+		NewStateRoot:     newBatch.StateRoot,
+		NewAccInputHash:  newBatch.AccInputHash,
+		NewLocalExitRoot: newBatch.LocalExitRoot,
+		FinalNewBatch:    param.finalNewBatch,
+	}, nil
 }
 
 // VerifyZkProof verify zk proof

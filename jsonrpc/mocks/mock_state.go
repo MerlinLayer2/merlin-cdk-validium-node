@@ -361,6 +361,24 @@ func (_m *StateMock) GetForcedBatchDataByNumbers(ctx context.Context, batchNumbe
 	return r0, r1
 }
 
+// GetForkIDByBatchNumber provides a mock function with given fields: batchNumber
+func (_m *StateMock) GetForkIDByBatchNumber(batchNumber uint64) uint64 {
+	ret := _m.Called(batchNumber)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetForkIDByBatchNumber")
+	}
+
+	var r0 uint64
+	if rf, ok := ret.Get(0).(func(uint64) uint64); ok {
+		r0 = rf(batchNumber)
+	} else {
+		r0 = ret.Get(0).(uint64)
+	}
+
+	return r0
+}
+
 // GetL2BlockByHash provides a mock function with given fields: ctx, hash, dbTx
 func (_m *StateMock) GetL2BlockByHash(ctx context.Context, hash common.Hash, dbTx pgx.Tx) (*state.L2Block, error) {
 	ret := _m.Called(ctx, hash, dbTx)

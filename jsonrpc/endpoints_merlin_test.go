@@ -118,7 +118,7 @@ func TestVerifyTestnet(t *testing.T) {
 		GlobalExitRootManagerAddr: common.HexToAddress("0x07eb659bd996Ac74c154dfe86Ea875570647961C"),
 	}
 
-	ethermanClient, err := etherman.NewClient(cfg, l1Config, nil)
+	ethermanClient, err := etherman.NewClient(cfg, l1Config, nil, nil)
 	require.NoError(t, err)
 
 	conf := Config{
@@ -174,7 +174,7 @@ func TestVerifyMainnet(t *testing.T) {
 		GlobalExitRootManagerAddr: common.HexToAddress("0x8b97BF5C42739C375a2db080813E9b4C9A4a2c9A"),
 	}
 
-	ethermanClient, err := etherman.NewClient(cfg, l1Config, nil)
+	ethermanClient, err := etherman.NewClient(cfg, l1Config, nil, nil)
 	require.NoError(t, err)
 
 	conf := Config{
@@ -238,7 +238,7 @@ func TestVerifyMainnetForkID5(t *testing.T) {
 		GlobalExitRootManagerAddr: common.HexToAddress("0x8b97BF5C42739C375a2db080813E9b4C9A4a2c9A"),
 	}
 
-	ethermanClient, err := etherman.NewClient(cfg, l1Config, nil)
+	ethermanClient, err := etherman.NewClient(cfg, l1Config, nil, nil)
 	require.NoError(t, err)
 	conf := Config{
 		VerifyZkProofConfigs: []*VerifyZkProofConfig{{
