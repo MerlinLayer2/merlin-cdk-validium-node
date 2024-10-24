@@ -38,7 +38,7 @@ type ProcessingContextV2 struct {
 }
 
 // ProcessBatchV2 processes a batch for forkID >= ETROG
-func (s *State) ProcessBatchV2(ctx context.Context, request ProcessRequest, updateMerkleTree bool) (*ProcessBatchResponse, error) {
+func (s *State) ProcessBatchV2(ctx context.Context, request ProcessRequest, updateMerkleTree bool) (*ProcessBatchResponse, string, error) {
 	updateMT := uint32(cFalse)
 	if updateMerkleTree {
 		updateMT = cTrue
@@ -86,16 +86,16 @@ func (s *State) ProcessBatchV2(ctx context.Context, request ProcessRequest, upda
 
 	res, err := s.sendBatchRequestToExecutorV2(ctx, processBatchRequest, request.Caller)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	var result *ProcessBatchResponse
 	result, err = s.convertToProcessBatchResponseV2(res)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
-	return result, nil
+	return result, processBatchRequest.ContextId, nil
 }
 
 // ExecuteBatchV2 is used by the synchronizer to reprocess batches to compare generated state root vs stored one
@@ -310,6 +310,7 @@ func (s *State) sendBatchRequestToExecutorV2(ctx context.Context, batchRequest *
 			log.Warn(batchResponseToString)
 			s.eventLog.LogExecutorErrorV2(ctx, batchResponse.Error, batchRequest)
 		} else if batchResponse.ErrorRom != executor.RomError_ROM_ERROR_NO_ERROR && executor.IsROMOutOfCountersError(batchResponse.ErrorRom) {
+			err = executor.RomErr(batchResponse.ErrorRom)
 			log.Warnf("executor batch %d response, ROM OOC, error: %v", newBatchNum, err)
 			log.Warn(batchResponseToString)
 		} else if batchResponse.ErrorRom != executor.RomError_ROM_ERROR_NO_ERROR {
@@ -403,7 +404,7 @@ func (s *State) ProcessAndStoreClosedBatchV2(ctx context.Context, processingCtx 
 
 	if len(processedBatch.BlockResponses) > 0 && !processedBatch.IsRomOOCError && processedBatch.RomError_V2 == nil {
 		for _, blockResponse := range processedBatch.BlockResponses {
-			err = s.StoreL2Block(ctx, processingCtx.BatchNumber, blockResponse, nil, dbTx)
+			_, err = s.StoreL2Block(ctx, processingCtx.BatchNumber, blockResponse, nil, dbTx)
 			if err != nil {
 				log.Errorf("%s error StoreL2Block: %v", debugPrefix, err)
 				return common.Hash{}, noFlushID, noProverID, err

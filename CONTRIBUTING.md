@@ -1,53 +1,43 @@
-## Contributing
+# Pull Request guidelines
 
-1. Fork it ( <https://github.com/MerlinLayer2/merlin-cdk-validium-node/fork> )
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Write tests that cover your work
-4. Commit your changes (`git commit -am 'Add some feature'`)
-5. Push to the branch (`git push origin my-new-feature`)
-6. Create a new Pull Request
-7. Update CHANGELOG.md with the link to PR and description of the changes
+This document addresses how we should create PRs, give and receive reviews. The motivation is to have better code, reduce the time from creation to merge while sharing knowledge and insights that help everyone becoming better developers.
 
-### General
+Note that non of this is a hard rule, but suggestions / guidelines. Although everyone is encouraged to stick to this points as much as possible. Use your common sense if some of this do not apply well on a particular PR
 
-* Commits should be one logical change that still allows all tests to pass. Prefer smaller commits if there could be two
-  levels of logic grouping. The goal is to allow contributors in the future (including your own future self) to
-  determine your reasoning for making changes and to allow them to cherry-pick, patch or port those changes in isolation
-  to other branches or forks.
-* If during your PR you reveal a pre-existing bug:
-    1. Try to isolate the bug and fix it on an independent branch and PR it first.
-    2. Try to fix the bug in a separate commit from other changes:
-    1. Commit the code in the broken state that revealed the bug originally
-    2. Commit the fix for the bug.
-    3. Continue original PR work.
+## How to create a good PR
 
-### Enhancements
+- Follow the template, unless for some reason it doesn't fit the content of the PR
+- Try hard on doing small PRs (> ~400 lines), in general is better to have 2 small PRs rather than a big one
+- Indicate clearly who should review it, ideally 2 team mates
+- Author of the PR is responsible for merging. Never do it until you have the approval of the specified reviewers unless you have their explicit permission
+- Introduce the purpose of the PR, for example: `Fixes the handle of ...`
+- Give brief context on why this is being done and link it to any relevant issue
+- Feel free to ask to specific team mates to review specific parts of the PR
 
-Enhancements cover all changes that make users lives better:
+## How to do a good review
 
-* feature requests filed as issues that impact end-user contributors and developers
-* changes to the architecture that make it easier for contributors (in the GitHub sense), dev-ops, and deployers to maintain and run it
+- In general it's hard to set a quality threshold for changes. A good measure for when to approve is to accept changes once the overall quality of the code has been improved (compared to the code base before the PR)
+- Try hard to avoid taking things personally. For instance avoid using `I`, `you`, `I (don't) like`, ...
+- Ask, don’t tell. ("What about trying...?" rather than "Don’t do...")
+- Try to use positive language. You can even use emoji to clarify tone.
+- Be super clear on how confident you are when requesting changes. One way to do it is by starting the message like this:
+  - `Opinion: ...` this way you're indicating a some how personal preference to the PR author. It's great to share opinions that may not be based on evidence, The author should understand this as `if you agree with me, you could do this change`
+  - `Suggestion: ...` similar to opinion, but should have some back up / evidence / reasoning on why the suggestion is better than what done by the author. It should be read as `I think this could be done better this way, unless you have arguments to defend the original solution you should do it`
+  - `Request: ...` indicates that the PR won't be approved unless the request is applied. This should always include arguments that make obvious why the changes being requested are needed
+- Avoid doing code reviews for too consecutive time, try to don't do reviews for more than one hour non-stop
 
-### Bug Fixes
+## How to receive feedback
 
-For bug fixes, whenever possible, there should be at least 2 commits:
+- Accept that many programming decisions are opinions. Discuss tradeoffs, which you prefer, and reach a resolution quickly.
+- Ask for clarification if needed. ("I don’t understand, can you clarify?")
+- Offer clarification, explain the decisions you made to reach a solution in question.
+- Try to respond to every comment.
+- If there is growing confusion or debate, ask yourself if the written word is still the best form of communication. Talk (virtually) face-to-face, then mutually consider posting a follow-up to summarize any offline discussion (useful for others who be following along, now or later).
+- If consensus is still not reached, involve someone else in the discussion. As a last resource the lead of the project could take the decision
 
-1. A regression test commit that contains tests that demonstrate the bug and show as failing.
-2. The bug fix commit that shows the regression test now passing.
+## Links and credits
 
-This format ensures that we can run the test to reproduce the original bug without depending on the new code in the fix,
-which could lead to the test falsely passing.
+This guide is based on the following content:
 
-### Incompatible Changes
-
-Incompatible changes can arise as a side-effect of either Enhancements or Bug Fixes. During Enhancements, incompatible
-changes can occur because, as an example, in order to support showing end-users new data, the database schema may need
-to be changed and the index rebuilt from scratch. During bug fixes, incompatible changes can occur because in order to
-fix a bug, the schema had to change, or how certain internal APIs are called changed.
-
-### Pull Request
-
-There is a [PULL_REQUEST_TEMPLATE.md](PULL_REQUEST_TEMPLATE.md) for this repository, but since it can't fill in the
-title for you, please follow the following steps when opening a Pull Request before filling in the template:
-
-See [#1](https://github.com/MerlinLayer2/merlin-cdk-validium-node/pull/1) as an example PR that uses GitHub keywords and a Changelog to explain multiple changes.
+- https://smartbear.com/learn/code-review/best-practices-for-peer-code-review/
+- https://github.blog/2015-01-21-how-to-write-the-perfect-pull-request/

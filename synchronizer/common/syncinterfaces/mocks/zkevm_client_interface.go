@@ -30,6 +30,10 @@ func (_m *ZKEVMClientInterface) EXPECT() *ZKEVMClientInterface_Expecter {
 func (_m *ZKEVMClientInterface) BatchByNumber(ctx context.Context, number *big.Int) (*types.Batch, error) {
 	ret := _m.Called(ctx, number)
 
+	if len(ret) == 0 {
+		panic("no return value specified for BatchByNumber")
+	}
+
 	var r0 *types.Batch
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, *big.Int) (*types.Batch, error)); ok {
@@ -85,6 +89,10 @@ func (_c *ZKEVMClientInterface_BatchByNumber_Call) RunAndReturn(run func(context
 func (_m *ZKEVMClientInterface) BatchNumber(ctx context.Context) (uint64, error) {
 	ret := _m.Called(ctx)
 
+	if len(ret) == 0 {
+		panic("no return value specified for BatchNumber")
+	}
+
 	var r0 uint64
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context) (uint64, error)); ok {
@@ -133,9 +141,72 @@ func (_c *ZKEVMClientInterface_BatchNumber_Call) RunAndReturn(run func(context.C
 	return _c
 }
 
+// BlockByNumber provides a mock function with given fields: ctx, number
+func (_m *ZKEVMClientInterface) BlockByNumber(ctx context.Context, number *big.Int) (*types.Block, error) {
+	ret := _m.Called(ctx, number)
+
+	if len(ret) == 0 {
+		panic("no return value specified for BlockByNumber")
+	}
+
+	var r0 *types.Block
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *big.Int) (*types.Block, error)); ok {
+		return rf(ctx, number)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *big.Int) *types.Block); ok {
+		r0 = rf(ctx, number)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*types.Block)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *big.Int) error); ok {
+		r1 = rf(ctx, number)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ZKEVMClientInterface_BlockByNumber_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'BlockByNumber'
+type ZKEVMClientInterface_BlockByNumber_Call struct {
+	*mock.Call
+}
+
+// BlockByNumber is a helper method to define mock.On call
+//   - ctx context.Context
+//   - number *big.Int
+func (_e *ZKEVMClientInterface_Expecter) BlockByNumber(ctx interface{}, number interface{}) *ZKEVMClientInterface_BlockByNumber_Call {
+	return &ZKEVMClientInterface_BlockByNumber_Call{Call: _e.mock.On("BlockByNumber", ctx, number)}
+}
+
+func (_c *ZKEVMClientInterface_BlockByNumber_Call) Run(run func(ctx context.Context, number *big.Int)) *ZKEVMClientInterface_BlockByNumber_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(*big.Int))
+	})
+	return _c
+}
+
+func (_c *ZKEVMClientInterface_BlockByNumber_Call) Return(_a0 *types.Block, _a1 error) *ZKEVMClientInterface_BlockByNumber_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *ZKEVMClientInterface_BlockByNumber_Call) RunAndReturn(run func(context.Context, *big.Int) (*types.Block, error)) *ZKEVMClientInterface_BlockByNumber_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ExitRootsByGER provides a mock function with given fields: ctx, globalExitRoot
 func (_m *ZKEVMClientInterface) ExitRootsByGER(ctx context.Context, globalExitRoot common.Hash) (*types.ExitRoots, error) {
 	ret := _m.Called(ctx, globalExitRoot)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ExitRootsByGER")
+	}
 
 	var r0 *types.ExitRoots
 	var r1 error

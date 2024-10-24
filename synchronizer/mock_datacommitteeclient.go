@@ -29,6 +29,10 @@ func (_m *dataCommitteeClientMock) EXPECT() *dataCommitteeClientMock_Expecter {
 func (_m *dataCommitteeClientMock) GetOffChainData(ctx context.Context, hash common.Hash) ([]byte, error) {
 	ret := _m.Called(ctx, hash)
 
+	if len(ret) == 0 {
+		panic("no return value specified for GetOffChainData")
+	}
+
 	var r0 []byte
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, common.Hash) ([]byte, error)); ok {
@@ -83,6 +87,10 @@ func (_c *dataCommitteeClientMock_GetOffChainData_Call) RunAndReturn(run func(co
 // SignSequence provides a mock function with given fields: signedSequence
 func (_m *dataCommitteeClientMock) SignSequence(signedSequence types.SignedSequence) ([]byte, error) {
 	ret := _m.Called(signedSequence)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SignSequence")
+	}
 
 	var r0 []byte
 	var r1 error

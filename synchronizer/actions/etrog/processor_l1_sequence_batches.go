@@ -299,8 +299,8 @@ func (p *ProcessorL1SequenceBatchesEtrog) ProcessSequenceBatches(ctx context.Con
 
 			// Reset trusted state
 			previousBatchNumber := batch.BatchNumber - 1
-			if tBatch.StateRoot == (common.Hash{}) {
-				log.Warnf("cleaning state before inserting batch from L1. Clean until batch: %d", previousBatchNumber)
+			if tBatch.WIP {
+				log.Infof("cleaning state before inserting batch from L1. Clean until batch: %d", previousBatchNumber)
 			} else {
 				log.Warnf("missmatch in trusted state detected, discarding batches until batchNum %d", previousBatchNumber)
 			}
@@ -403,7 +403,7 @@ func (p *ProcessorL1SequenceBatchesEtrog) checkTrustedState(ctx context.Context,
 		reason := reorgReasons.String()
 
 		if p.sync.IsTrustedSequencer() {
-			log.Errorf("TRUSTED REORG DETECTED! Batch: %d reson:%s", batch.BatchNumber, reason)
+			log.Errorf("TRUSTED REORG DETECTED! Batch: %d reason:%s", batch.BatchNumber, reason)
 			// Halt function never have to return! it must blocks the process
 			p.halt(ctx, fmt.Errorf("TRUSTED REORG DETECTED! Batch: %d", batch.BatchNumber))
 			log.Errorf("CRITICAL!!!: Never have to execute this code. Halt function never have to return! it must blocks the process")

@@ -24,6 +24,10 @@ func (_m *SynchronizerFullInterface) EXPECT() *SynchronizerFullInterface_Expecte
 func (_m *SynchronizerFullInterface) CheckFlushID(dbTx pgx.Tx) error {
 	ret := _m.Called(dbTx)
 
+	if len(ret) == 0 {
+		panic("no return value specified for CheckFlushID")
+	}
+
 	var r0 error
 	if rf, ok := ret.Get(0).(func(pgx.Tx) error); ok {
 		r0 = rf(dbTx)
@@ -97,6 +101,10 @@ func (_c *SynchronizerFullInterface_CleanTrustedState_Call) RunAndReturn(run fun
 // IsTrustedSequencer provides a mock function with given fields:
 func (_m *SynchronizerFullInterface) IsTrustedSequencer() bool {
 	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for IsTrustedSequencer")
+	}
 
 	var r0 bool
 	if rf, ok := ret.Get(0).(func() bool); ok {

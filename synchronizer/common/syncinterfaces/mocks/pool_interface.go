@@ -27,6 +27,10 @@ func (_m *PoolInterface) EXPECT() *PoolInterface_Expecter {
 func (_m *PoolInterface) DeleteReorgedTransactions(ctx context.Context, txs []*types.Transaction) error {
 	ret := _m.Called(ctx, txs)
 
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteReorgedTransactions")
+	}
+
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, []*types.Transaction) error); ok {
 		r0 = rf(ctx, txs)
@@ -69,6 +73,10 @@ func (_c *PoolInterface_DeleteReorgedTransactions_Call) RunAndReturn(run func(co
 // StoreTx provides a mock function with given fields: ctx, tx, ip, isWIP
 func (_m *PoolInterface) StoreTx(ctx context.Context, tx types.Transaction, ip string, isWIP bool) error {
 	ret := _m.Called(ctx, tx, ip, isWIP)
+
+	if len(ret) == 0 {
+		panic("no return value specified for StoreTx")
+	}
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, types.Transaction, string, bool) error); ok {

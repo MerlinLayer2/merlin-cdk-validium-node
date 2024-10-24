@@ -211,6 +211,36 @@ func (_m *StateMock) GetBatchByNumber(ctx context.Context, batchNumber uint64, d
 	return r0, r1
 }
 
+// GetBatchL2DataByNumbers provides a mock function with given fields: ctx, batchNumbers, dbTx
+func (_m *StateMock) GetBatchL2DataByNumbers(ctx context.Context, batchNumbers []uint64, dbTx pgx.Tx) (map[uint64][]byte, error) {
+	ret := _m.Called(ctx, batchNumbers, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetBatchL2DataByNumbers")
+	}
+
+	var r0 map[uint64][]byte
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, []uint64, pgx.Tx) (map[uint64][]byte, error)); ok {
+		return rf(ctx, batchNumbers, dbTx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, []uint64, pgx.Tx) map[uint64][]byte); ok {
+		r0 = rf(ctx, batchNumbers, dbTx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(map[uint64][]byte)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, []uint64, pgx.Tx) error); ok {
+		r1 = rf(ctx, batchNumbers, dbTx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetBatchTimestamp provides a mock function with given fields: ctx, batchNumber, forcedForkId, dbTx
 func (_m *StateMock) GetBatchTimestamp(ctx context.Context, batchNumber uint64, forcedForkId *uint64, dbTx pgx.Tx) (*time.Time, error) {
 	ret := _m.Called(ctx, batchNumber, forcedForkId, dbTx)
@@ -301,22 +331,34 @@ func (_m *StateMock) GetExitRootByGlobalExitRoot(ctx context.Context, ger common
 	return r0, r1
 }
 
-// GetForkIDByBatchNumber provides a mock function with given fields: batchNumber
-func (_m *StateMock) GetForkIDByBatchNumber(batchNumber uint64) uint64 {
-	ret := _m.Called(batchNumber)
+// GetForcedBatchDataByNumbers provides a mock function with given fields: ctx, batchNumbers, dbTx
+func (_m *StateMock) GetForcedBatchDataByNumbers(ctx context.Context, batchNumbers []uint64, dbTx pgx.Tx) (map[uint64][]byte, error) {
+	ret := _m.Called(ctx, batchNumbers, dbTx)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetForkIDByBatchNumber")
+		panic("no return value specified for GetForcedBatchDataByNumbers")
 	}
 
-	var r0 uint64
-	if rf, ok := ret.Get(0).(func(uint64) uint64); ok {
-		r0 = rf(batchNumber)
+	var r0 map[uint64][]byte
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, []uint64, pgx.Tx) (map[uint64][]byte, error)); ok {
+		return rf(ctx, batchNumbers, dbTx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, []uint64, pgx.Tx) map[uint64][]byte); ok {
+		r0 = rf(ctx, batchNumbers, dbTx)
 	} else {
-		r0 = ret.Get(0).(uint64)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(map[uint64][]byte)
+		}
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(context.Context, []uint64, pgx.Tx) error); ok {
+		r1 = rf(ctx, batchNumbers, dbTx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // GetL2BlockByHash provides a mock function with given fields: ctx, hash, dbTx
