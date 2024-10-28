@@ -33,6 +33,8 @@ const (
 	APITxPool = "txpool"
 	// APIWeb3 represents the web3 API prefix.
 	APIWeb3 = "web3"
+	// APIMerlin represents the merlin API prefix.
+	APIMerlin = "merlin"
 
 	wsBufferSizeLimitInBytes = 1024
 	maxRequestContentLength  = 1024 * 1024 * 5

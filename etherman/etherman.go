@@ -210,6 +210,7 @@ type Client struct {
 
 	da    dataavailability.BatchDataProvider
 	state stateProvider
+	OriEthClient *ethclient.Client
 }
 
 // NewClient creates a new etherman.
@@ -307,6 +308,7 @@ func NewClient(cfg Config, l1Config L1Config, da dataavailability.BatchDataProvi
 		auth:  map[common.Address]bind.TransactOpts{},
 		da:    da,
 		state: st,
+		OriEthClient: ethClient,
 	}, nil
 }
 
@@ -2103,4 +2105,9 @@ func (etherMan *Client) SetDataAvailabilityProtocol(from, daAddress common.Addre
 // GetRollupId returns the rollup id
 func (etherMan *Client) GetRollupId() uint32 {
 	return etherMan.RollupID
+}
+
+// GetOriginalEthClient return the original ethClient
+func (etherMan *Client) GetOriginalEthClient() *ethclient.Client {
+	return etherMan.OriEthClient
 }

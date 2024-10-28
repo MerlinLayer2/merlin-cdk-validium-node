@@ -790,3 +790,33 @@ func NewZKCountersResponse(zkCounters state.ZKCounters, limits ZKCountersLimits,
 		OOCError:       oocErrMsg,
 	}
 }
+
+// ZKProof  zk proof
+type ZKProof struct {
+	ForkID        uint64          `json:"forkID"`
+	Proof         [24]common.Hash `json:"proof"`
+	PubSignals    [1]*big.Int     `json:"pubSignals"`
+	RpubSignals   *RawPubSignals  `json:"rawPubSignals,omitempty"`
+	StartBlockNum uint64          `json:"startBlockNum"`
+	EndBlockNum   uint64          `json:"endBlockNum"`
+}
+
+// RawPubSignals raw pub signals
+type RawPubSignals struct {
+	Snark  *InputSnark `json:"snark"`
+	Rfield string      `json:"rfield"`
+}
+
+// InputSnark input snark
+type InputSnark struct {
+	Sender           common.Address `json:"sender"`
+	OldStateRoot     common.Hash    `json:"oldStateRoot"`
+	OldAccInputHash  common.Hash    `json:"oldAccInputHash"`
+	InitNumBatch     uint64         `json:"initNumBatch"`
+	ChainId          uint64         `json:"chainId"`
+	ForkID           uint64         `json:"forkID"`
+	NewStateRoot     common.Hash    `json:"newStateRoot"`
+	NewAccInputHash  common.Hash    `json:"newAccInputHash"`
+	NewLocalExitRoot common.Hash    `json:"newLocalExitRoot"`
+	FinalNewBatch    uint64         `json:"finalNewBatch"`
+}
