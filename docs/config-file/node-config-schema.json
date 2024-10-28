@@ -169,6 +169,16 @@
 						"300ms"
 					]
 				},
+				"IntervalToRefreshSpecialedAddresses": {
+					"type": "string",
+					"title": "Duration",
+					"description": "IntervalToRefreshSpecialedAddresses is the time it takes to sync the\nSpecialed address list from db to memory",
+					"default": "5m0s",
+					"examples": [
+						"1m",
+						"300ms"
+					]
+				},
 				"IntervalToRefreshGasPrices": {
 					"type": "string",
 					"title": "Duration",
@@ -231,10 +241,62 @@
 					"type": "object",
 					"description": "DB is the database configuration"
 				},
+				"EnableReadDB": {
+					"type": "boolean",
+					"description": "EnableReadDB enables using read instance for certain database queries",
+					"default": false
+				},
+				"ReadDB": {
+					"properties": {
+						"Name": {
+							"type": "string",
+							"description": "Database name",
+							"default": "pool_db"
+						},
+						"User": {
+							"type": "string",
+							"description": "Database User name",
+							"default": "pool_user"
+						},
+						"Password": {
+							"type": "string",
+							"description": "Database Password of the user",
+							"default": "pool_password"
+						},
+						"Host": {
+							"type": "string",
+							"description": "Host address of database",
+							"default": "zkevm-pool-db"
+						},
+						"Port": {
+							"type": "string",
+							"description": "Port Number of database",
+							"default": "5432"
+						},
+						"EnableLog": {
+							"type": "boolean",
+							"description": "EnableLog",
+							"default": false
+						},
+						"MaxConns": {
+							"type": "integer",
+							"description": "MaxConns is the maximum number of connections in the pool.",
+							"default": 200
+						}
+					},
+					"additionalProperties": false,
+					"type": "object",
+					"description": "ReadDB is the connection of the read instance for certain database queries"
+				},
 				"DefaultMinGasPriceAllowed": {
 					"type": "integer",
 					"description": "DefaultMinGasPriceAllowed is the default min gas price to suggest",
 					"default": 1000000000
+				},
+				"DefaultMaxGasPriceAllowed": {
+					"type": "integer",
+					"description": "DefaultMaxGasPriceAllowed is the default max gas price to suggest",
+					"default": 0
 				},
 				"MinAllowedGasPriceInterval": {
 					"type": "string",
@@ -256,15 +318,45 @@
 						"300ms"
 					]
 				},
+				"DefaultMaxGasAllowed": {
+					"type": "integer",
+					"description": "DefaultMaxGasAllowed is the max gas limit to suggest, set 0 to disable",
+					"default": 0
+				},
 				"AccountQueue": {
 					"type": "integer",
 					"description": "AccountQueue represents the maximum number of non-executable transaction slots permitted per account",
 					"default": 64
 				},
+				"AccountQueueSpecialedMultiple": {
+					"type": "integer",
+					"description": "AccountQueueSpecialedMultiple Amplification factor for addresses in the Specialed",
+					"default": 10
+				},
 				"GlobalQueue": {
 					"type": "integer",
 					"description": "GlobalQueue represents the maximum number of non-executable transaction slots for all accounts",
 					"default": 1024
+				},
+				"EnableSpecialPriorityGasPrice": {
+					"type": "boolean",
+					"description": "EnableSpecialPriorityGasPrice Whether to activate priority adjustment based on special price",
+					"default": false
+				},
+				"SpecialPriorityGasPriceMultiple": {
+					"type": "integer",
+					"description": "SpecialPriorityGasPriceMultiple When the price exceeds the recommended price by several times, a special priority is triggered",
+					"default": 10
+				},
+				"EnableToBlacklist": {
+					"type": "boolean",
+					"description": "EnableToBlacklist Whether to enable interception when the to address is in the blacklist",
+					"default": false
+				},
+				"ToBlacklistDisguiseErrors": {
+					"type": "boolean",
+					"description": "ToBlacklistDisguiseErrors Whether to disguise errors that prohibit the to address",
+					"default": false
 				},
 				"EffectiveGasPrice": {
 					"properties": {
@@ -456,6 +548,11 @@
 					"description": "EnableHttpLog allows the user to enable or disable the logs related to the HTTP\nrequests to be captured by the server.",
 					"default": true
 				},
+				"PreCheckEnabled": {
+					"type": "boolean",
+					"description": "PreCheckEnabled External nodes are pre-checked in advance",
+					"default": true
+				},
 				"ZKCountersLimits": {
 					"properties": {
 						"MaxKeccakHashes": {
@@ -552,12 +649,12 @@
 								"latest"
 							],
 							"description": "L1SafeBlockPoint is the point that a block is considered safe enough to be checked\nit can be: finalized, safe,pending or latest",
-							"default": "finalized"
+							"default": "latest"
 						},
 						"L1SafeBlockOffset": {
 							"type": "integer",
 							"description": "L1SafeBlockOffset is the offset to add to L1SafeBlockPoint as a safe point\nit can be positive or negative\nExample: L1SafeBlockPoint= finalized, L1SafeBlockOffset= -10, then the safe block ten blocks before the finalized block",
-							"default": 0
+							"default": -5
 						},
 						"ForceCheckBeforeStart": {
 							"type": "boolean",
@@ -577,12 +674,12 @@
 								"latest"
 							],
 							"description": "L1PreSafeBlockPoint is the point that a block is considered safe enough to be checked\nit can be: finalized, safe,pending or latest",
-							"default": "safe"
+							"default": "latest"
 						},
 						"L1PreSafeBlockOffset": {
 							"type": "integer",
 							"description": "L1PreSafeBlockOffset is the offset to add to L1PreSafeBlockPoint as a safe point\nit can be positive or negative\nExample: L1PreSafeBlockPoint= finalized, L1PreSafeBlockOffset= -10, then the safe block ten blocks before the finalized block",
-							"default": 0
+							"default": -5
 						}
 					},
 					"additionalProperties": false,
@@ -734,6 +831,16 @@
 					"additionalProperties": false,
 					"type": "object",
 					"description": "L2Synchronization Configuration for L2 synchronization"
+				},
+				"SyncOnlyTrusted": {
+					"type": "boolean",
+					"description": "Merlin specific\nSyncOnlyTrusted option whether sync L1 block or not (for external node use)",
+					"default": false
+				},
+				"UpgradeEtrogBatchNumber": {
+					"type": "integer",
+					"description": "UpgradeEtrogBatchNumber is the number of the first batch after upgrading to etrog",
+					"default": 0
 				}
 			},
 			"additionalProperties": false,
@@ -1221,6 +1328,16 @@
 					"type": "string",
 					"description": "GeneratingProofCleanupThreshold represents the time interval after\nwhich a proof in generating state is considered to be stuck and\nallowed to be cleared.",
 					"default": "10m"
+				},
+				"GenerateProofDelay": {
+					"type": "string",
+					"title": "Duration",
+					"description": "GenerateProofDelay is the delay to start generating proof for a batch since the batch's timestamp",
+					"default": "0s",
+					"examples": [
+						"1m",
+						"300ms"
+					]
 				},
 				"GasOffset": {
 					"type": "integer",
