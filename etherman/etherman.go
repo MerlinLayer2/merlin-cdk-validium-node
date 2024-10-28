@@ -208,8 +208,8 @@ type Client struct {
 	cfg   Config
 	auth  map[common.Address]bind.TransactOpts // empty in case of read-only client
 
-	da    dataavailability.BatchDataProvider
-	state stateProvider
+	da           dataavailability.BatchDataProvider
+	state        stateProvider
 	OriEthClient *ethclient.Client
 }
 
@@ -303,11 +303,11 @@ func NewClient(cfg Config, l1Config L1Config, da dataavailability.BatchDataProvi
 			MultiGasProvider: cfg.MultiGasProvider,
 			Providers:        gProviders,
 		},
-		l1Cfg: l1Config,
-		cfg:   cfg,
-		auth:  map[common.Address]bind.TransactOpts{},
-		da:    da,
-		state: st,
+		l1Cfg:        l1Config,
+		cfg:          cfg,
+		auth:         map[common.Address]bind.TransactOpts{},
+		da:           da,
+		state:        st,
 		OriEthClient: ethClient,
 	}, nil
 }
