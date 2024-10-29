@@ -32,6 +32,7 @@ DOCKERCOMPOSENODEAPPROVE := zkevm-approve
 DOCKERCOMPOSENODEAPPROVEV1TOV2 := zkevm-approve-v1tov2
 DOCKERCOMPOSEMETRICS := zkevm-metrics
 DOCKERCOMPOSEGRAFANA := grafana
+DOCKERCOMPOSEDATANODEDB := zkevm-data-node-db
 
 RUNSTATEDB := $(DOCKERCOMPOSE) up -d $(DOCKERCOMPOSESTATEDB)
 RUNPOOLDB := $(DOCKERCOMPOSE) up -d $(DOCKERCOMPOSEPOOLDB)
@@ -113,8 +114,8 @@ STOPMETRICS := $(DOCKERCOMPOSE) stop $(DOCKERCOMPOSEMETRICS) && $(DOCKERCOMPOSE)
 
 STOP := $(DOCKERCOMPOSE) down --remove-orphans
 
-RUNDACDB := docker-compose up -d zkevm-data-node-db
-STOPDACDB := docker-compose stop zkevm-data-node-db && docker-compose rm -f zkevm-data-node-db
+RUNDACDB := $(DOCKERCOMPOSE) up -d $(DOCKERCOMPOSEDATANODEDB)
+STOPDACDB := $(DOCKERCOMPOSE) stop $(DOCKERCOMPOSEDATANODEDB) && $(DOCKERCOMPOSE) rm -f $(DOCKERCOMPOSEDATANODEDB)
 
 .PHONY: test-full-non-e2e
 test-full-non-e2e: stop ## Runs non-e2e tests checking race conditions
@@ -724,11 +725,11 @@ generate-mocks-synchronizer: ## Generates mocks for synchronizer , using mockery
 
 	rm -Rf ../synchronizer/actions/elderberry/mocks
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --all --case snake --dir ../synchronizer/actions/elderberry --output ../synchronizer/actions/elderberry/mocks --outpkg mock_elderberry ${COMMON_MOCKERY_PARAMS}
-	
+
 	rm -Rf ../synchronizer/l1_check_block/mocks
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --all --case snake --dir ../synchronizer/l1_check_block --output ../synchronizer/l1_check_block/mocks --outpkg mock_l1_check_block ${COMMON_MOCKERY_PARAMS}
-	
-	
+
+
 
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=Tx --srcpkg=github.com/jackc/pgx/v4 --output=../synchronizer/mocks --structname=DbTxMock --filename=mock_dbtx.go ${COMMON_MOCKERY_PARAMS}
 
