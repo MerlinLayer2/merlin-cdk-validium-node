@@ -39,8 +39,6 @@ const (
 
 	ethTxManagerOwner = "aggregator"
 	monitoredIDFormat = "proof-from-%v-to-%v"
-
-	forkId9 = uint64(9)
 )
 
 type finalProofMsg struct {
