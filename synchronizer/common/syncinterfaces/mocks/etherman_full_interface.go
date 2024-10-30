@@ -20,6 +20,11 @@ type EthermanFullInterface struct {
 	mock.Mock
 }
 
+func (_m *EthermanFullInterface) GetLatestBlockNumber(ctx context.Context) (uint64, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 type EthermanFullInterface_Expecter struct {
 	mock *mock.Mock
 }
