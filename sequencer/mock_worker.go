@@ -125,9 +125,9 @@ func (_m *WorkerMock) MoveTxToNotReady(txHash common.Hash, from common.Address, 
 	return r0
 }
 
-// NewTxTracker provides a mock function with given fields: tx, usedZKcounters, reservedZKCouners, ip
-func (_m *WorkerMock)NewTxTracker(tx types.Transaction, usedZKcounters state.ZKCounters, reservedZKCouners state.ZKCounters, ip string, priority uint64) (*TxTracker, error) {
-	ret := _m.Called(tx, usedZKcounters, reservedZKCouners, ip)
+// NewTxTracker provides a mock function with given fields: tx, usedZKcounters, reservedZKCouners, ip, priority
+func (_m *WorkerMock) NewTxTracker(tx types.Transaction, usedZKcounters state.ZKCounters, reservedZKCouners state.ZKCounters, ip string, priority uint64) (*TxTracker, error) {
+	ret := _m.Called(tx, usedZKcounters, reservedZKCouners, ip, priority)
 
 	if len(ret) == 0 {
 		panic("no return value specified for NewTxTracker")
@@ -135,19 +135,19 @@ func (_m *WorkerMock)NewTxTracker(tx types.Transaction, usedZKcounters state.ZKC
 
 	var r0 *TxTracker
 	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Transaction, state.ZKCounters, state.ZKCounters, string) (*TxTracker, error)); ok {
-		return rf(tx, usedZKcounters, reservedZKCouners, ip)
+	if rf, ok := ret.Get(0).(func(types.Transaction, state.ZKCounters, state.ZKCounters, string, uint64) (*TxTracker, error)); ok {
+		return rf(tx, usedZKcounters, reservedZKCouners, ip, priority)
 	}
-	if rf, ok := ret.Get(0).(func(types.Transaction, state.ZKCounters, state.ZKCounters, string) *TxTracker); ok {
-		r0 = rf(tx, usedZKcounters, reservedZKCouners, ip)
+	if rf, ok := ret.Get(0).(func(types.Transaction, state.ZKCounters, state.ZKCounters, string, uint64) *TxTracker); ok {
+		r0 = rf(tx, usedZKcounters, reservedZKCouners, ip, priority)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*TxTracker)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Transaction, state.ZKCounters, state.ZKCounters, string) error); ok {
-		r1 = rf(tx, usedZKcounters, reservedZKCouners, ip)
+	if rf, ok := ret.Get(1).(func(types.Transaction, state.ZKCounters, state.ZKCounters, string, uint64) error); ok {
+		r1 = rf(tx, usedZKcounters, reservedZKCouners, ip, priority)
 	} else {
 		r1 = ret.Error(1)
 	}

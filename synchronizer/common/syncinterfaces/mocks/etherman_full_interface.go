@@ -203,6 +203,62 @@ func (_c *EthermanFullInterface_GetLatestBatchNumber_Call) RunAndReturn(run func
 	return _c
 }
 
+// GetLatestBlockNumber provides a mock function with given fields: ctx
+func (_m *EthermanFullInterface) GetLatestBlockNumber(ctx context.Context) (uint64, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetLatestBlockNumber")
+	}
+
+	var r0 uint64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (uint64, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) uint64); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(uint64)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// EthermanFullInterface_GetLatestBlockNumber_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetLatestBlockNumber'
+type EthermanFullInterface_GetLatestBlockNumber_Call struct {
+	*mock.Call
+}
+
+// GetLatestBlockNumber is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *EthermanFullInterface_Expecter) GetLatestBlockNumber(ctx interface{}) *EthermanFullInterface_GetLatestBlockNumber_Call {
+	return &EthermanFullInterface_GetLatestBlockNumber_Call{Call: _e.mock.On("GetLatestBlockNumber", ctx)}
+}
+
+func (_c *EthermanFullInterface_GetLatestBlockNumber_Call) Run(run func(ctx context.Context)) *EthermanFullInterface_GetLatestBlockNumber_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context))
+	})
+	return _c
+}
+
+func (_c *EthermanFullInterface_GetLatestBlockNumber_Call) Return(_a0 uint64, _a1 error) *EthermanFullInterface_GetLatestBlockNumber_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *EthermanFullInterface_GetLatestBlockNumber_Call) RunAndReturn(run func(context.Context) (uint64, error)) *EthermanFullInterface_GetLatestBlockNumber_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetLatestVerifiedBatchNum provides a mock function with given fields:
 func (_m *EthermanFullInterface) GetLatestVerifiedBatchNum() (uint64, error) {
 	ret := _m.Called()
