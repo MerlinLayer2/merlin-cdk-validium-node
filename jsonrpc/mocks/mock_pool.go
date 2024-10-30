@@ -22,10 +22,6 @@ type PoolMock struct {
 	mock.Mock
 }
 
-func (_m *PoolMock) ExternalValidateTx(ctx context.Context, tx types.Transaction, ip string) error {
-	return nil
-}
-
 // AddTx provides a mock function with given fields: ctx, tx, ip
 func (_m *PoolMock) AddTx(ctx context.Context, tx types.Transaction, ip string) error {
 	ret := _m.Called(ctx, tx, ip)

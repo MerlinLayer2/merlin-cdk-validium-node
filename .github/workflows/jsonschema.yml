@@ -47,7 +47,7 @@ jobs:
 
           echo "Checking if JSON schema is up to date..."
           make GENERATE_DOC_PATH=/tmp/ config-doc-gen
-          for CHECK_FILE in "node-config-schema.json" "node-config-doc.md" "node-config-doc.html" "custom_network-config-schema.json" "custom_network-config-doc.md" "custom_network-config-doc.html"; do
+          for CHECK_FILE in "node-config-schema.json" "node-config-doc.md" "custom_network-config-schema.json" "custom_network-config-doc.md" "custom_network-config-doc.html"; do
             EXPECTED_FILE=tmp/$CHECK_FILE
             REAL_FILE=docs/config-file/$CHECK_FILE
             echo "checking $CHECK_FILE ...."
