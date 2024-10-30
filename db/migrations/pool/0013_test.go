@@ -46,5 +46,5 @@ func (m migrationTest0013) RunAssertsAfterMigrationDown(t *testing.T, db *sql.DB
 }
 
 func TestMigration0013(t *testing.T) {
-	runMigrationTest(t, 13, migrationTest0013{})
+	runMigrationTest(t, 16, migrationTest0013{})
 }
