@@ -87,6 +87,62 @@ func (_c *ethermanMock_EthBlockByNumber_Call) RunAndReturn(run func(context.Cont
 	return _c
 }
 
+// GetFinalizedBlockNumber provides a mock function with given fields: ctx
+func (_m *ethermanMock) GetFinalizedBlockNumber(ctx context.Context) (uint64, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetFinalizedBlockNumber")
+	}
+
+	var r0 uint64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (uint64, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) uint64); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(uint64)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ethermanMock_GetFinalizedBlockNumber_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetFinalizedBlockNumber'
+type ethermanMock_GetFinalizedBlockNumber_Call struct {
+	*mock.Call
+}
+
+// GetFinalizedBlockNumber is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *ethermanMock_Expecter) GetFinalizedBlockNumber(ctx interface{}) *ethermanMock_GetFinalizedBlockNumber_Call {
+	return &ethermanMock_GetFinalizedBlockNumber_Call{Call: _e.mock.On("GetFinalizedBlockNumber", ctx)}
+}
+
+func (_c *ethermanMock_GetFinalizedBlockNumber_Call) Run(run func(ctx context.Context)) *ethermanMock_GetFinalizedBlockNumber_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context))
+	})
+	return _c
+}
+
+func (_c *ethermanMock_GetFinalizedBlockNumber_Call) Return(_a0 uint64, _a1 error) *ethermanMock_GetFinalizedBlockNumber_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *ethermanMock_GetFinalizedBlockNumber_Call) RunAndReturn(run func(context.Context) (uint64, error)) *ethermanMock_GetFinalizedBlockNumber_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetLatestBatchNumber provides a mock function with given fields:
 func (_m *ethermanMock) GetLatestBatchNumber() (uint64, error) {
 	ret := _m.Called()
@@ -138,6 +194,62 @@ func (_c *ethermanMock_GetLatestBatchNumber_Call) Return(_a0 uint64, _a1 error) 
 }
 
 func (_c *ethermanMock_GetLatestBatchNumber_Call) RunAndReturn(run func() (uint64, error)) *ethermanMock_GetLatestBatchNumber_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetLatestBlockNumber provides a mock function with given fields: ctx
+func (_m *ethermanMock) GetLatestBlockNumber(ctx context.Context) (uint64, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetLatestBlockNumber")
+	}
+
+	var r0 uint64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (uint64, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) uint64); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(uint64)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ethermanMock_GetLatestBlockNumber_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetLatestBlockNumber'
+type ethermanMock_GetLatestBlockNumber_Call struct {
+	*mock.Call
+}
+
+// GetLatestBlockNumber is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *ethermanMock_Expecter) GetLatestBlockNumber(ctx interface{}) *ethermanMock_GetLatestBlockNumber_Call {
+	return &ethermanMock_GetLatestBlockNumber_Call{Call: _e.mock.On("GetLatestBlockNumber", ctx)}
+}
+
+func (_c *ethermanMock_GetLatestBlockNumber_Call) Run(run func(ctx context.Context)) *ethermanMock_GetLatestBlockNumber_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context))
+	})
+	return _c
+}
+
+func (_c *ethermanMock_GetLatestBlockNumber_Call) Return(_a0 uint64, _a1 error) *ethermanMock_GetLatestBlockNumber_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *ethermanMock_GetLatestBlockNumber_Call) RunAndReturn(run func(context.Context) (uint64, error)) *ethermanMock_GetLatestBlockNumber_Call {
 	_c.Call.Return(run)
 	return _c
 }
