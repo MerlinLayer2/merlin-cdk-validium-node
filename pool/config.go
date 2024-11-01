@@ -11,6 +11,10 @@ type Config struct {
 	// blocked address list from db to memory
 	IntervalToRefreshBlockedAddresses types.Duration `mapstructure:"IntervalToRefreshBlockedAddresses"`
 
+	// IntervalToRefreshSpecialedAddresses is the time it takes to sync the
+	// Specialed address list from db to memory
+	IntervalToRefreshSpecialedAddresses types.Duration `mapstructure:"IntervalToRefreshSpecialedAddresses"`
+
 	// IntervalToRefreshGasPrices is the time to wait to refresh the gas prices
 	IntervalToRefreshGasPrices types.Duration `mapstructure:"IntervalToRefreshGasPrices"`
 
@@ -47,14 +51,33 @@ type Config struct {
 	// AccountQueue represents the maximum number of non-executable transaction slots permitted per account
 	AccountQueue uint64 `mapstructure:"AccountQueue"`
 
+	// AccountQueueSpecialedMultiple Amplification factor for addresses in the Specialed
+	AccountQueueSpecialedMultiple uint64 `mapstructure:"AccountQueueSpecialedMultiple"`
+
 	// GlobalQueue represents the maximum number of non-executable transaction slots for all accounts
 	GlobalQueue uint64 `mapstructure:"GlobalQueue"`
+
+	// EnableSpecialPriorityGasPrice Whether to activate priority adjustment based on special price
+	EnableSpecialPriorityGasPrice bool `mapstructure:"EnableSpecialPriorityGasPrice"`
+
+	// SpecialPriorityGasPriceMultiple When the price exceeds the recommended price by several times, a special priority is triggered
+	SpecialPriorityGasPriceMultiple uint64 `mapstructure:"SpecialPriorityGasPriceMultiple"`
+
+	// EnableToBlacklist Whether to enable interception when the to address is in the blacklist
+	EnableToBlacklist bool `mapstructure:"EnableToBlacklist"`
+
+	// ToBlacklistDisguiseErrors Whether to disguise errors that prohibit the to address
+	ToBlacklistDisguiseErrors bool `mapstructure:"ToBlacklistDisguiseErrors"`
 
 	// EffectiveGasPrice is the config for the effective gas price calculation
 	EffectiveGasPrice EffectiveGasPriceCfg `mapstructure:"EffectiveGasPrice"`
 
 	// ForkID is the current fork ID of the chain
 	ForkID uint64 `mapstructure:"ForkID"`
+
+	// TxFeeCap is the global transaction fee(price * gaslimit) cap for
+	// send-transaction variants. The unit is ether. 0 means no cap.
+	TxFeeCap float64 `mapstructure:"TxFeeCap"`
 }
 
 // EffectiveGasPriceCfg contains the configuration properties for the effective gas price

@@ -446,6 +446,23 @@ func NewBatch(ctx context.Context, st StateInterface, batch *state.Batch, virtua
 	return res, nil
 }
 
+// BatchFilter is a list of batch numbers to retrieve
+type BatchFilter struct {
+	Numbers []BatchNumber `json:"numbers"`
+}
+
+// BatchData is an abbreviated structure that only contains the number and L2 batch data
+type BatchData struct {
+	Number      ArgUint64 `json:"number"`
+	BatchL2Data ArgBytes  `json:"batchL2Data,omitempty"`
+	Empty       bool      `json:"empty"`
+}
+
+// BatchDataResult is a list of BatchData for a BatchFilter
+type BatchDataResult struct {
+	Data []*BatchData `json:"data"`
+}
+
 // TransactionOrHash for union type of transaction and types.Hash
 type TransactionOrHash struct {
 	Hash *common.Hash
@@ -772,4 +789,34 @@ func NewZKCountersResponse(zkCounters state.ZKCounters, limits ZKCountersLimits,
 		Revert:         revert,
 		OOCError:       oocErrMsg,
 	}
+}
+
+// ZKProof  zk proof
+type ZKProof struct {
+	ForkID        uint64          `json:"forkID"`
+	Proof         [24]common.Hash `json:"proof"`
+	PubSignals    [1]*big.Int     `json:"pubSignals"`
+	RpubSignals   *RawPubSignals  `json:"rawPubSignals,omitempty"`
+	StartBlockNum uint64          `json:"startBlockNum"`
+	EndBlockNum   uint64          `json:"endBlockNum"`
+}
+
+// RawPubSignals raw pub signals
+type RawPubSignals struct {
+	Snark  *InputSnark `json:"snark"`
+	Rfield string      `json:"rfield"`
+}
+
+// InputSnark input snark
+type InputSnark struct {
+	Sender           common.Address `json:"sender"`
+	OldStateRoot     common.Hash    `json:"oldStateRoot"`
+	OldAccInputHash  common.Hash    `json:"oldAccInputHash"`
+	InitNumBatch     uint64         `json:"initNumBatch"`
+	ChainId          uint64         `json:"chainId"`
+	ForkID           uint64         `json:"forkID"`
+	NewStateRoot     common.Hash    `json:"newStateRoot"`
+	NewAccInputHash  common.Hash    `json:"newAccInputHash"`
+	NewLocalExitRoot common.Hash    `json:"newLocalExitRoot"`
+	FinalNewBatch    uint64         `json:"finalNewBatch"`
 }

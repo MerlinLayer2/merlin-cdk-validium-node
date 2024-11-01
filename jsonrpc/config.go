@@ -68,6 +68,9 @@ type Config struct {
 
 	// ZKCountersLimits defines the ZK Counter limits
 	ZKCountersLimits ZKCountersLimits
+
+	// VerifyZkProofConfigs verify zkproof config
+	VerifyZkProofConfigs []*VerifyZkProofConfig
 }
 
 // ZKCountersLimits defines the ZK Counter limits
@@ -95,4 +98,14 @@ type WebSocketsConfig struct {
 
 	// ReadLimit defines the maximum size of a message read from the client (in bytes)
 	ReadLimit int64 `mapstructure:"ReadLimit"`
+}
+
+// VerifyZkProofConfig verify zk proof config
+type VerifyZkProofConfig struct {
+	//ForkID this forkid of config
+	ForkID uint64
+	// VerifierAddr Address of the L1 verifier contract
+	VerifierAddr common.Address
+	// TrustedAggregator trusted Aggregator that used for verify proof
+	TrustedAggregator common.Address
 }

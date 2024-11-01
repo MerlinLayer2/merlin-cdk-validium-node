@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"strconv"
 	"sync"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/params"
 )
 
 var (
@@ -43,6 +45,7 @@ type Pool struct {
 	cfg                     Config
 	batchConstraintsCfg     state.BatchConstraintsCfg
 	blockedAddresses        sync.Map
+	specialedAddresses      sync.Map
 	minSuggestedGasPrice    *big.Int
 	minSuggestedGasPriceMux *sync.RWMutex
 	maxSuggestedGasPrice    *big.Int
@@ -101,6 +104,14 @@ func NewPool(cfg Config, batchConstraintsCfg state.BatchConstraintsCfg, s storag
 		for {
 			time.Sleep(cfg.IntervalToRefreshBlockedAddresses.Duration)
 			p.refreshBlockedAddresses()
+		}
+	}(&cfg, p)
+
+	p.refreshSpecialedAddresses()
+	go func(cfg *Config, p *Pool) {
+		for {
+			time.Sleep(cfg.IntervalToRefreshSpecialedAddresses.Duration)
+			p.refreshSpecialedAddresses()
 		}
 	}(&cfg, p)
 
@@ -166,6 +177,37 @@ func (p *Pool) refreshBlockedAddresses() {
 
 	for _, unblockedAddress := range unblockedAddresses {
 		p.blockedAddresses.Delete(unblockedAddress)
+	}
+}
+
+// refreshSpecialedAddresses refreshes the list of specialed addresses for the provided instance of pool
+func (p *Pool) refreshSpecialedAddresses() {
+	whitelistAddresses, err := p.storage.GetAllAddressesSpecialed(context.Background())
+	if err != nil {
+		log.Error("failed to load specialed addresses")
+		return
+	}
+
+	whitelistAddressesMap := sync.Map{}
+	for _, whitelistAddress := range whitelistAddresses {
+		whitelistAddressesMap.Store(whitelistAddress.String(), 1)
+		p.specialedAddresses.Store(whitelistAddress.String(), 1)
+	}
+
+	unspecialedAddresses := []string{}
+	p.specialedAddresses.Range(func(key, value any) bool {
+		addrHex := key.(string)
+		_, found := whitelistAddressesMap.Load(addrHex)
+		if found {
+			return true
+		}
+
+		unspecialedAddresses = append(unspecialedAddresses, addrHex)
+		return true
+	})
+
+	for _, unspecialedAddress := range unspecialedAddresses {
+		p.specialedAddresses.Delete(unspecialedAddress)
 	}
 }
 
@@ -257,6 +299,19 @@ func (p *Pool) StoreTx(ctx context.Context, tx types.Transaction, ip string, isW
 	poolTx.ZKCounters = preExecutionResponse.usedZKCounters
 	poolTx.ReservedZKCounters = preExecutionResponse.reservedZKCounters
 
+	from, err := state.GetSender(poolTx.Transaction)
+	if err != nil {
+		return ErrInvalidSender
+	}
+	_, whitelisted := p.specialedAddresses.Load(from.String())
+	if whitelisted {
+		poolTx.Priority = 1
+	}
+	if p.cfg.EnableSpecialPriorityGasPrice {
+		if tx.GasPrice().Uint64() > p.gasPrices.L2GasPrice*p.cfg.SpecialPriorityGasPriceMultiple {
+			poolTx.Priority = 2
+		}
+	}
 	return p.storage.AddTx(ctx, *poolTx)
 }
 
@@ -443,7 +498,7 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 
 	// check chain id
 	txChainID := poolTx.ChainId().Uint64()
-	if txChainID != p.chainID {
+	if txChainID != p.chainID && txChainID != 0 {
 		return ErrInvalidChainID
 	}
 
@@ -480,13 +535,29 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 		return ErrNegativeValue
 	}
 
+	if err := checkTxFee(poolTx.GasPrice(), poolTx.Gas(), p.cfg.TxFeeCap); err != nil {
+		return err
+	}
+
 	// check if sender is blocked
 	_, blocked := p.blockedAddresses.Load(from.String())
 	if blocked {
 		log.Infof("%v: %v", ErrBlockedSender.Error(), from.String())
 		return ErrBlockedSender
 	}
-
+	if p.cfg.EnableToBlacklist {
+		// check if to is blocked
+		if poolTx.Transaction.To() != nil {
+			_, toBlocked := p.blockedAddresses.Load(poolTx.Transaction.To().String())
+			if toBlocked {
+				log.Infof("%v: %v", ErrBlockedTo.Error(), poolTx.Transaction.To().String())
+				if p.cfg.ToBlacklistDisguiseErrors {
+					return ErrTxPoolOverflow
+				}
+				return ErrBlockedTo
+			}
+		}
+	}
 	lastL2Block, err := p.state.GetLastL2Block(ctx, nil)
 	if err != nil {
 		log.Errorf("failed to load last l2 block while adding tx to the pool", err)
@@ -514,7 +585,13 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 		// }
 
 		// Ensure the transaction does not jump out of the expected AccountQueue
-		if poolTx.Nonce() > currentNonce+p.cfg.AccountQueue-1 {
+		// check if sender is whitelisted
+		_, specialed := p.specialedAddresses.Load(from.String())
+		accountQueue := p.cfg.AccountQueue
+		if specialed && p.cfg.AccountQueueSpecialedMultiple > 0 {
+			accountQueue *= p.cfg.AccountQueueSpecialedMultiple
+		}
+		if poolTx.Nonce() > currentNonce+accountQueue-1 {
 			log.Infof("%v: %v", ErrNonceTooHigh.Error(), from.String())
 			return ErrNonceTooHigh
 		}
@@ -729,7 +806,7 @@ func (p *Pool) CalculateEffectiveGasPrice(rawTx []byte, txGasPrice *big.Int, txG
 
 // CalculateEffectiveGasPricePercentage calculates the gas price's effective percentage
 func (p *Pool) CalculateEffectiveGasPricePercentage(gasPrice *big.Int, effectiveGasPrice *big.Int) (uint8, error) {
-	return p.effectiveGasPrice.CalculateEffectiveGasPricePercentage(gasPrice, effectiveGasPrice)
+	return state.CalculateEffectiveGasPricePercentage(gasPrice, effectiveGasPrice)
 }
 
 // EffectiveGasPriceEnabled returns if effective gas price calculation is enabled or not
@@ -775,4 +852,20 @@ func IntrinsicGas(tx types.Transaction) (uint64, error) {
 // CheckPolicy checks if an address is allowed by policy name
 func (p *Pool) CheckPolicy(ctx context.Context, policy PolicyName, address common.Address) (bool, error) {
 	return p.storage.CheckPolicy(ctx, policy, address)
+}
+
+// checkTxFee is an internal function used to check whether the fee of
+// the given transaction is _reasonable_(under the cap).
+func checkTxFee(gasPrice *big.Int, gas uint64, cap float64) error {
+	// Short circuit if there is no cap for transaction fee at all.
+	if cap == 0 {
+		return nil
+	}
+	feeEth := new(big.Float).Quo(new(big.Float).SetInt(new(big.Int).Mul(gasPrice, new(big.Int).SetUint64(gas))), new(big.Float).SetInt(big.NewInt(params.Ether)))
+	feeFloat, _ := feeEth.Float64()
+	if feeFloat > cap {
+		feeFloatTruncated := strconv.FormatFloat(feeFloat, 'f', -1, 64)
+		return fmt.Errorf("tx fee (%s ether) exceeds the configured cap (%.2f ether)", feeFloatTruncated, cap)
+	}
+	return nil
 }

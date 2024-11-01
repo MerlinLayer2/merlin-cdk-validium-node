@@ -32,10 +32,11 @@ type TxTracker struct {
 	EGPLog             state.EffectiveGasPriceLog
 	L1GasPrice         uint64
 	L2GasPrice         uint64
+	Priority           uint64
 }
 
 // newTxTracker creates and inti a TxTracker
-func newTxTracker(tx types.Transaction, usedZKCounters state.ZKCounters, reservedZKCounters state.ZKCounters, ip string) (*TxTracker, error) {
+func newTxTracker(tx types.Transaction, usedZKCounters state.ZKCounters, reservedZKCounters state.ZKCounters, ip string, priority uint64) (*TxTracker, error) {
 	addr, err := state.GetSender(tx)
 	if err != nil {
 		return nil, err
@@ -55,6 +56,7 @@ func newTxTracker(tx types.Transaction, usedZKCounters state.ZKCounters, reserve
 		Gas:                tx.Gas(),
 		GasPrice:           tx.GasPrice(),
 		Cost:               tx.Cost(),
+		Priority:           priority,
 		Bytes:              uint64(len(rawTx)) + state.EfficiencyPercentageByteLength,
 		UsedZKCounters:     usedZKCounters,
 		ReservedZKCounters: reservedZKCounters,

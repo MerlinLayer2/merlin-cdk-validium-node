@@ -412,24 +412,31 @@ MaxGasPriceLimit=0
 **Type:** : `object`
 **Description:** Pool service configuration
 
-| Property                                                                        | Pattern | Type    | Deprecated | Definition | Title/Description                                                                                    |
-| ------------------------------------------------------------------------------- | ------- | ------- | ---------- | ---------- | ---------------------------------------------------------------------------------------------------- |
-| - [IntervalToRefreshBlockedAddresses](#Pool_IntervalToRefreshBlockedAddresses ) | No      | string  | No         | -          | Duration                                                                                             |
-| - [IntervalToRefreshGasPrices](#Pool_IntervalToRefreshGasPrices )               | No      | string  | No         | -          | Duration                                                                                             |
-| - [MaxTxBytesSize](#Pool_MaxTxBytesSize )                                       | No      | integer | No         | -          | MaxTxBytesSize is the max size of a transaction in bytes                                             |
-| - [MaxTxDataBytesSize](#Pool_MaxTxDataBytesSize )                               | No      | integer | No         | -          | MaxTxDataBytesSize is the max size of the data field of a transaction in bytes                       |
-| - [DB](#Pool_DB )                                                               | No      | object  | No         | -          | DB is the database configuration                                                                     |
-| - [EnableReadDB](#Pool_EnableReadDB )                                           | No      | boolean | No         | -          | EnableReadDB enables using read instance for certain database queries                                |
-| - [ReadDB](#Pool_ReadDB )                                                       | No      | object  | No         | -          | ReadDB is the connection of the read instance for certain database queries                           |
-| - [DefaultMinGasPriceAllowed](#Pool_DefaultMinGasPriceAllowed )                 | No      | integer | No         | -          | DefaultMinGasPriceAllowed is the default min gas price to suggest                                    |
-| - [DefaultMaxGasPriceAllowed](#Pool_DefaultMaxGasPriceAllowed )                 | No      | integer | No         | -          | DefaultMaxGasPriceAllowed is the default max gas price to suggest                                    |
-| - [MinAllowedGasPriceInterval](#Pool_MinAllowedGasPriceInterval )               | No      | string  | No         | -          | Duration                                                                                             |
-| - [PollMinAllowedGasPriceInterval](#Pool_PollMinAllowedGasPriceInterval )       | No      | string  | No         | -          | Duration                                                                                             |
-| - [DefaultMaxGasAllowed](#Pool_DefaultMaxGasAllowed )                           | No      | integer | No         | -          | DefaultMaxGasAllowed is the max gas limit to suggest, set 0 to disable                               |
-| - [AccountQueue](#Pool_AccountQueue )                                           | No      | integer | No         | -          | AccountQueue represents the maximum number of non-executable transaction slots permitted per account |
-| - [GlobalQueue](#Pool_GlobalQueue )                                             | No      | integer | No         | -          | GlobalQueue represents the maximum number of non-executable transaction slots for all accounts       |
-| - [EffectiveGasPrice](#Pool_EffectiveGasPrice )                                 | No      | object  | No         | -          | EffectiveGasPrice is the config for the effective gas price calculation                              |
-| - [ForkID](#Pool_ForkID )                                                       | No      | integer | No         | -          | ForkID is the current fork ID of the chain                                                           |
+| Property                                                                            | Pattern | Type    | Deprecated | Definition | Title/Description                                                                                                                   |
+| ----------------------------------------------------------------------------------- | ------- | ------- | ---------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| - [IntervalToRefreshBlockedAddresses](#Pool_IntervalToRefreshBlockedAddresses )     | No      | string  | No         | -          | Duration                                                                                                                            |
+| - [IntervalToRefreshSpecialedAddresses](#Pool_IntervalToRefreshSpecialedAddresses ) | No      | string  | No         | -          | Duration                                                                                                                            |
+| - [IntervalToRefreshGasPrices](#Pool_IntervalToRefreshGasPrices )                   | No      | string  | No         | -          | Duration                                                                                                                            |
+| - [MaxTxBytesSize](#Pool_MaxTxBytesSize )                                           | No      | integer | No         | -          | MaxTxBytesSize is the max size of a transaction in bytes                                                                            |
+| - [MaxTxDataBytesSize](#Pool_MaxTxDataBytesSize )                                   | No      | integer | No         | -          | MaxTxDataBytesSize is the max size of the data field of a transaction in bytes                                                      |
+| - [DB](#Pool_DB )                                                                   | No      | object  | No         | -          | DB is the database configuration                                                                                                    |
+| - [EnableReadDB](#Pool_EnableReadDB )                                               | No      | boolean | No         | -          | EnableReadDB enables using read instance for certain database queries                                                               |
+| - [ReadDB](#Pool_ReadDB )                                                           | No      | object  | No         | -          | ReadDB is the connection of the read instance for certain database queries                                                          |
+| - [DefaultMinGasPriceAllowed](#Pool_DefaultMinGasPriceAllowed )                     | No      | integer | No         | -          | DefaultMinGasPriceAllowed is the default min gas price to suggest                                                                   |
+| - [DefaultMaxGasPriceAllowed](#Pool_DefaultMaxGasPriceAllowed )                     | No      | integer | No         | -          | DefaultMaxGasPriceAllowed is the default max gas price to suggest                                                                   |
+| - [MinAllowedGasPriceInterval](#Pool_MinAllowedGasPriceInterval )                   | No      | string  | No         | -          | Duration                                                                                                                            |
+| - [PollMinAllowedGasPriceInterval](#Pool_PollMinAllowedGasPriceInterval )           | No      | string  | No         | -          | Duration                                                                                                                            |
+| - [DefaultMaxGasAllowed](#Pool_DefaultMaxGasAllowed )                               | No      | integer | No         | -          | DefaultMaxGasAllowed is the max gas limit to suggest, set 0 to disable                                                              |
+| - [AccountQueue](#Pool_AccountQueue )                                               | No      | integer | No         | -          | AccountQueue represents the maximum number of non-executable transaction slots permitted per account                                |
+| - [AccountQueueSpecialedMultiple](#Pool_AccountQueueSpecialedMultiple )             | No      | integer | No         | -          | AccountQueueSpecialedMultiple Amplification factor for addresses in the Specialed                                                   |
+| - [GlobalQueue](#Pool_GlobalQueue )                                                 | No      | integer | No         | -          | GlobalQueue represents the maximum number of non-executable transaction slots for all accounts                                      |
+| - [EnableSpecialPriorityGasPrice](#Pool_EnableSpecialPriorityGasPrice )             | No      | boolean | No         | -          | EnableSpecialPriorityGasPrice Whether to activate priority adjustment based on special price                                        |
+| - [SpecialPriorityGasPriceMultiple](#Pool_SpecialPriorityGasPriceMultiple )         | No      | integer | No         | -          | SpecialPriorityGasPriceMultiple When the price exceeds the recommended price by several times, a special priority is triggered      |
+| - [EnableToBlacklist](#Pool_EnableToBlacklist )                                     | No      | boolean | No         | -          | EnableToBlacklist Whether to enable interception when the to address is in the blacklist                                            |
+| - [ToBlacklistDisguiseErrors](#Pool_ToBlacklistDisguiseErrors )                     | No      | boolean | No         | -          | ToBlacklistDisguiseErrors Whether to disguise errors that prohibit the to address                                                   |
+| - [EffectiveGasPrice](#Pool_EffectiveGasPrice )                                     | No      | object  | No         | -          | EffectiveGasPrice is the config for the effective gas price calculation                                                             |
+| - [ForkID](#Pool_ForkID )                                                           | No      | integer | No         | -          | ForkID is the current fork ID of the chain                                                                                          |
+| - [TxFeeCap](#Pool_TxFeeCap )                                                       | No      | number  | No         | -          | TxFeeCap is the global transaction fee(price * gaslimit) cap for<br />send-transaction variants. The unit is ether. 0 means no cap. |
 
 ### <a name="Pool_IntervalToRefreshBlockedAddresses"></a>7.1. `Pool.IntervalToRefreshBlockedAddresses`
 
@@ -458,7 +465,34 @@ blocked address list from db to memory
 IntervalToRefreshBlockedAddresses="5m0s"
 ```
 
-### <a name="Pool_IntervalToRefreshGasPrices"></a>7.2. `Pool.IntervalToRefreshGasPrices`
+### <a name="Pool_IntervalToRefreshSpecialedAddresses"></a>7.2. `Pool.IntervalToRefreshSpecialedAddresses`
+
+**Title:** Duration
+
+**Type:** : `string`
+
+**Default:** `"5m0s"`
+
+**Description:** IntervalToRefreshSpecialedAddresses is the time it takes to sync the
+Specialed address list from db to memory
+
+**Examples:** 
+
+```json
+"1m"
+```
+
+```json
+"300ms"
+```
+
+**Example setting the default value** ("5m0s"):
+```
+[Pool]
+IntervalToRefreshSpecialedAddresses="5m0s"
+```
+
+### <a name="Pool_IntervalToRefreshGasPrices"></a>7.3. `Pool.IntervalToRefreshGasPrices`
 
 **Title:** Duration
 
@@ -484,7 +518,7 @@ IntervalToRefreshBlockedAddresses="5m0s"
 IntervalToRefreshGasPrices="5s"
 ```
 
-### <a name="Pool_MaxTxBytesSize"></a>7.3. `Pool.MaxTxBytesSize`
+### <a name="Pool_MaxTxBytesSize"></a>7.4. `Pool.MaxTxBytesSize`
 
 **Type:** : `integer`
 
@@ -498,7 +532,7 @@ IntervalToRefreshGasPrices="5s"
 MaxTxBytesSize=100132
 ```
 
-### <a name="Pool_MaxTxDataBytesSize"></a>7.4. `Pool.MaxTxDataBytesSize`
+### <a name="Pool_MaxTxDataBytesSize"></a>7.5. `Pool.MaxTxDataBytesSize`
 
 **Type:** : `integer`
 
@@ -512,7 +546,7 @@ MaxTxBytesSize=100132
 MaxTxDataBytesSize=100000
 ```
 
-### <a name="Pool_DB"></a>7.5. `[Pool.DB]`
+### <a name="Pool_DB"></a>7.6. `[Pool.DB]`
 
 **Type:** : `object`
 **Description:** DB is the database configuration
@@ -527,7 +561,7 @@ MaxTxDataBytesSize=100000
 | - [EnableLog](#Pool_DB_EnableLog ) | No      | boolean | No         | -          | EnableLog                                                  |
 | - [MaxConns](#Pool_DB_MaxConns )   | No      | integer | No         | -          | MaxConns is the maximum number of connections in the pool. |
 
-#### <a name="Pool_DB_Name"></a>7.5.1. `Pool.DB.Name`
+#### <a name="Pool_DB_Name"></a>7.6.1. `Pool.DB.Name`
 
 **Type:** : `string`
 
@@ -541,7 +575,7 @@ MaxTxDataBytesSize=100000
 Name="pool_db"
 ```
 
-#### <a name="Pool_DB_User"></a>7.5.2. `Pool.DB.User`
+#### <a name="Pool_DB_User"></a>7.6.2. `Pool.DB.User`
 
 **Type:** : `string`
 
@@ -555,7 +589,7 @@ Name="pool_db"
 User="pool_user"
 ```
 
-#### <a name="Pool_DB_Password"></a>7.5.3. `Pool.DB.Password`
+#### <a name="Pool_DB_Password"></a>7.6.3. `Pool.DB.Password`
 
 **Type:** : `string`
 
@@ -569,7 +603,7 @@ User="pool_user"
 Password="pool_password"
 ```
 
-#### <a name="Pool_DB_Host"></a>7.5.4. `Pool.DB.Host`
+#### <a name="Pool_DB_Host"></a>7.6.4. `Pool.DB.Host`
 
 **Type:** : `string`
 
@@ -583,7 +617,7 @@ Password="pool_password"
 Host="zkevm-pool-db"
 ```
 
-#### <a name="Pool_DB_Port"></a>7.5.5. `Pool.DB.Port`
+#### <a name="Pool_DB_Port"></a>7.6.5. `Pool.DB.Port`
 
 **Type:** : `string`
 
@@ -597,7 +631,7 @@ Host="zkevm-pool-db"
 Port="5432"
 ```
 
-#### <a name="Pool_DB_EnableLog"></a>7.5.6. `Pool.DB.EnableLog`
+#### <a name="Pool_DB_EnableLog"></a>7.6.6. `Pool.DB.EnableLog`
 
 **Type:** : `boolean`
 
@@ -611,7 +645,7 @@ Port="5432"
 EnableLog=false
 ```
 
-#### <a name="Pool_DB_MaxConns"></a>7.5.7. `Pool.DB.MaxConns`
+#### <a name="Pool_DB_MaxConns"></a>7.6.7. `Pool.DB.MaxConns`
 
 **Type:** : `integer`
 
@@ -625,7 +659,7 @@ EnableLog=false
 MaxConns=200
 ```
 
-### <a name="Pool_EnableReadDB"></a>7.6. `Pool.EnableReadDB`
+### <a name="Pool_EnableReadDB"></a>7.7. `Pool.EnableReadDB`
 
 **Type:** : `boolean`
 
@@ -639,7 +673,7 @@ MaxConns=200
 EnableReadDB=false
 ```
 
-### <a name="Pool_ReadDB"></a>7.7. `[Pool.ReadDB]`
+### <a name="Pool_ReadDB"></a>7.8. `[Pool.ReadDB]`
 
 **Type:** : `object`
 **Description:** ReadDB is the connection of the read instance for certain database queries
@@ -654,7 +688,7 @@ EnableReadDB=false
 | - [EnableLog](#Pool_ReadDB_EnableLog ) | No      | boolean | No         | -          | EnableLog                                                  |
 | - [MaxConns](#Pool_ReadDB_MaxConns )   | No      | integer | No         | -          | MaxConns is the maximum number of connections in the pool. |
 
-#### <a name="Pool_ReadDB_Name"></a>7.7.1. `Pool.ReadDB.Name`
+#### <a name="Pool_ReadDB_Name"></a>7.8.1. `Pool.ReadDB.Name`
 
 **Type:** : `string`
 
@@ -668,7 +702,7 @@ EnableReadDB=false
 Name="pool_db"
 ```
 
-#### <a name="Pool_ReadDB_User"></a>7.7.2. `Pool.ReadDB.User`
+#### <a name="Pool_ReadDB_User"></a>7.8.2. `Pool.ReadDB.User`
 
 **Type:** : `string`
 
@@ -682,7 +716,7 @@ Name="pool_db"
 User="pool_user"
 ```
 
-#### <a name="Pool_ReadDB_Password"></a>7.7.3. `Pool.ReadDB.Password`
+#### <a name="Pool_ReadDB_Password"></a>7.8.3. `Pool.ReadDB.Password`
 
 **Type:** : `string`
 
@@ -696,7 +730,7 @@ User="pool_user"
 Password="pool_password"
 ```
 
-#### <a name="Pool_ReadDB_Host"></a>7.7.4. `Pool.ReadDB.Host`
+#### <a name="Pool_ReadDB_Host"></a>7.8.4. `Pool.ReadDB.Host`
 
 **Type:** : `string`
 
@@ -710,7 +744,7 @@ Password="pool_password"
 Host="zkevm-pool-db"
 ```
 
-#### <a name="Pool_ReadDB_Port"></a>7.7.5. `Pool.ReadDB.Port`
+#### <a name="Pool_ReadDB_Port"></a>7.8.5. `Pool.ReadDB.Port`
 
 **Type:** : `string`
 
@@ -724,7 +758,7 @@ Host="zkevm-pool-db"
 Port="5432"
 ```
 
-#### <a name="Pool_ReadDB_EnableLog"></a>7.7.6. `Pool.ReadDB.EnableLog`
+#### <a name="Pool_ReadDB_EnableLog"></a>7.8.6. `Pool.ReadDB.EnableLog`
 
 **Type:** : `boolean`
 
@@ -738,7 +772,7 @@ Port="5432"
 EnableLog=false
 ```
 
-#### <a name="Pool_ReadDB_MaxConns"></a>7.7.7. `Pool.ReadDB.MaxConns`
+#### <a name="Pool_ReadDB_MaxConns"></a>7.8.7. `Pool.ReadDB.MaxConns`
 
 **Type:** : `integer`
 
@@ -752,7 +786,7 @@ EnableLog=false
 MaxConns=200
 ```
 
-### <a name="Pool_DefaultMinGasPriceAllowed"></a>7.8. `Pool.DefaultMinGasPriceAllowed`
+### <a name="Pool_DefaultMinGasPriceAllowed"></a>7.9. `Pool.DefaultMinGasPriceAllowed`
 
 **Type:** : `integer`
 
@@ -766,7 +800,7 @@ MaxConns=200
 DefaultMinGasPriceAllowed=1000000000
 ```
 
-### <a name="Pool_DefaultMaxGasPriceAllowed"></a>7.9. `Pool.DefaultMaxGasPriceAllowed`
+### <a name="Pool_DefaultMaxGasPriceAllowed"></a>7.10. `Pool.DefaultMaxGasPriceAllowed`
 
 **Type:** : `integer`
 
@@ -780,7 +814,7 @@ DefaultMinGasPriceAllowed=1000000000
 DefaultMaxGasPriceAllowed=0
 ```
 
-### <a name="Pool_MinAllowedGasPriceInterval"></a>7.10. `Pool.MinAllowedGasPriceInterval`
+### <a name="Pool_MinAllowedGasPriceInterval"></a>7.11. `Pool.MinAllowedGasPriceInterval`
 
 **Title:** Duration
 
@@ -806,7 +840,7 @@ DefaultMaxGasPriceAllowed=0
 MinAllowedGasPriceInterval="5m0s"
 ```
 
-### <a name="Pool_PollMinAllowedGasPriceInterval"></a>7.11. `Pool.PollMinAllowedGasPriceInterval`
+### <a name="Pool_PollMinAllowedGasPriceInterval"></a>7.12. `Pool.PollMinAllowedGasPriceInterval`
 
 **Title:** Duration
 
@@ -832,7 +866,7 @@ MinAllowedGasPriceInterval="5m0s"
 PollMinAllowedGasPriceInterval="15s"
 ```
 
-### <a name="Pool_DefaultMaxGasAllowed"></a>7.12. `Pool.DefaultMaxGasAllowed`
+### <a name="Pool_DefaultMaxGasAllowed"></a>7.13. `Pool.DefaultMaxGasAllowed`
 
 **Type:** : `integer`
 
@@ -846,7 +880,7 @@ PollMinAllowedGasPriceInterval="15s"
 DefaultMaxGasAllowed=0
 ```
 
-### <a name="Pool_AccountQueue"></a>7.13. `Pool.AccountQueue`
+### <a name="Pool_AccountQueue"></a>7.14. `Pool.AccountQueue`
 
 **Type:** : `integer`
 
@@ -860,7 +894,21 @@ DefaultMaxGasAllowed=0
 AccountQueue=64
 ```
 
-### <a name="Pool_GlobalQueue"></a>7.14. `Pool.GlobalQueue`
+### <a name="Pool_AccountQueueSpecialedMultiple"></a>7.15. `Pool.AccountQueueSpecialedMultiple`
+
+**Type:** : `integer`
+
+**Default:** `10`
+
+**Description:** AccountQueueSpecialedMultiple Amplification factor for addresses in the Specialed
+
+**Example setting the default value** (10):
+```
+[Pool]
+AccountQueueSpecialedMultiple=10
+```
+
+### <a name="Pool_GlobalQueue"></a>7.16. `Pool.GlobalQueue`
 
 **Type:** : `integer`
 
@@ -874,7 +922,63 @@ AccountQueue=64
 GlobalQueue=1024
 ```
 
-### <a name="Pool_EffectiveGasPrice"></a>7.15. `[Pool.EffectiveGasPrice]`
+### <a name="Pool_EnableSpecialPriorityGasPrice"></a>7.17. `Pool.EnableSpecialPriorityGasPrice`
+
+**Type:** : `boolean`
+
+**Default:** `false`
+
+**Description:** EnableSpecialPriorityGasPrice Whether to activate priority adjustment based on special price
+
+**Example setting the default value** (false):
+```
+[Pool]
+EnableSpecialPriorityGasPrice=false
+```
+
+### <a name="Pool_SpecialPriorityGasPriceMultiple"></a>7.18. `Pool.SpecialPriorityGasPriceMultiple`
+
+**Type:** : `integer`
+
+**Default:** `10`
+
+**Description:** SpecialPriorityGasPriceMultiple When the price exceeds the recommended price by several times, a special priority is triggered
+
+**Example setting the default value** (10):
+```
+[Pool]
+SpecialPriorityGasPriceMultiple=10
+```
+
+### <a name="Pool_EnableToBlacklist"></a>7.19. `Pool.EnableToBlacklist`
+
+**Type:** : `boolean`
+
+**Default:** `false`
+
+**Description:** EnableToBlacklist Whether to enable interception when the to address is in the blacklist
+
+**Example setting the default value** (false):
+```
+[Pool]
+EnableToBlacklist=false
+```
+
+### <a name="Pool_ToBlacklistDisguiseErrors"></a>7.20. `Pool.ToBlacklistDisguiseErrors`
+
+**Type:** : `boolean`
+
+**Default:** `false`
+
+**Description:** ToBlacklistDisguiseErrors Whether to disguise errors that prohibit the to address
+
+**Example setting the default value** (false):
+```
+[Pool]
+ToBlacklistDisguiseErrors=false
+```
+
+### <a name="Pool_EffectiveGasPrice"></a>7.21. `[Pool.EffectiveGasPrice]`
 
 **Type:** : `object`
 **Description:** EffectiveGasPrice is the config for the effective gas price calculation
@@ -892,7 +996,7 @@ GlobalQueue=1024
 | - [EthTransferL1GasPriceFactor](#Pool_EffectiveGasPrice_EthTransferL1GasPriceFactor ) | No      | number  | No         | -          | EthTransferL1GasPriceFactor is the percentage of L1 gas price returned as effective gas price for txs tha are ETH transfers (0 means disabled)<br />Only one of EthTransferGasPrice or EthTransferL1GasPriceFactor params can be different than 0. If both params are set to 0, the sequencer will halt and log an error |
 | - [L2GasPriceSuggesterFactor](#Pool_EffectiveGasPrice_L2GasPriceSuggesterFactor )     | No      | number  | No         | -          | L2GasPriceSuggesterFactor is the factor to apply to L1 gas price to get the suggested L2 gas price used in the<br />calculations when the effective gas price is disabled (testing/metrics purposes)                                                                                                                     |
 
-#### <a name="Pool_EffectiveGasPrice_Enabled"></a>7.15.1. `Pool.EffectiveGasPrice.Enabled`
+#### <a name="Pool_EffectiveGasPrice_Enabled"></a>7.21.1. `Pool.EffectiveGasPrice.Enabled`
 
 **Type:** : `boolean`
 
@@ -906,7 +1010,7 @@ GlobalQueue=1024
 Enabled=false
 ```
 
-#### <a name="Pool_EffectiveGasPrice_L1GasPriceFactor"></a>7.15.2. `Pool.EffectiveGasPrice.L1GasPriceFactor`
+#### <a name="Pool_EffectiveGasPrice_L1GasPriceFactor"></a>7.21.2. `Pool.EffectiveGasPrice.L1GasPriceFactor`
 
 **Type:** : `number`
 
@@ -920,7 +1024,7 @@ Enabled=false
 L1GasPriceFactor=0.25
 ```
 
-#### <a name="Pool_EffectiveGasPrice_ByteGasCost"></a>7.15.3. `Pool.EffectiveGasPrice.ByteGasCost`
+#### <a name="Pool_EffectiveGasPrice_ByteGasCost"></a>7.21.3. `Pool.EffectiveGasPrice.ByteGasCost`
 
 **Type:** : `integer`
 
@@ -934,7 +1038,7 @@ L1GasPriceFactor=0.25
 ByteGasCost=16
 ```
 
-#### <a name="Pool_EffectiveGasPrice_ZeroByteGasCost"></a>7.15.4. `Pool.EffectiveGasPrice.ZeroByteGasCost`
+#### <a name="Pool_EffectiveGasPrice_ZeroByteGasCost"></a>7.21.4. `Pool.EffectiveGasPrice.ZeroByteGasCost`
 
 **Type:** : `integer`
 
@@ -948,7 +1052,7 @@ ByteGasCost=16
 ZeroByteGasCost=4
 ```
 
-#### <a name="Pool_EffectiveGasPrice_NetProfit"></a>7.15.5. `Pool.EffectiveGasPrice.NetProfit`
+#### <a name="Pool_EffectiveGasPrice_NetProfit"></a>7.21.5. `Pool.EffectiveGasPrice.NetProfit`
 
 **Type:** : `number`
 
@@ -962,7 +1066,7 @@ ZeroByteGasCost=4
 NetProfit=1
 ```
 
-#### <a name="Pool_EffectiveGasPrice_BreakEvenFactor"></a>7.15.6. `Pool.EffectiveGasPrice.BreakEvenFactor`
+#### <a name="Pool_EffectiveGasPrice_BreakEvenFactor"></a>7.21.6. `Pool.EffectiveGasPrice.BreakEvenFactor`
 
 **Type:** : `number`
 
@@ -976,7 +1080,7 @@ NetProfit=1
 BreakEvenFactor=1.1
 ```
 
-#### <a name="Pool_EffectiveGasPrice_FinalDeviationPct"></a>7.15.7. `Pool.EffectiveGasPrice.FinalDeviationPct`
+#### <a name="Pool_EffectiveGasPrice_FinalDeviationPct"></a>7.21.7. `Pool.EffectiveGasPrice.FinalDeviationPct`
 
 **Type:** : `integer`
 
@@ -990,7 +1094,7 @@ BreakEvenFactor=1.1
 FinalDeviationPct=10
 ```
 
-#### <a name="Pool_EffectiveGasPrice_EthTransferGasPrice"></a>7.15.8. `Pool.EffectiveGasPrice.EthTransferGasPrice`
+#### <a name="Pool_EffectiveGasPrice_EthTransferGasPrice"></a>7.21.8. `Pool.EffectiveGasPrice.EthTransferGasPrice`
 
 **Type:** : `integer`
 
@@ -1005,7 +1109,7 @@ Only one of EthTransferGasPrice or EthTransferL1GasPriceFactor params can be dif
 EthTransferGasPrice=0
 ```
 
-#### <a name="Pool_EffectiveGasPrice_EthTransferL1GasPriceFactor"></a>7.15.9. `Pool.EffectiveGasPrice.EthTransferL1GasPriceFactor`
+#### <a name="Pool_EffectiveGasPrice_EthTransferL1GasPriceFactor"></a>7.21.9. `Pool.EffectiveGasPrice.EthTransferL1GasPriceFactor`
 
 **Type:** : `number`
 
@@ -1020,7 +1124,7 @@ Only one of EthTransferGasPrice or EthTransferL1GasPriceFactor params can be dif
 EthTransferL1GasPriceFactor=0
 ```
 
-#### <a name="Pool_EffectiveGasPrice_L2GasPriceSuggesterFactor"></a>7.15.10. `Pool.EffectiveGasPrice.L2GasPriceSuggesterFactor`
+#### <a name="Pool_EffectiveGasPrice_L2GasPriceSuggesterFactor"></a>7.21.10. `Pool.EffectiveGasPrice.L2GasPriceSuggesterFactor`
 
 **Type:** : `number`
 
@@ -1035,7 +1139,7 @@ calculations when the effective gas price is disabled (testing/metrics purposes)
 L2GasPriceSuggesterFactor=0.5
 ```
 
-### <a name="Pool_ForkID"></a>7.16. `Pool.ForkID`
+### <a name="Pool_ForkID"></a>7.22. `Pool.ForkID`
 
 **Type:** : `integer`
 
@@ -1047,6 +1151,21 @@ L2GasPriceSuggesterFactor=0.5
 ```
 [Pool]
 ForkID=0
+```
+
+### <a name="Pool_TxFeeCap"></a>7.23. `Pool.TxFeeCap`
+
+**Type:** : `number`
+
+**Default:** `1`
+
+**Description:** TxFeeCap is the global transaction fee(price * gaslimit) cap for
+send-transaction variants. The unit is ether. 0 means no cap.
+
+**Example setting the default value** (1):
+```
+[Pool]
+TxFeeCap=1
 ```
 
 ## <a name="RPC"></a>8. `[RPC]`
@@ -1074,6 +1193,7 @@ ForkID=0
 | - [EnableHttpLog](#RPC_EnableHttpLog )                                       | No      | boolean          | No         | -          | EnableHttpLog allows the user to enable or disable the logs related to the HTTP<br />requests to be captured by the server.                                                           |
 | - [PreCheckEnabled](#RPC_PreCheckEnabled )                                   | No      | boolean          | No         | -          | PreCheckEnabled External nodes are pre-checked in advance                                                                                                                             |
 | - [ZKCountersLimits](#RPC_ZKCountersLimits )                                 | No      | object           | No         | -          | ZKCountersLimits defines the ZK Counter limits                                                                                                                                        |
+| - [VerifyZkProofConfigs](#RPC_VerifyZkProofConfigs )                         | No      | array of object  | No         | -          | VerifyZkProofConfigs verify zkproof config                                                                                                                                            |
 
 ### <a name="RPC_Host"></a>8.1. `RPC.Host`
 
@@ -1502,22 +1622,69 @@ MaxSteps=0
 MaxSHA256Hashes=0
 ```
 
+### <a name="RPC_VerifyZkProofConfigs"></a>8.19. `RPC.VerifyZkProofConfigs`
+
+**Type:** : `array of object`
+**Description:** VerifyZkProofConfigs verify zkproof config
+
+|                      | Array restrictions |
+| -------------------- | ------------------ |
+| **Min items**        | N/A                |
+| **Max items**        | N/A                |
+| **Items unicity**    | False              |
+| **Additional items** | False              |
+| **Tuple validation** | See below          |
+
+| Each item of this array must be                               | Description                                |
+| ------------------------------------------------------------- | ------------------------------------------ |
+| [VerifyZkProofConfigs items](#RPC_VerifyZkProofConfigs_items) | VerifyZkProofConfig verify zk proof config |
+
+#### <a name="autogenerated_heading_3"></a>8.19.1. [RPC.VerifyZkProofConfigs.VerifyZkProofConfigs items]
+
+**Type:** : `object`
+**Description:** VerifyZkProofConfig verify zk proof config
+
+| Property                                                                  | Pattern | Type             | Deprecated | Definition | Title/Description                                               |
+| ------------------------------------------------------------------------- | ------- | ---------------- | ---------- | ---------- | --------------------------------------------------------------- |
+| - [ForkID](#RPC_VerifyZkProofConfigs_items_ForkID )                       | No      | integer          | No         | -          | ForkID this forkid of config                                    |
+| - [VerifierAddr](#RPC_VerifyZkProofConfigs_items_VerifierAddr )           | No      | array of integer | No         | -          | VerifierAddr Address of the L1 verifier contract                |
+| - [TrustedAggregator](#RPC_VerifyZkProofConfigs_items_TrustedAggregator ) | No      | array of integer | No         | -          | TrustedAggregator trusted Aggregator that used for verify proof |
+
+##### <a name="RPC_VerifyZkProofConfigs_items_ForkID"></a>8.19.1.1. `RPC.VerifyZkProofConfigs.VerifyZkProofConfigs items.ForkID`
+
+**Type:** : `integer`
+**Description:** ForkID this forkid of config
+
+##### <a name="RPC_VerifyZkProofConfigs_items_VerifierAddr"></a>8.19.1.2. `RPC.VerifyZkProofConfigs.VerifyZkProofConfigs items.VerifierAddr`
+
+**Type:** : `array of integer`
+**Description:** VerifierAddr Address of the L1 verifier contract
+
+##### <a name="RPC_VerifyZkProofConfigs_items_TrustedAggregator"></a>8.19.1.3. `RPC.VerifyZkProofConfigs.VerifyZkProofConfigs items.TrustedAggregator`
+
+**Type:** : `array of integer`
+**Description:** TrustedAggregator trusted Aggregator that used for verify proof
+
 ## <a name="Synchronizer"></a>9. `[Synchronizer]`
 
 **Type:** : `object`
 **Description:** Configuration of service `Syncrhonizer`. For this service is also really important the value of `IsTrustedSequencer`
 because depending of this values is going to ask to a trusted node for trusted transactions or not
 
-| Property                                                                | Pattern | Type             | Deprecated | Definition | Title/Description                                                                                                                                                                                                                                       |
-| ----------------------------------------------------------------------- | ------- | ---------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| - [SyncInterval](#Synchronizer_SyncInterval )                           | No      | string           | No         | -          | Duration                                                                                                                                                                                                                                                |
-| - [SyncChunkSize](#Synchronizer_SyncChunkSize )                         | No      | integer          | No         | -          | SyncChunkSize is the number of blocks to sync on each chunk                                                                                                                                                                                             |
-| - [TrustedSequencerURL](#Synchronizer_TrustedSequencerURL )             | No      | string           | No         | -          | TrustedSequencerURL is the rpc url to connect and sync the trusted state                                                                                                                                                                                |
-| - [SyncOnlyTrusted](#Synchronizer_SyncOnlyTrusted )                     | No      | boolean          | No         | -          | SyncOnlyTrusted option whether sync L1 block or not (for external node use)                                                                                                                                                                             |
-| - [L1SynchronizationMode](#Synchronizer_L1SynchronizationMode )         | No      | enum (of string) | No         | -          | L1SynchronizationMode define how to synchronize with L1:<br />- parallel: Request data to L1 in parallel, and process sequentially. The advantage is that executor is not blocked waiting for L1 data<br />- sequential: Request data to L1 and execute |
-| - [L1ParallelSynchronization](#Synchronizer_L1ParallelSynchronization ) | No      | object           | No         | -          | L1ParallelSynchronization Configuration for parallel mode (if L1SynchronizationMode equal to 'parallel')                                                                                                                                                |
-| - [L2Synchronization](#Synchronizer_L2Synchronization )                 | No      | object           | No         | -          | L2Synchronization Configuration for L2 synchronization                                                                                                                                                                                                  |
-| - [UpgradeEtrogBatchNumber](#Synchronizer_UpgradeEtrogBatchNumber )     | No      | integer          | No         | -          | UpgradeEtrogBatchNumber is the number of the first batch after upgrading to etrog                                                                                                                                                                       |
+| Property                                                                              | Pattern | Type             | Deprecated | Definition | Title/Description                                                                                                                                                                                                                                       |
+| ------------------------------------------------------------------------------------- | ------- | ---------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| - [SyncInterval](#Synchronizer_SyncInterval )                                         | No      | string           | No         | -          | Duration                                                                                                                                                                                                                                                |
+| - [SyncChunkSize](#Synchronizer_SyncChunkSize )                                       | No      | integer          | No         | -          | SyncChunkSize is the number of blocks to sync on each chunk                                                                                                                                                                                             |
+| - [TrustedSequencerURL](#Synchronizer_TrustedSequencerURL )                           | No      | string           | No         | -          | TrustedSequencerURL is the rpc url to connect and sync the trusted state                                                                                                                                                                                |
+| - [SyncBlockProtection](#Synchronizer_SyncBlockProtection )                           | No      | string           | No         | -          | SyncBlockProtection specify the state to sync (lastest, finalized or safe)                                                                                                                                                                              |
+| - [L1SyncCheckL2BlockHash](#Synchronizer_L1SyncCheckL2BlockHash )                     | No      | boolean          | No         | -          | L1SyncCheckL2BlockHash if is true when a batch is closed is force to check  L2Block hash against trustedNode (only apply for permissionless)                                                                                                            |
+| - [L1SyncCheckL2BlockNumberhModulus](#Synchronizer_L1SyncCheckL2BlockNumberhModulus ) | No      | integer          | No         | -          | L1SyncCheckL2BlockNumberhModulus is the modulus used to choose the l2block to check<br />a modules 5, for instance, means check all l2block multiples of 5 (10,15,20,...)                                                                               |
+| - [L1BlockCheck](#Synchronizer_L1BlockCheck )                                         | No      | object           | No         | -          | -                                                                                                                                                                                                                                                       |
+| - [L1SynchronizationMode](#Synchronizer_L1SynchronizationMode )                       | No      | enum (of string) | No         | -          | L1SynchronizationMode define how to synchronize with L1:<br />- parallel: Request data to L1 in parallel, and process sequentially. The advantage is that executor is not blocked waiting for L1 data<br />- sequential: Request data to L1 and execute |
+| - [L1ParallelSynchronization](#Synchronizer_L1ParallelSynchronization )               | No      | object           | No         | -          | L1ParallelSynchronization Configuration for parallel mode (if L1SynchronizationMode equal to 'parallel')                                                                                                                                                |
+| - [L2Synchronization](#Synchronizer_L2Synchronization )                               | No      | object           | No         | -          | L2Synchronization Configuration for L2 synchronization                                                                                                                                                                                                  |
+| - [SyncOnlyTrusted](#Synchronizer_SyncOnlyTrusted )                                   | No      | boolean          | No         | -          | Merlin specific<br />SyncOnlyTrusted option whether sync L1 block or not (for external node use)                                                                                                                                                        |
+| - [UpgradeEtrogBatchNumber](#Synchronizer_UpgradeEtrogBatchNumber )                   | No      | integer          | No         | -          | UpgradeEtrogBatchNumber is the number of the first batch after upgrading to etrog                                                                                                                                                                       |
 
 ### <a name="Synchronizer_SyncInterval"></a>9.1. `Synchronizer.SyncInterval`
 
@@ -1573,21 +1740,178 @@ SyncChunkSize=100
 TrustedSequencerURL=""
 ```
 
-### <a name="Synchronizer_SyncOnlyTrusted"></a>9.4. `Synchronizer.SyncOnlyTrusted`
+### <a name="Synchronizer_SyncBlockProtection"></a>9.4. `Synchronizer.SyncBlockProtection`
+
+**Type:** : `string`
+
+**Default:** `"safe"`
+
+**Description:** SyncBlockProtection specify the state to sync (lastest, finalized or safe)
+
+**Example setting the default value** ("safe"):
+```
+[Synchronizer]
+SyncBlockProtection="safe"
+```
+
+### <a name="Synchronizer_L1SyncCheckL2BlockHash"></a>9.5. `Synchronizer.L1SyncCheckL2BlockHash`
 
 **Type:** : `boolean`
 
-**Default:** `false`
+**Default:** `true`
 
-**Description:** SyncOnlyTrusted option whether sync L1 block or not (for external node use)
+**Description:** L1SyncCheckL2BlockHash if is true when a batch is closed is force to check  L2Block hash against trustedNode (only apply for permissionless)
 
-**Example setting the default value** (false):
+**Example setting the default value** (true):
 ```
 [Synchronizer]
-SyncOnlyTrusted=false
+L1SyncCheckL2BlockHash=true
 ```
 
-### <a name="Synchronizer_L1SynchronizationMode"></a>9.5. `Synchronizer.L1SynchronizationMode`
+### <a name="Synchronizer_L1SyncCheckL2BlockNumberhModulus"></a>9.6. `Synchronizer.L1SyncCheckL2BlockNumberhModulus`
+
+**Type:** : `integer`
+
+**Default:** `600`
+
+**Description:** L1SyncCheckL2BlockNumberhModulus is the modulus used to choose the l2block to check
+a modules 5, for instance, means check all l2block multiples of 5 (10,15,20,...)
+
+**Example setting the default value** (600):
+```
+[Synchronizer]
+L1SyncCheckL2BlockNumberhModulus=600
+```
+
+### <a name="Synchronizer_L1BlockCheck"></a>9.7. `[Synchronizer.L1BlockCheck]`
+
+**Type:** : `object`
+
+| Property                                                                     | Pattern | Type             | Deprecated | Definition | Title/Description                                                                                                                                                                                                                                       |
+| ---------------------------------------------------------------------------- | ------- | ---------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| - [Enabled](#Synchronizer_L1BlockCheck_Enabled )                             | No      | boolean          | No         | -          | If enabled then the check l1 Block Hash is active                                                                                                                                                                                                       |
+| - [L1SafeBlockPoint](#Synchronizer_L1BlockCheck_L1SafeBlockPoint )           | No      | enum (of string) | No         | -          | L1SafeBlockPoint is the point that a block is considered safe enough to be checked<br />it can be: finalized, safe,pending or latest                                                                                                                    |
+| - [L1SafeBlockOffset](#Synchronizer_L1BlockCheck_L1SafeBlockOffset )         | No      | integer          | No         | -          | L1SafeBlockOffset is the offset to add to L1SafeBlockPoint as a safe point<br />it can be positive or negative<br />Example: L1SafeBlockPoint= finalized, L1SafeBlockOffset= -10, then the safe block ten blocks before the finalized block             |
+| - [ForceCheckBeforeStart](#Synchronizer_L1BlockCheck_ForceCheckBeforeStart ) | No      | boolean          | No         | -          | ForceCheckBeforeStart if is true then the first time the system is started it will force to check all pending blocks                                                                                                                                    |
+| - [PreCheckEnabled](#Synchronizer_L1BlockCheck_PreCheckEnabled )             | No      | boolean          | No         | -          | If enabled then the pre-check is active, will check blocks between L1SafeBlock and L1PreSafeBlock                                                                                                                                                       |
+| - [L1PreSafeBlockPoint](#Synchronizer_L1BlockCheck_L1PreSafeBlockPoint )     | No      | enum (of string) | No         | -          | L1PreSafeBlockPoint is the point that a block is considered safe enough to be checked<br />it can be: finalized, safe,pending or latest                                                                                                                 |
+| - [L1PreSafeBlockOffset](#Synchronizer_L1BlockCheck_L1PreSafeBlockOffset )   | No      | integer          | No         | -          | L1PreSafeBlockOffset is the offset to add to L1PreSafeBlockPoint as a safe point<br />it can be positive or negative<br />Example: L1PreSafeBlockPoint= finalized, L1PreSafeBlockOffset= -10, then the safe block ten blocks before the finalized block |
+
+#### <a name="Synchronizer_L1BlockCheck_Enabled"></a>9.7.1. `Synchronizer.L1BlockCheck.Enabled`
+
+**Type:** : `boolean`
+
+**Default:** `true`
+
+**Description:** If enabled then the check l1 Block Hash is active
+
+**Example setting the default value** (true):
+```
+[Synchronizer.L1BlockCheck]
+Enabled=true
+```
+
+#### <a name="Synchronizer_L1BlockCheck_L1SafeBlockPoint"></a>9.7.2. `Synchronizer.L1BlockCheck.L1SafeBlockPoint`
+
+**Type:** : `enum (of string)`
+
+**Default:** `"latest"`
+
+**Description:** L1SafeBlockPoint is the point that a block is considered safe enough to be checked
+it can be: finalized, safe,pending or latest
+
+**Example setting the default value** ("latest"):
+```
+[Synchronizer.L1BlockCheck]
+L1SafeBlockPoint="latest"
+```
+
+Must be one of:
+* "finalized"
+* "safe"
+* "latest"
+
+#### <a name="Synchronizer_L1BlockCheck_L1SafeBlockOffset"></a>9.7.3. `Synchronizer.L1BlockCheck.L1SafeBlockOffset`
+
+**Type:** : `integer`
+
+**Default:** `-5`
+
+**Description:** L1SafeBlockOffset is the offset to add to L1SafeBlockPoint as a safe point
+it can be positive or negative
+Example: L1SafeBlockPoint= finalized, L1SafeBlockOffset= -10, then the safe block ten blocks before the finalized block
+
+**Example setting the default value** (-5):
+```
+[Synchronizer.L1BlockCheck]
+L1SafeBlockOffset=-5
+```
+
+#### <a name="Synchronizer_L1BlockCheck_ForceCheckBeforeStart"></a>9.7.4. `Synchronizer.L1BlockCheck.ForceCheckBeforeStart`
+
+**Type:** : `boolean`
+
+**Default:** `true`
+
+**Description:** ForceCheckBeforeStart if is true then the first time the system is started it will force to check all pending blocks
+
+**Example setting the default value** (true):
+```
+[Synchronizer.L1BlockCheck]
+ForceCheckBeforeStart=true
+```
+
+#### <a name="Synchronizer_L1BlockCheck_PreCheckEnabled"></a>9.7.5. `Synchronizer.L1BlockCheck.PreCheckEnabled`
+
+**Type:** : `boolean`
+
+**Default:** `true`
+
+**Description:** If enabled then the pre-check is active, will check blocks between L1SafeBlock and L1PreSafeBlock
+
+**Example setting the default value** (true):
+```
+[Synchronizer.L1BlockCheck]
+PreCheckEnabled=true
+```
+
+#### <a name="Synchronizer_L1BlockCheck_L1PreSafeBlockPoint"></a>9.7.6. `Synchronizer.L1BlockCheck.L1PreSafeBlockPoint`
+
+**Type:** : `enum (of string)`
+
+**Default:** `"latest"`
+
+**Description:** L1PreSafeBlockPoint is the point that a block is considered safe enough to be checked
+it can be: finalized, safe,pending or latest
+
+**Example setting the default value** ("latest"):
+```
+[Synchronizer.L1BlockCheck]
+L1PreSafeBlockPoint="latest"
+```
+
+Must be one of:
+* "finalized"
+* "safe"
+* "latest"
+
+#### <a name="Synchronizer_L1BlockCheck_L1PreSafeBlockOffset"></a>9.7.7. `Synchronizer.L1BlockCheck.L1PreSafeBlockOffset`
+
+**Type:** : `integer`
+
+**Default:** `-5`
+
+**Description:** L1PreSafeBlockOffset is the offset to add to L1PreSafeBlockPoint as a safe point
+it can be positive or negative
+Example: L1PreSafeBlockPoint= finalized, L1PreSafeBlockOffset= -10, then the safe block ten blocks before the finalized block
+
+**Example setting the default value** (-5):
+```
+[Synchronizer.L1BlockCheck]
+L1PreSafeBlockOffset=-5
+```
+
+### <a name="Synchronizer_L1SynchronizationMode"></a>9.8. `Synchronizer.L1SynchronizationMode`
 
 **Type:** : `enum (of string)`
 
@@ -1607,7 +1931,7 @@ Must be one of:
 * "sequential"
 * "parallel"
 
-### <a name="Synchronizer_L1ParallelSynchronization"></a>9.6. `[Synchronizer.L1ParallelSynchronization]`
+### <a name="Synchronizer_L1ParallelSynchronization"></a>9.9. `[Synchronizer.L1ParallelSynchronization]`
 
 **Type:** : `object`
 **Description:** L1ParallelSynchronization Configuration for parallel mode (if L1SynchronizationMode equal to 'parallel')
@@ -1625,7 +1949,7 @@ Must be one of:
 | - [RollupInfoRetriesSpacing](#Synchronizer_L1ParallelSynchronization_RollupInfoRetriesSpacing )                             | No      | string  | No         | -          | Duration                                                                                                                                                                                      |
 | - [FallbackToSequentialModeOnSynchronized](#Synchronizer_L1ParallelSynchronization_FallbackToSequentialModeOnSynchronized ) | No      | boolean | No         | -          | FallbackToSequentialModeOnSynchronized if true switch to sequential mode if the system is synchronized                                                                                        |
 
-#### <a name="Synchronizer_L1ParallelSynchronization_MaxClients"></a>9.6.1. `Synchronizer.L1ParallelSynchronization.MaxClients`
+#### <a name="Synchronizer_L1ParallelSynchronization_MaxClients"></a>9.9.1. `Synchronizer.L1ParallelSynchronization.MaxClients`
 
 **Type:** : `integer`
 
@@ -1639,7 +1963,7 @@ Must be one of:
 MaxClients=10
 ```
 
-#### <a name="Synchronizer_L1ParallelSynchronization_MaxPendingNoProcessedBlocks"></a>9.6.2. `Synchronizer.L1ParallelSynchronization.MaxPendingNoProcessedBlocks`
+#### <a name="Synchronizer_L1ParallelSynchronization_MaxPendingNoProcessedBlocks"></a>9.9.2. `Synchronizer.L1ParallelSynchronization.MaxPendingNoProcessedBlocks`
 
 **Type:** : `integer`
 
@@ -1654,7 +1978,7 @@ sugested twice of NumberOfParallelOfEthereumClients
 MaxPendingNoProcessedBlocks=25
 ```
 
-#### <a name="Synchronizer_L1ParallelSynchronization_RequestLastBlockPeriod"></a>9.6.3. `Synchronizer.L1ParallelSynchronization.RequestLastBlockPeriod`
+#### <a name="Synchronizer_L1ParallelSynchronization_RequestLastBlockPeriod"></a>9.9.3. `Synchronizer.L1ParallelSynchronization.RequestLastBlockPeriod`
 
 **Title:** Duration
 
@@ -1682,7 +2006,7 @@ This value only apply when the system is synchronized
 RequestLastBlockPeriod="5s"
 ```
 
-#### <a name="Synchronizer_L1ParallelSynchronization_PerformanceWarning"></a>9.6.4. `[Synchronizer.L1ParallelSynchronization.PerformanceWarning]`
+#### <a name="Synchronizer_L1ParallelSynchronization_PerformanceWarning"></a>9.9.4. `[Synchronizer.L1ParallelSynchronization.PerformanceWarning]`
 
 **Type:** : `object`
 **Description:** Consumer Configuration for the consumer of rollup information from L1
@@ -1692,7 +2016,7 @@ RequestLastBlockPeriod="5s"
 | - [AceptableInacctivityTime](#Synchronizer_L1ParallelSynchronization_PerformanceWarning_AceptableInacctivityTime )       | No      | string  | No         | -          | Duration                                                                                                                 |
 | - [ApplyAfterNumRollupReceived](#Synchronizer_L1ParallelSynchronization_PerformanceWarning_ApplyAfterNumRollupReceived ) | No      | integer | No         | -          | ApplyAfterNumRollupReceived is the number of iterations to<br />start checking the time waiting for new rollup info data |
 
-##### <a name="Synchronizer_L1ParallelSynchronization_PerformanceWarning_AceptableInacctivityTime"></a>9.6.4.1. `Synchronizer.L1ParallelSynchronization.PerformanceWarning.AceptableInacctivityTime`
+##### <a name="Synchronizer_L1ParallelSynchronization_PerformanceWarning_AceptableInacctivityTime"></a>9.9.4.1. `Synchronizer.L1ParallelSynchronization.PerformanceWarning.AceptableInacctivityTime`
 
 **Title:** Duration
 
@@ -1721,7 +2045,7 @@ fast enought then you could increse the number of parallel clients to sync with 
 AceptableInacctivityTime="5s"
 ```
 
-##### <a name="Synchronizer_L1ParallelSynchronization_PerformanceWarning_ApplyAfterNumRollupReceived"></a>9.6.4.2. `Synchronizer.L1ParallelSynchronization.PerformanceWarning.ApplyAfterNumRollupReceived`
+##### <a name="Synchronizer_L1ParallelSynchronization_PerformanceWarning_ApplyAfterNumRollupReceived"></a>9.9.4.2. `Synchronizer.L1ParallelSynchronization.PerformanceWarning.ApplyAfterNumRollupReceived`
 
 **Type:** : `integer`
 
@@ -1736,7 +2060,7 @@ start checking the time waiting for new rollup info data
 ApplyAfterNumRollupReceived=10
 ```
 
-#### <a name="Synchronizer_L1ParallelSynchronization_RequestLastBlockTimeout"></a>9.6.5. `Synchronizer.L1ParallelSynchronization.RequestLastBlockTimeout`
+#### <a name="Synchronizer_L1ParallelSynchronization_RequestLastBlockTimeout"></a>9.9.5. `Synchronizer.L1ParallelSynchronization.RequestLastBlockTimeout`
 
 **Title:** Duration
 
@@ -1762,7 +2086,7 @@ ApplyAfterNumRollupReceived=10
 RequestLastBlockTimeout="5s"
 ```
 
-#### <a name="Synchronizer_L1ParallelSynchronization_RequestLastBlockMaxRetries"></a>9.6.6. `Synchronizer.L1ParallelSynchronization.RequestLastBlockMaxRetries`
+#### <a name="Synchronizer_L1ParallelSynchronization_RequestLastBlockMaxRetries"></a>9.9.6. `Synchronizer.L1ParallelSynchronization.RequestLastBlockMaxRetries`
 
 **Type:** : `integer`
 
@@ -1776,7 +2100,7 @@ RequestLastBlockTimeout="5s"
 RequestLastBlockMaxRetries=3
 ```
 
-#### <a name="Synchronizer_L1ParallelSynchronization_StatisticsPeriod"></a>9.6.7. `Synchronizer.L1ParallelSynchronization.StatisticsPeriod`
+#### <a name="Synchronizer_L1ParallelSynchronization_StatisticsPeriod"></a>9.9.7. `Synchronizer.L1ParallelSynchronization.StatisticsPeriod`
 
 **Title:** Duration
 
@@ -1802,7 +2126,7 @@ RequestLastBlockMaxRetries=3
 StatisticsPeriod="5m0s"
 ```
 
-#### <a name="Synchronizer_L1ParallelSynchronization_TimeOutMainLoop"></a>9.6.8. `Synchronizer.L1ParallelSynchronization.TimeOutMainLoop`
+#### <a name="Synchronizer_L1ParallelSynchronization_TimeOutMainLoop"></a>9.9.8. `Synchronizer.L1ParallelSynchronization.TimeOutMainLoop`
 
 **Title:** Duration
 
@@ -1828,7 +2152,7 @@ StatisticsPeriod="5m0s"
 TimeOutMainLoop="5m0s"
 ```
 
-#### <a name="Synchronizer_L1ParallelSynchronization_RollupInfoRetriesSpacing"></a>9.6.9. `Synchronizer.L1ParallelSynchronization.RollupInfoRetriesSpacing`
+#### <a name="Synchronizer_L1ParallelSynchronization_RollupInfoRetriesSpacing"></a>9.9.9. `Synchronizer.L1ParallelSynchronization.RollupInfoRetriesSpacing`
 
 **Title:** Duration
 
@@ -1854,7 +2178,7 @@ TimeOutMainLoop="5m0s"
 RollupInfoRetriesSpacing="5s"
 ```
 
-#### <a name="Synchronizer_L1ParallelSynchronization_FallbackToSequentialModeOnSynchronized"></a>9.6.10. `Synchronizer.L1ParallelSynchronization.FallbackToSequentialModeOnSynchronized`
+#### <a name="Synchronizer_L1ParallelSynchronization_FallbackToSequentialModeOnSynchronized"></a>9.9.10. `Synchronizer.L1ParallelSynchronization.FallbackToSequentialModeOnSynchronized`
 
 **Type:** : `boolean`
 
@@ -1868,18 +2192,34 @@ RollupInfoRetriesSpacing="5s"
 FallbackToSequentialModeOnSynchronized=false
 ```
 
-### <a name="Synchronizer_L2Synchronization"></a>9.7. `[Synchronizer.L2Synchronization]`
+### <a name="Synchronizer_L2Synchronization"></a>9.10. `[Synchronizer.L2Synchronization]`
 
 **Type:** : `object`
 **Description:** L2Synchronization Configuration for L2 synchronization
 
-| Property                                                                                                | Pattern | Type    | Deprecated | Definition | Title/Description                                                                                                                                                   |
-| ------------------------------------------------------------------------------------------------------- | ------- | ------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| - [AcceptEmptyClosedBatches](#Synchronizer_L2Synchronization_AcceptEmptyClosedBatches )                 | No      | boolean | No         | -          | AcceptEmptyClosedBatches is a flag to enable or disable the acceptance of empty batches.<br />if true, the synchronizer will accept empty batches and process them. |
-| - [ReprocessFullBatchOnClose](#Synchronizer_L2Synchronization_ReprocessFullBatchOnClose )               | No      | boolean | No         | -          | ReprocessFullBatchOnClose if is true when a batch is closed is force to reprocess again                                                                             |
-| - [CheckLastL2BlockHashOnCloseBatch](#Synchronizer_L2Synchronization_CheckLastL2BlockHashOnCloseBatch ) | No      | boolean | No         | -          | CheckLastL2BlockHashOnCloseBatch if is true when a batch is closed is force to check the last L2Block hash                                                          |
+| Property                                                                                                | Pattern | Type            | Deprecated | Definition | Title/Description                                                                                                                                                   |
+| ------------------------------------------------------------------------------------------------------- | ------- | --------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| - [Enabled](#Synchronizer_L2Synchronization_Enabled )                                                   | No      | boolean         | No         | -          | If enabled then the L2 sync process is permitted (only for permissionless)                                                                                          |
+| - [AcceptEmptyClosedBatches](#Synchronizer_L2Synchronization_AcceptEmptyClosedBatches )                 | No      | boolean         | No         | -          | AcceptEmptyClosedBatches is a flag to enable or disable the acceptance of empty batches.<br />if true, the synchronizer will accept empty batches and process them. |
+| - [ReprocessFullBatchOnClose](#Synchronizer_L2Synchronization_ReprocessFullBatchOnClose )               | No      | boolean         | No         | -          | ReprocessFullBatchOnClose if is true when a batch is closed is force to reprocess again                                                                             |
+| - [CheckLastL2BlockHashOnCloseBatch](#Synchronizer_L2Synchronization_CheckLastL2BlockHashOnCloseBatch ) | No      | boolean         | No         | -          | CheckLastL2BlockHashOnCloseBatch if is true when a batch is closed is force to check the last L2Block hash                                                          |
+| - [DataSourcePriority](#Synchronizer_L2Synchronization_DataSourcePriority )                             | No      | array of string | No         | -          | DataSourcePriority defines the order in which L2 batch should be retrieved: local, trusted, external                                                                |
 
-#### <a name="Synchronizer_L2Synchronization_AcceptEmptyClosedBatches"></a>9.7.1. `Synchronizer.L2Synchronization.AcceptEmptyClosedBatches`
+#### <a name="Synchronizer_L2Synchronization_Enabled"></a>9.10.1. `Synchronizer.L2Synchronization.Enabled`
+
+**Type:** : `boolean`
+
+**Default:** `true`
+
+**Description:** If enabled then the L2 sync process is permitted (only for permissionless)
+
+**Example setting the default value** (true):
+```
+[Synchronizer.L2Synchronization]
+Enabled=true
+```
+
+#### <a name="Synchronizer_L2Synchronization_AcceptEmptyClosedBatches"></a>9.10.2. `Synchronizer.L2Synchronization.AcceptEmptyClosedBatches`
 
 **Type:** : `boolean`
 
@@ -1894,7 +2234,7 @@ if true, the synchronizer will accept empty batches and process them.
 AcceptEmptyClosedBatches=false
 ```
 
-#### <a name="Synchronizer_L2Synchronization_ReprocessFullBatchOnClose"></a>9.7.2. `Synchronizer.L2Synchronization.ReprocessFullBatchOnClose`
+#### <a name="Synchronizer_L2Synchronization_ReprocessFullBatchOnClose"></a>9.10.3. `Synchronizer.L2Synchronization.ReprocessFullBatchOnClose`
 
 **Type:** : `boolean`
 
@@ -1908,7 +2248,7 @@ AcceptEmptyClosedBatches=false
 ReprocessFullBatchOnClose=false
 ```
 
-#### <a name="Synchronizer_L2Synchronization_CheckLastL2BlockHashOnCloseBatch"></a>9.7.3. `Synchronizer.L2Synchronization.CheckLastL2BlockHashOnCloseBatch`
+#### <a name="Synchronizer_L2Synchronization_CheckLastL2BlockHashOnCloseBatch"></a>9.10.4. `Synchronizer.L2Synchronization.CheckLastL2BlockHashOnCloseBatch`
 
 **Type:** : `boolean`
 
@@ -1922,7 +2262,36 @@ ReprocessFullBatchOnClose=false
 CheckLastL2BlockHashOnCloseBatch=true
 ```
 
-### <a name="Synchronizer_UpgradeEtrogBatchNumber"></a>9.8. `Synchronizer.UpgradeEtrogBatchNumber`
+#### <a name="Synchronizer_L2Synchronization_DataSourcePriority"></a>9.10.5. `Synchronizer.L2Synchronization.DataSourcePriority`
+
+**Type:** : `array of string`
+
+**Default:** `["local", "trusted", "external"]`
+
+**Description:** DataSourcePriority defines the order in which L2 batch should be retrieved: local, trusted, external
+
+**Example setting the default value** (["local", "trusted", "external"]):
+```
+[Synchronizer.L2Synchronization]
+DataSourcePriority=["local", "trusted", "external"]
+```
+
+### <a name="Synchronizer_SyncOnlyTrusted"></a>9.11. `Synchronizer.SyncOnlyTrusted`
+
+**Type:** : `boolean`
+
+**Default:** `false`
+
+**Description:** Merlin specific
+SyncOnlyTrusted option whether sync L1 block or not (for external node use)
+
+**Example setting the default value** (false):
+```
+[Synchronizer]
+SyncOnlyTrusted=false
+```
+
+### <a name="Synchronizer_UpgradeEtrogBatchNumber"></a>9.12. `Synchronizer.UpgradeEtrogBatchNumber`
 
 **Type:** : `integer`
 
@@ -1941,17 +2310,17 @@ UpgradeEtrogBatchNumber=0
 **Type:** : `object`
 **Description:** Configuration of the sequencer service
 
-| Property                                                                             | Pattern | Type             | Deprecated | Definition | Title/Description                                                                                          |
-| ------------------------------------------------------------------------------------ | ------- | ---------------- | ---------- | ---------- | ---------------------------------------------------------------------------------------------------------- |
-| - [DeletePoolTxsL1BlockConfirmations](#Sequencer_DeletePoolTxsL1BlockConfirmations ) | No      | integer          | No         | -          | DeletePoolTxsL1BlockConfirmations is blocks amount after which txs will be deleted from the pool           |
-| - [DeletePoolTxsCheckInterval](#Sequencer_DeletePoolTxsCheckInterval )               | No      | string           | No         | -          | Duration                                                                                                   |
-| - [TxLifetimeCheckInterval](#Sequencer_TxLifetimeCheckInterval )                     | No      | string           | No         | -          | Duration                                                                                                   |
-| - [TxLifetimeMax](#Sequencer_TxLifetimeMax )                                         | No      | string           | No         | -          | Duration                                                                                                   |
-| - [LoadPoolTxsCheckInterval](#Sequencer_LoadPoolTxsCheckInterval )                   | No      | string           | No         | -          | Duration                                                                                                   |
-| - [StateConsistencyCheckInterval](#Sequencer_StateConsistencyCheckInterval )         | No      | string           | No         | -          | Duration                                                                                                   |
-| - [Finalizer](#Sequencer_Finalizer )                                                 | No      | object           | No         | -          | Finalizer's specific config properties                                                                     |
-| - [StreamServer](#Sequencer_StreamServer )                                           | No      | object           | No         | -          | StreamServerCfg is the config for the stream server                                                        |
-| - [L2Coinbase](#Sequencer_L2Coinbase )                                               | No      | array of integer | No         | -          | L2Coinbase is the address receives the L2 fee, should be consistent with the  L2Coinbase in SequenceSender |
+| Property                                                                             | Pattern | Type             | Deprecated | Definition | Title/Description                                                                                                      |
+| ------------------------------------------------------------------------------------ | ------- | ---------------- | ---------- | ---------- | ---------------------------------------------------------------------------------------------------------------------- |
+| - [DeletePoolTxsL1BlockConfirmations](#Sequencer_DeletePoolTxsL1BlockConfirmations ) | No      | integer          | No         | -          | DeletePoolTxsL1BlockConfirmations is blocks amount after which txs will be deleted from the pool                       |
+| - [DeletePoolTxsCheckInterval](#Sequencer_DeletePoolTxsCheckInterval )               | No      | string           | No         | -          | Duration                                                                                                               |
+| - [TxLifetimeCheckInterval](#Sequencer_TxLifetimeCheckInterval )                     | No      | string           | No         | -          | Duration                                                                                                               |
+| - [TxLifetimeMax](#Sequencer_TxLifetimeMax )                                         | No      | string           | No         | -          | Duration                                                                                                               |
+| - [LoadPoolTxsCheckInterval](#Sequencer_LoadPoolTxsCheckInterval )                   | No      | string           | No         | -          | Duration                                                                                                               |
+| - [StateConsistencyCheckInterval](#Sequencer_StateConsistencyCheckInterval )         | No      | string           | No         | -          | Duration                                                                                                               |
+| - [L2Coinbase](#Sequencer_L2Coinbase )                                               | No      | array of integer | No         | -          | L2Coinbase defines which address is going to receive the fees. It gets the config value from SequenceSender.L2Coinbase |
+| - [Finalizer](#Sequencer_Finalizer )                                                 | No      | object           | No         | -          | Finalizer's specific config properties                                                                                 |
+| - [StreamServer](#Sequencer_StreamServer )                                           | No      | object           | No         | -          | StreamServerCfg is the config for the stream server                                                                    |
 
 ### <a name="Sequencer_DeletePoolTxsL1BlockConfirmations"></a>10.1. `Sequencer.DeletePoolTxsL1BlockConfirmations`
 
@@ -2097,7 +2466,12 @@ LoadPoolTxsCheckInterval="500ms"
 StateConsistencyCheckInterval="5s"
 ```
 
-### <a name="Sequencer_Finalizer"></a>10.7. `[Sequencer.Finalizer]`
+### <a name="Sequencer_L2Coinbase"></a>10.7. `Sequencer.L2Coinbase`
+
+**Type:** : `array of integer`
+**Description:** L2Coinbase defines which address is going to receive the fees. It gets the config value from SequenceSender.L2Coinbase
+
+### <a name="Sequencer_Finalizer"></a>10.8. `[Sequencer.Finalizer]`
 
 **Type:** : `object`
 **Description:** Finalizer's specific config properties
@@ -2113,12 +2487,14 @@ StateConsistencyCheckInterval="5s"
 | - [L1InfoTreeCheckInterval](#Sequencer_Finalizer_L1InfoTreeCheckInterval )                     | No      | string  | No         | -          | Duration                                                                                                                                                                                                      |
 | - [BatchMaxDeltaTimestamp](#Sequencer_Finalizer_BatchMaxDeltaTimestamp )                       | No      | string  | No         | -          | Duration                                                                                                                                                                                                      |
 | - [L2BlockMaxDeltaTimestamp](#Sequencer_Finalizer_L2BlockMaxDeltaTimestamp )                   | No      | string  | No         | -          | Duration                                                                                                                                                                                                      |
+| - [StateRootSyncInterval](#Sequencer_Finalizer_StateRootSyncInterval )                         | No      | string  | No         | -          | Duration                                                                                                                                                                                                      |
+| - [FlushIdCheckInterval](#Sequencer_Finalizer_FlushIdCheckInterval )                           | No      | string  | No         | -          | Duration                                                                                                                                                                                                      |
 | - [HaltOnBatchNumber](#Sequencer_Finalizer_HaltOnBatchNumber )                                 | No      | integer | No         | -          | HaltOnBatchNumber specifies the batch number where the Sequencer will stop to process more transactions and generate new batches.<br />The Sequencer will halt after it closes the batch equal to this number |
 | - [SequentialBatchSanityCheck](#Sequencer_Finalizer_SequentialBatchSanityCheck )               | No      | boolean | No         | -          | SequentialBatchSanityCheck indicates if the reprocess of a closed batch (sanity check) must be done in a<br />sequential way (instead than in parallel)                                                       |
 | - [SequentialProcessL2Block](#Sequencer_Finalizer_SequentialProcessL2Block )                   | No      | boolean | No         | -          | SequentialProcessL2Block indicates if the processing of a L2 Block must be done in the same finalizer go func instead<br />in the processPendingL2Blocks go func                                              |
 | - [Metrics](#Sequencer_Finalizer_Metrics )                                                     | No      | object  | No         | -          | Metrics is the config for the sequencer metrics                                                                                                                                                               |
 
-#### <a name="Sequencer_Finalizer_ForcedBatchesTimeout"></a>10.7.1. `Sequencer.Finalizer.ForcedBatchesTimeout`
+#### <a name="Sequencer_Finalizer_ForcedBatchesTimeout"></a>10.8.1. `Sequencer.Finalizer.ForcedBatchesTimeout`
 
 **Title:** Duration
 
@@ -2144,7 +2520,7 @@ StateConsistencyCheckInterval="5s"
 ForcedBatchesTimeout="1m0s"
 ```
 
-#### <a name="Sequencer_Finalizer_NewTxsWaitInterval"></a>10.7.2. `Sequencer.Finalizer.NewTxsWaitInterval`
+#### <a name="Sequencer_Finalizer_NewTxsWaitInterval"></a>10.8.2. `Sequencer.Finalizer.NewTxsWaitInterval`
 
 **Title:** Duration
 
@@ -2170,7 +2546,7 @@ ForcedBatchesTimeout="1m0s"
 NewTxsWaitInterval="100ms"
 ```
 
-#### <a name="Sequencer_Finalizer_ResourceExhaustedMarginPct"></a>10.7.3. `Sequencer.Finalizer.ResourceExhaustedMarginPct`
+#### <a name="Sequencer_Finalizer_ResourceExhaustedMarginPct"></a>10.8.3. `Sequencer.Finalizer.ResourceExhaustedMarginPct`
 
 **Type:** : `integer`
 
@@ -2184,7 +2560,7 @@ NewTxsWaitInterval="100ms"
 ResourceExhaustedMarginPct=10
 ```
 
-#### <a name="Sequencer_Finalizer_ForcedBatchesL1BlockConfirmations"></a>10.7.4. `Sequencer.Finalizer.ForcedBatchesL1BlockConfirmations`
+#### <a name="Sequencer_Finalizer_ForcedBatchesL1BlockConfirmations"></a>10.8.4. `Sequencer.Finalizer.ForcedBatchesL1BlockConfirmations`
 
 **Type:** : `integer`
 
@@ -2198,7 +2574,7 @@ ResourceExhaustedMarginPct=10
 ForcedBatchesL1BlockConfirmations=64
 ```
 
-#### <a name="Sequencer_Finalizer_L1InfoTreeL1BlockConfirmations"></a>10.7.5. `Sequencer.Finalizer.L1InfoTreeL1BlockConfirmations`
+#### <a name="Sequencer_Finalizer_L1InfoTreeL1BlockConfirmations"></a>10.8.5. `Sequencer.Finalizer.L1InfoTreeL1BlockConfirmations`
 
 **Type:** : `integer`
 
@@ -2212,7 +2588,7 @@ ForcedBatchesL1BlockConfirmations=64
 L1InfoTreeL1BlockConfirmations=64
 ```
 
-#### <a name="Sequencer_Finalizer_ForcedBatchesCheckInterval"></a>10.7.6. `Sequencer.Finalizer.ForcedBatchesCheckInterval`
+#### <a name="Sequencer_Finalizer_ForcedBatchesCheckInterval"></a>10.8.6. `Sequencer.Finalizer.ForcedBatchesCheckInterval`
 
 **Title:** Duration
 
@@ -2238,7 +2614,7 @@ L1InfoTreeL1BlockConfirmations=64
 ForcedBatchesCheckInterval="10s"
 ```
 
-#### <a name="Sequencer_Finalizer_L1InfoTreeCheckInterval"></a>10.7.7. `Sequencer.Finalizer.L1InfoTreeCheckInterval`
+#### <a name="Sequencer_Finalizer_L1InfoTreeCheckInterval"></a>10.8.7. `Sequencer.Finalizer.L1InfoTreeCheckInterval`
 
 **Title:** Duration
 
@@ -2246,7 +2622,7 @@ ForcedBatchesCheckInterval="10s"
 
 **Default:** `"10s"`
 
-**Description:** L1InfoTreeCheckInterval is the wait time to check if the L1InfoRoot has been updated
+**Description:** L1InfoTreeCheckInterval is the time interval to check if the L1InfoRoot has been updated
 
 **Examples:** 
 
@@ -2264,13 +2640,13 @@ ForcedBatchesCheckInterval="10s"
 L1InfoTreeCheckInterval="10s"
 ```
 
-#### <a name="Sequencer_Finalizer_BatchMaxDeltaTimestamp"></a>10.7.8. `Sequencer.Finalizer.BatchMaxDeltaTimestamp`
+#### <a name="Sequencer_Finalizer_BatchMaxDeltaTimestamp"></a>10.8.8. `Sequencer.Finalizer.BatchMaxDeltaTimestamp`
 
 **Title:** Duration
 
 **Type:** : `string`
 
-**Default:** `"10s"`
+**Default:** `"30m0s"`
 
 **Description:** BatchMaxDeltaTimestamp is the resolution of the timestamp used to close a batch
 
@@ -2284,13 +2660,13 @@ L1InfoTreeCheckInterval="10s"
 "300ms"
 ```
 
-**Example setting the default value** ("10s"):
+**Example setting the default value** ("30m0s"):
 ```
 [Sequencer.Finalizer]
-BatchMaxDeltaTimestamp="10s"
+BatchMaxDeltaTimestamp="30m0s"
 ```
 
-#### <a name="Sequencer_Finalizer_L2BlockMaxDeltaTimestamp"></a>10.7.9. `Sequencer.Finalizer.L2BlockMaxDeltaTimestamp`
+#### <a name="Sequencer_Finalizer_L2BlockMaxDeltaTimestamp"></a>10.8.9. `Sequencer.Finalizer.L2BlockMaxDeltaTimestamp`
 
 **Title:** Duration
 
@@ -2316,7 +2692,60 @@ BatchMaxDeltaTimestamp="10s"
 L2BlockMaxDeltaTimestamp="3s"
 ```
 
-#### <a name="Sequencer_Finalizer_HaltOnBatchNumber"></a>10.7.10. `Sequencer.Finalizer.HaltOnBatchNumber`
+#### <a name="Sequencer_Finalizer_StateRootSyncInterval"></a>10.8.10. `Sequencer.Finalizer.StateRootSyncInterval`
+
+**Title:** Duration
+
+**Type:** : `string`
+
+**Default:** `"1h0m0s"`
+
+**Description:** StateRootSyncInterval indicates how often the stateroot generated by the L2 block process will be synchronized with
+the stateroot used in the tx-by-tx execution
+
+**Examples:** 
+
+```json
+"1m"
+```
+
+```json
+"300ms"
+```
+
+**Example setting the default value** ("1h0m0s"):
+```
+[Sequencer.Finalizer]
+StateRootSyncInterval="1h0m0s"
+```
+
+#### <a name="Sequencer_Finalizer_FlushIdCheckInterval"></a>10.8.11. `Sequencer.Finalizer.FlushIdCheckInterval`
+
+**Title:** Duration
+
+**Type:** : `string`
+
+**Default:** `"50ms"`
+
+**Description:** FlushIdCheckInterval is the time interval to get storedFlushID value from the executor/hashdb
+
+**Examples:** 
+
+```json
+"1m"
+```
+
+```json
+"300ms"
+```
+
+**Example setting the default value** ("50ms"):
+```
+[Sequencer.Finalizer]
+FlushIdCheckInterval="50ms"
+```
+
+#### <a name="Sequencer_Finalizer_HaltOnBatchNumber"></a>10.8.12. `Sequencer.Finalizer.HaltOnBatchNumber`
 
 **Type:** : `integer`
 
@@ -2331,7 +2760,7 @@ The Sequencer will halt after it closes the batch equal to this number
 HaltOnBatchNumber=0
 ```
 
-#### <a name="Sequencer_Finalizer_SequentialBatchSanityCheck"></a>10.7.11. `Sequencer.Finalizer.SequentialBatchSanityCheck`
+#### <a name="Sequencer_Finalizer_SequentialBatchSanityCheck"></a>10.8.13. `Sequencer.Finalizer.SequentialBatchSanityCheck`
 
 **Type:** : `boolean`
 
@@ -2346,22 +2775,22 @@ sequential way (instead than in parallel)
 SequentialBatchSanityCheck=false
 ```
 
-#### <a name="Sequencer_Finalizer_SequentialProcessL2Block"></a>10.7.12. `Sequencer.Finalizer.SequentialProcessL2Block`
+#### <a name="Sequencer_Finalizer_SequentialProcessL2Block"></a>10.8.14. `Sequencer.Finalizer.SequentialProcessL2Block`
 
 **Type:** : `boolean`
 
-**Default:** `true`
+**Default:** `false`
 
 **Description:** SequentialProcessL2Block indicates if the processing of a L2 Block must be done in the same finalizer go func instead
 in the processPendingL2Blocks go func
 
-**Example setting the default value** (true):
+**Example setting the default value** (false):
 ```
 [Sequencer.Finalizer]
-SequentialProcessL2Block=true
+SequentialProcessL2Block=false
 ```
 
-#### <a name="Sequencer_Finalizer_Metrics"></a>10.7.13. `[Sequencer.Finalizer.Metrics]`
+#### <a name="Sequencer_Finalizer_Metrics"></a>10.8.15. `[Sequencer.Finalizer.Metrics]`
 
 **Type:** : `object`
 **Description:** Metrics is the config for the sequencer metrics
@@ -2371,7 +2800,7 @@ SequentialProcessL2Block=true
 | - [Interval](#Sequencer_Finalizer_Metrics_Interval )   | No      | string  | No         | -          | Duration                                           |
 | - [EnableLog](#Sequencer_Finalizer_Metrics_EnableLog ) | No      | boolean | No         | -          | EnableLog is a flag to enable/disable metrics logs |
 
-##### <a name="Sequencer_Finalizer_Metrics_Interval"></a>10.7.13.1. `Sequencer.Finalizer.Metrics.Interval`
+##### <a name="Sequencer_Finalizer_Metrics_Interval"></a>10.8.15.1. `Sequencer.Finalizer.Metrics.Interval`
 
 **Title:** Duration
 
@@ -2397,7 +2826,7 @@ SequentialProcessL2Block=true
 Interval="1h0m0s"
 ```
 
-##### <a name="Sequencer_Finalizer_Metrics_EnableLog"></a>10.7.13.2. `Sequencer.Finalizer.Metrics.EnableLog`
+##### <a name="Sequencer_Finalizer_Metrics_EnableLog"></a>10.8.15.2. `Sequencer.Finalizer.Metrics.EnableLog`
 
 **Type:** : `boolean`
 
@@ -2411,7 +2840,7 @@ Interval="1h0m0s"
 EnableLog=true
 ```
 
-### <a name="Sequencer_StreamServer"></a>10.8. `[Sequencer.StreamServer]`
+### <a name="Sequencer_StreamServer"></a>10.9. `[Sequencer.StreamServer]`
 
 **Type:** : `object`
 **Description:** StreamServerCfg is the config for the stream server
@@ -2425,8 +2854,9 @@ EnableLog=true
 | - [Enabled](#Sequencer_StreamServer_Enabled )                                 | No      | boolean | No         | -          | Enabled is a flag to enable/disable the data streamer            |
 | - [Log](#Sequencer_StreamServer_Log )                                         | No      | object  | No         | -          | Log is the log configuration                                     |
 | - [UpgradeEtrogBatchNumber](#Sequencer_StreamServer_UpgradeEtrogBatchNumber ) | No      | integer | No         | -          | UpgradeEtrogBatchNumber is the batch number of the upgrade etrog |
+| - [WriteTimeout](#Sequencer_StreamServer_WriteTimeout )                       | No      | string  | No         | -          | Duration                                                         |
 
-#### <a name="Sequencer_StreamServer_Port"></a>10.8.1. `Sequencer.StreamServer.Port`
+#### <a name="Sequencer_StreamServer_Port"></a>10.9.1. `Sequencer.StreamServer.Port`
 
 **Type:** : `integer`
 
@@ -2440,7 +2870,7 @@ EnableLog=true
 Port=0
 ```
 
-#### <a name="Sequencer_StreamServer_Filename"></a>10.8.2. `Sequencer.StreamServer.Filename`
+#### <a name="Sequencer_StreamServer_Filename"></a>10.9.2. `Sequencer.StreamServer.Filename`
 
 **Type:** : `string`
 
@@ -2454,7 +2884,7 @@ Port=0
 Filename=""
 ```
 
-#### <a name="Sequencer_StreamServer_Version"></a>10.8.3. `Sequencer.StreamServer.Version`
+#### <a name="Sequencer_StreamServer_Version"></a>10.9.3. `Sequencer.StreamServer.Version`
 
 **Type:** : `integer`
 
@@ -2468,7 +2898,7 @@ Filename=""
 Version=0
 ```
 
-#### <a name="Sequencer_StreamServer_ChainID"></a>10.8.4. `Sequencer.StreamServer.ChainID`
+#### <a name="Sequencer_StreamServer_ChainID"></a>10.9.4. `Sequencer.StreamServer.ChainID`
 
 **Type:** : `integer`
 
@@ -2482,7 +2912,7 @@ Version=0
 ChainID=0
 ```
 
-#### <a name="Sequencer_StreamServer_Enabled"></a>10.8.5. `Sequencer.StreamServer.Enabled`
+#### <a name="Sequencer_StreamServer_Enabled"></a>10.9.5. `Sequencer.StreamServer.Enabled`
 
 **Type:** : `boolean`
 
@@ -2496,7 +2926,7 @@ ChainID=0
 Enabled=false
 ```
 
-#### <a name="Sequencer_StreamServer_Log"></a>10.8.6. `[Sequencer.StreamServer.Log]`
+#### <a name="Sequencer_StreamServer_Log"></a>10.9.6. `[Sequencer.StreamServer.Log]`
 
 **Type:** : `object`
 **Description:** Log is the log configuration
@@ -2507,7 +2937,7 @@ Enabled=false
 | - [Level](#Sequencer_StreamServer_Log_Level )             | No      | enum (of string) | No         | -          | -                 |
 | - [Outputs](#Sequencer_StreamServer_Log_Outputs )         | No      | array of string  | No         | -          | -                 |
 
-##### <a name="Sequencer_StreamServer_Log_Environment"></a>10.8.6.1. `Sequencer.StreamServer.Log.Environment`
+##### <a name="Sequencer_StreamServer_Log_Environment"></a>10.9.6.1. `Sequencer.StreamServer.Log.Environment`
 
 **Type:** : `enum (of string)`
 
@@ -2523,7 +2953,7 @@ Must be one of:
 * "production"
 * "development"
 
-##### <a name="Sequencer_StreamServer_Log_Level"></a>10.8.6.2. `Sequencer.StreamServer.Log.Level`
+##### <a name="Sequencer_StreamServer_Log_Level"></a>10.9.6.2. `Sequencer.StreamServer.Log.Level`
 
 **Type:** : `enum (of string)`
 
@@ -2544,11 +2974,11 @@ Must be one of:
 * "panic"
 * "fatal"
 
-##### <a name="Sequencer_StreamServer_Log_Outputs"></a>10.8.6.3. `Sequencer.StreamServer.Log.Outputs`
+##### <a name="Sequencer_StreamServer_Log_Outputs"></a>10.9.6.3. `Sequencer.StreamServer.Log.Outputs`
 
 **Type:** : `array of string`
 
-#### <a name="Sequencer_StreamServer_UpgradeEtrogBatchNumber"></a>10.8.7. `Sequencer.StreamServer.UpgradeEtrogBatchNumber`
+#### <a name="Sequencer_StreamServer_UpgradeEtrogBatchNumber"></a>10.9.7. `Sequencer.StreamServer.UpgradeEtrogBatchNumber`
 
 **Type:** : `integer`
 
@@ -2562,10 +2992,31 @@ Must be one of:
 UpgradeEtrogBatchNumber=0
 ```
 
-### <a name="Sequencer_L2Coinbase"></a>10.9. `Sequencer.L2Coinbase`
+#### <a name="Sequencer_StreamServer_WriteTimeout"></a>10.9.8. `Sequencer.StreamServer.WriteTimeout`
 
-**Type:** : `array of integer`
-**Description:** L2Coinbase is the address receives the L2 fee, should be consistent with the  L2Coinbase in SequenceSender
+**Title:** Duration
+
+**Type:** : `string`
+
+**Default:** `"5s"`
+
+**Description:** WriteTimeout is the TCP write timeout when sending data to a datastream client
+
+**Examples:** 
+
+```json
+"1m"
+```
+
+```json
+"300ms"
+```
+
+**Example setting the default value** ("5s"):
+```
+[Sequencer.StreamServer]
+WriteTimeout="5s"
+```
 
 ## <a name="SequenceSender"></a>11. `[SequenceSender]`
 
@@ -2584,6 +3035,7 @@ UpgradeEtrogBatchNumber=0
 | - [ForkUpgradeBatchNumber](#SequenceSender_ForkUpgradeBatchNumber )                                     | No      | integer          | No         | -          | Batch number where there is a forkid change (fork upgrade)                                                                                                                                                                                                                                                                                                                                                                    |
 | - [GasOffset](#SequenceSender_GasOffset )                                                               | No      | integer          | No         | -          | GasOffset is the amount of gas to be added to the gas estimation in order<br />to provide an amount that is higher than the estimated one. This is used<br />to avoid the TX getting reverted in case something has changed in the network<br />state after the estimation which can cause the TX to require more gas to be<br />executed.<br /><br />ex:<br />gas estimation: 1000<br />gas offset: 100<br />final gas: 1100 |
 | - [MaxBatchesForL1](#SequenceSender_MaxBatchesForL1 )                                                   | No      | integer          | No         | -          | MaxBatchesForL1 is the maximum amount of batches to be sequenced in a single L1 tx                                                                                                                                                                                                                                                                                                                                            |
+| - [SequenceL1BlockConfirmations](#SequenceSender_SequenceL1BlockConfirmations )                         | No      | integer          | No         | -          | SequenceL1BlockConfirmations is number of blocks to consider a sequence sent to L1 as final                                                                                                                                                                                                                                                                                                                                   |
 
 ### <a name="SequenceSender_WaitPeriodSendSequence"></a>11.1. `SequenceSender.WaitPeriodSendSequence`
 
@@ -2790,6 +3242,20 @@ GasOffset=80000
 ```
 [SequenceSender]
 MaxBatchesForL1=300
+```
+
+### <a name="SequenceSender_SequenceL1BlockConfirmations"></a>11.11. `SequenceSender.SequenceL1BlockConfirmations`
+
+**Type:** : `integer`
+
+**Default:** `32`
+
+**Description:** SequenceL1BlockConfirmations is number of blocks to consider a sequence sent to L1 as final
+
+**Example setting the default value** (32):
+```
+[SequenceSender]
+SequenceL1BlockConfirmations=32
 ```
 
 ## <a name="Aggregator"></a>12. `[Aggregator]`
@@ -3348,7 +3814,7 @@ RollupManagerBlockNumber=0
 | ----------------------------------------------------- | ------------------------------------------------------------------------- |
 | [Actions items](#NetworkConfig_Genesis_Actions_items) | GenesisAction represents one of the values set on the SMT during genesis. |
 
-##### <a name="autogenerated_heading_3"></a>13.2.4.1. [NetworkConfig.Genesis.Actions.Actions items]
+##### <a name="autogenerated_heading_4"></a>13.2.4.1. [NetworkConfig.Genesis.Actions.Actions items]
 
 **Type:** : `object`
 **Description:** GenesisAction represents one of the values set on the SMT during genesis.
@@ -4064,7 +4530,7 @@ ChainID=0
 | ----------------------------------------------------- | ------------------------------------ |
 | [ForkIDIntervals items](#State_ForkIDIntervals_items) | ForkIDInterval is a fork id interval |
 
-#### <a name="autogenerated_heading_4"></a>20.3.1. [State.ForkIDIntervals.ForkIDIntervals items]
+#### <a name="autogenerated_heading_5"></a>20.3.1. [State.ForkIDIntervals.ForkIDIntervals items]
 
 **Type:** : `object`
 **Description:** ForkIDInterval is a fork id interval

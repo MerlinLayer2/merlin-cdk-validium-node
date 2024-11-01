@@ -1,4 +1,4 @@
-DOCKERCOMPOSE := docker-compose -f docker-compose.yml
+DOCKERCOMPOSE := docker compose -f docker-compose.yml
 DOCKERCOMPOSEAPPSEQ := zkevm-sequencer
 DOCKERCOMPOSEAPPSEQV1TOV2 := zkevm-sequencer-v1tov2
 DOCKERCOMPOSEAPPSEQSENDER := zkevm-sequence-sender
@@ -32,6 +32,7 @@ DOCKERCOMPOSENODEAPPROVE := zkevm-approve
 DOCKERCOMPOSENODEAPPROVEV1TOV2 := zkevm-approve-v1tov2
 DOCKERCOMPOSEMETRICS := zkevm-metrics
 DOCKERCOMPOSEGRAFANA := grafana
+DOCKERCOMPOSEDATANODEDB := zkevm-data-node-db
 
 RUNSTATEDB := $(DOCKERCOMPOSE) up -d $(DOCKERCOMPOSESTATEDB)
 RUNPOOLDB := $(DOCKERCOMPOSE) up -d $(DOCKERCOMPOSEPOOLDB)
@@ -113,8 +114,8 @@ STOPMETRICS := $(DOCKERCOMPOSE) stop $(DOCKERCOMPOSEMETRICS) && $(DOCKERCOMPOSE)
 
 STOP := $(DOCKERCOMPOSE) down --remove-orphans
 
-RUNDACDB := docker-compose up -d zkevm-data-node-db
-STOPDACDB := docker-compose stop zkevm-data-node-db && docker-compose rm -f zkevm-data-node-db
+RUNDACDB := $(DOCKERCOMPOSE) up -d $(DOCKERCOMPOSEDATANODEDB)
+STOPDACDB := $(DOCKERCOMPOSE) stop $(DOCKERCOMPOSEDATANODEDB) && $(DOCKERCOMPOSE) rm -f $(DOCKERCOMPOSEDATANODEDB)
 
 .PHONY: test-full-non-e2e
 test-full-non-e2e: stop ## Runs non-e2e tests checking race conditions
@@ -381,7 +382,7 @@ stop-zkprover: ## Stops zkprover
 	$(STOPZKPROVER)
 
 .PHONY: run-l1-explorer
-run-l1-explorer: ## Runs L1 blockscan explorer 
+run-l1-explorer: ## Runs L1 blockscan explorer
 	$(RUNEXPLORERL1DB)
 	$(RUNEXPLORERL1)
 
@@ -451,7 +452,7 @@ stop-seqsender: ## stops the sequencer sender
 .PHONY: stop-seqsender-v1tov2
 stop-seqsender-v1tov2: ## stops the sequencer sender
 	$(STOPV1TOV2SEQUENCESENDER)
-	
+
 .PHONY: run-sync
 run-sync: ## runs the synchronizer
 	$(RUNSYNC)
@@ -515,7 +516,7 @@ stop-eth-tx-manager: ## Stops the eth tx manager service
 .PHONY: stop-eth-tx-manager-v1tov2
 stop-eth-tx-manager-v1tov2: ## Stops the eth tx manager service
 	$(STOPV1TOV2ETHTXMANAGER)
-	
+
 .PHONY: run-agg
 run-agg: ## Runs the aggregator service
 	$(RUNAGGREGATOR)
@@ -557,7 +558,7 @@ run-permissionless-dependencies:  ## Runs the permissionless dependencies (db + 
 	$(RUNPERMISSIONLESSDB)
 	sleep 3
 	$(RUNPERMISSIONLESSZKPROVER)
-	
+
 
 PHONY: stop-permissionless-dependencies
 stop-permissionless-dependencies:  ## Stop the permissionless dependencies (db + prover) without the node
@@ -646,7 +647,7 @@ init-network: ## Initializes the network
 	go run ./scripts/init_network/main.go .
 
 .PHONY: show-logs
-show-logs:  ## Show logs for running docker 
+show-logs:  ## Show logs for running docker
 	$(DOCKERCOMPOSE) logs
 
 .PHONY: deploy-sc
@@ -678,7 +679,6 @@ generate-mocks-jsonrpc: ## Generates mocks for jsonrpc , using mockery tool
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=PoolInterface --dir=../jsonrpc/types --output=../jsonrpc/mocks --outpkg=mocks --structname=PoolMock --filename=mock_pool.go
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=StateInterface --dir=../jsonrpc/types --output=../jsonrpc/mocks --outpkg=mocks --structname=StateMock --filename=mock_state.go
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=EthermanInterface --dir=../jsonrpc/types --output=../jsonrpc/mocks --outpkg=mocks --structname=EthermanMock --filename=mock_etherman.go
-	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=Tx --srcpkg=github.com/jackc/pgx/v4 --output=../jsonrpc/mocks --outpkg=mocks --structname=DBTxMock --filename=mock_dbtx.go
 
 .PHONY: generate-mocks-sequencer
 generate-mocks-sequencer: ## Generates mocks for sequencer , using mockery tool
@@ -686,7 +686,7 @@ generate-mocks-sequencer: ## Generates mocks for sequencer , using mockery tool
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=stateInterface --dir=../sequencer --output=../sequencer --outpkg=sequencer --inpackage --structname=StateMock --filename=mock_state.go
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=txPool --dir=../sequencer --output=../sequencer --outpkg=sequencer --inpackage  --structname=PoolMock --filename=mock_pool.go
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=Tx --srcpkg=github.com/jackc/pgx/v4 --output=../sequencer --outpkg=sequencer --structname=DbTxMock --filename=mock_dbtx.go
-	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=etherman --dir=../sequencer --output=../sequencer --outpkg=sequencer --inpackage --structname=EthermanMock --filename=mock_etherman.go
+	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=ethermanInterface --dir=../sequencer --output=../sequencer --outpkg=sequencer --inpackage --structname=EthermanMock --filename=mock_etherman.go
 
 .PHONY: generate-mocks-sequencesender
 generate-mocks-sequencesender: ## Generates mocks for sequencesender , using mockery tool
@@ -716,21 +716,24 @@ generate-mocks-synchronizer: ## Generates mocks for synchronizer , using mockery
 
 	rm -Rf ../synchronizer/l2_sync/l2_sync_etrog/mocks
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --all --case snake --dir ../synchronizer/l2_sync/l2_sync_etrog --output ../synchronizer/l2_sync/l2_sync_etrog/mocks --outpkg mock_l2_sync_etrog ${COMMON_MOCKERY_PARAMS}
-	
+
 	rm -Rf ../synchronizer/l2_sync/l2_shared/mocks
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --all --case snake --dir ../synchronizer/l2_sync/l2_shared --output ../synchronizer/l2_sync/l2_shared/mocks --outpkg mock_l2_shared ${COMMON_MOCKERY_PARAMS}
-	
+
 	rm -Rf ../synchronizer/common/syncinterfaces/mocks
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --all --case snake --dir ../synchronizer/common/syncinterfaces --output ../synchronizer/common/syncinterfaces/mocks --outpkg mock_syncinterfaces ${COMMON_MOCKERY_PARAMS}
-	
+
 	rm -Rf ../synchronizer/actions/elderberry/mocks
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --all --case snake --dir ../synchronizer/actions/elderberry --output ../synchronizer/actions/elderberry/mocks --outpkg mock_elderberry ${COMMON_MOCKERY_PARAMS}
-	
-	
 
-	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=Tx --srcpkg=github.com/jackc/pgx/v4 --output=../synchronizer/mocks --structname=DbTxMock --filename=mock_dbtx.go
-	
-.PHONY: generate-mocks-etherman	
+	rm -Rf ../synchronizer/l1_check_block/mocks
+	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --all --case snake --dir ../synchronizer/l1_check_block --output ../synchronizer/l1_check_block/mocks --outpkg mock_l1_check_block ${COMMON_MOCKERY_PARAMS}
+
+
+
+	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=Tx --srcpkg=github.com/jackc/pgx/v4 --output=../synchronizer/mocks --structname=DbTxMock --filename=mock_dbtx.go ${COMMON_MOCKERY_PARAMS}
+
+.PHONY: generate-mocks-etherman
 generate-mocks-etherman: ## Generates mocks for etherman , using mockery tool
 	## mocks for etherman
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=GasPricer --srcpkg=github.com/ethereum/go-ethereum --output=../etherman --outpkg=etherman --structname=etherscanMock --filename=mock_etherscan.go
@@ -741,10 +744,12 @@ generate-mocks-etherman: ## Generates mocks for etherman , using mockery tool
 
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=poolInterface --dir=../gasprice --output=../gasprice --outpkg=gasprice --structname=poolMock --filename=mock_pool.go
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=ethermanInterface --dir=../gasprice --output=../gasprice --outpkg=gasprice --structname=ethermanMock --filename=mock_etherman.go
-	
-	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=dataAvailabilityProvider --dir=../etherman --output=../etherman --outpkg=etherman --structname=daMock --filename=mock_da.go
 
-.PHONY: generate-mocks-aggregator	
+	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=dataAvailabilityProvider --dir=../etherman --output=../etherman --outpkg=etherman --structname=daMock --filename=mock_da.go
+	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=stateProvider --dir=../etherman --output=../etherman --outpkg=etherman --structname=stateMock --filename=mock_state.go
+
+
+.PHONY: generate-mocks-aggregator
 generate-mocks-aggregator: ## Generates mocks for aggregator , using mockery tool
 	## mocks for the aggregator tests
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=stateInterface --dir=../aggregator --output=../aggregator/mocks --outpkg=mocks --structname=StateMock --filename=mock_state.go
@@ -754,7 +759,7 @@ generate-mocks-aggregator: ## Generates mocks for aggregator , using mockery too
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=aggregatorTxProfitabilityChecker --dir=../aggregator --output=../aggregator/mocks --outpkg=mocks --structname=ProfitabilityCheckerMock --filename=mock_profitabilitychecker.go
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=Tx --srcpkg=github.com/jackc/pgx/v4 --output=../aggregator/mocks --outpkg=mocks --structname=DbTxMock --filename=mock_dbtx.go
 
-.PHONY: generate-mocks-state	
+.PHONY: generate-mocks-state
 generate-mocks-state: ## Generates mocks for state , using mockery tool
 	## mocks for the aggregator tests
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=storage --dir=../state --output=../state/mocks --outpkg=mocks --structname=StorageMock --filename=mock_storage.go --disable-version-string --with-expecter

@@ -67,6 +67,7 @@ var (
 		IntervalToRefreshGasPrices:        cfgTypes.NewDuration(5 * time.Second),
 		AccountQueue:                      15,
 		GlobalQueue:                       20,
+		TxFeeCap:                          1,
 		EffectiveGasPrice: pool.EffectiveGasPriceCfg{
 			Enabled:                     true,
 			L1GasPriceFactor:            0.25,
@@ -321,95 +322,94 @@ func Test_AddTx_OversizedData(t *testing.T) {
 	require.EqualError(t, err, pool.ErrOversizedData.Error())
 }
 
-// for adaptive the pool.go remove check txChainID != 0, that no need adaptive eip155
-//func Test_AddPreEIP155Tx(t *testing.T) {
-//	initOrResetDB(t)
-//
-//	stateSqlDB, err := db.NewSQLDB(stateDBCfg)
-//	require.NoError(t, err)
-//	defer stateSqlDB.Close() //nolint:gosec,errcheck
-//
-//	poolSqlDB, err := db.NewSQLDB(poolDBCfg)
-//	require.NoError(t, err)
-//	defer poolSqlDB.Close() //nolint:gosec,errcheck
-//
-//	eventStorage, err := nileventstorage.NewNilEventStorage()
-//	if err != nil {
-//		log.Fatal(err)
-//	}
-//	eventLog := event.NewEventLog(event.Config{}, eventStorage)
-//
-//	st := newState(stateSqlDB, eventLog)
-//
-//	genesisBlock := state.Block{
-//		BlockNumber: 0,
-//		BlockHash:   state.ZeroHash,
-//		ParentHash:  state.ZeroHash,
-//		ReceivedAt:  time.Now(),
-//	}
-//	genesis := state.Genesis{
-//		Actions: []*state.GenesisAction{
-//			{
-//				Address: senderAddress,
-//				Type:    int(merkletree.LeafTypeBalance),
-//				Value:   "1000000000000000000000",
-//			},
-//			{
-//				Address: "0x4d5Cf5032B2a844602278b01199ED191A86c93ff",
-//				Type:    int(merkletree.LeafTypeBalance),
-//				Value:   "200000000000000000000",
-//			},
-//		},
-//	}
-//	ctx := context.Background()
-//	dbTx, err := st.BeginStateTransaction(ctx)
-//	require.NoError(t, err)
-//	_, err = st.SetGenesis(ctx, genesisBlock, genesis, metrics.SynchronizerCallerLabel, dbTx)
-//	require.NoError(t, err)
-//	require.NoError(t, dbTx.Commit(ctx))
-//
-//	s, err := pgpoolstorage.NewPostgresPoolStorage(poolDBCfg)
-//	require.NoError(t, err)
-//
-//	const chainID = 2576980377
-//	p := setupPool(t, cfg, bc, s, st, chainID, ctx, eventLog)
-//
-//	batchL2Data := "0xe580843b9aca00830186a0941275fbb540c8efc58b812ba83b0d0b8b9917ae98808464fbb77c6b39bdc5f8e458aba689f2a1ff8c543a94e4817bda40f3fe34080c4ab26c1e3c2fc2cda93bc32f0a79940501fd505dcf48d94abfde932ebf1417f502cb0d9de81bff"
-//	b, err := hex.DecodeHex(batchL2Data)
-//	require.NoError(t, err)
-//	txs, _, _, err := state.DecodeTxs(b, forkID6)
-//	require.NoError(t, err)
-//
-//	tx := txs[0]
-//
-//	err = p.AddTx(ctx, tx, ip)
-//	require.NoError(t, err)
-//
-//	rows, err := poolSqlDB.Query(ctx, "SELECT hash, encoded, decoded, status FROM pool.transaction")
-//	require.NoError(t, err)
-//	defer rows.Close() // nolint:staticcheck
-//
-//	c := 0
-//	for rows.Next() {
-//		var hash, encoded, decoded, status string
-//		err := rows.Scan(&hash, &encoded, &decoded, &status)
-//		require.NoError(t, err)
-//
-//		b, err := tx.MarshalBinary()
-//		require.NoError(t, err)
-//
-//		bJSON, err := tx.MarshalJSON()
-//		require.NoError(t, err)
-//
-//		assert.Equal(t, tx.Hash().String(), hash, "invalid hash")
-//		assert.Equal(t, hex.EncodeToHex(b), encoded, "invalid encoded")
-//		assert.JSONEq(t, string(bJSON), decoded, "invalid decoded")
-//		assert.Equal(t, string(pool.TxStatusPending), status, "invalid tx status")
-//		c++
-//	}
-//
-//	assert.Equal(t, 1, c, "invalid number of txs in the pool")
-//}
+func Test_AddPreEIP155Tx(t *testing.T) {
+	initOrResetDB(t)
+
+	stateSqlDB, err := db.NewSQLDB(stateDBCfg)
+	require.NoError(t, err)
+	defer stateSqlDB.Close() //nolint:gosec,errcheck
+
+	poolSqlDB, err := db.NewSQLDB(poolDBCfg)
+	require.NoError(t, err)
+	defer poolSqlDB.Close() //nolint:gosec,errcheck
+
+	eventStorage, err := nileventstorage.NewNilEventStorage()
+	if err != nil {
+		log.Fatal(err)
+	}
+	eventLog := event.NewEventLog(event.Config{}, eventStorage)
+
+	st := newState(stateSqlDB, eventLog)
+
+	genesisBlock := state.Block{
+		BlockNumber: 0,
+		BlockHash:   state.ZeroHash,
+		ParentHash:  state.ZeroHash,
+		ReceivedAt:  time.Now(),
+	}
+	genesis := state.Genesis{
+		Actions: []*state.GenesisAction{
+			{
+				Address: senderAddress,
+				Type:    int(merkletree.LeafTypeBalance),
+				Value:   "1000000000000000000000",
+			},
+			{
+				Address: "0x4d5Cf5032B2a844602278b01199ED191A86c93ff",
+				Type:    int(merkletree.LeafTypeBalance),
+				Value:   "200000000000000000000",
+			},
+		},
+	}
+	ctx := context.Background()
+	dbTx, err := st.BeginStateTransaction(ctx)
+	require.NoError(t, err)
+	_, err = st.SetGenesis(ctx, genesisBlock, genesis, metrics.SynchronizerCallerLabel, dbTx)
+	require.NoError(t, err)
+	require.NoError(t, dbTx.Commit(ctx))
+
+	s, err := pgpoolstorage.NewPostgresPoolStorage(poolDBCfg)
+	require.NoError(t, err)
+
+	const chainID = 2576980377
+	p := setupPool(t, cfg, bc, s, st, chainID, ctx, eventLog)
+
+	batchL2Data := "0xe580843b9aca00830186a0941275fbb540c8efc58b812ba83b0d0b8b9917ae98808464fbb77c6b39bdc5f8e458aba689f2a1ff8c543a94e4817bda40f3fe34080c4ab26c1e3c2fc2cda93bc32f0a79940501fd505dcf48d94abfde932ebf1417f502cb0d9de81bff"
+	b, err := hex.DecodeHex(batchL2Data)
+	require.NoError(t, err)
+	txs, _, _, err := state.DecodeTxs(b, forkID6)
+	require.NoError(t, err)
+
+	tx := txs[0]
+
+	err = p.AddTx(ctx, tx, ip)
+	require.NoError(t, err)
+
+	rows, err := poolSqlDB.Query(ctx, "SELECT hash, encoded, decoded, status FROM pool.transaction")
+	require.NoError(t, err)
+	defer rows.Close() // nolint:staticcheck
+
+	c := 0
+	for rows.Next() {
+		var hash, encoded, decoded, status string
+		err := rows.Scan(&hash, &encoded, &decoded, &status)
+		require.NoError(t, err)
+
+		b, err := tx.MarshalBinary()
+		require.NoError(t, err)
+
+		bJSON, err := tx.MarshalJSON()
+		require.NoError(t, err)
+
+		assert.Equal(t, tx.Hash().String(), hash, "invalid hash")
+		assert.Equal(t, hex.EncodeToHex(b), encoded, "invalid encoded")
+		assert.JSONEq(t, string(bJSON), decoded, "invalid decoded")
+		assert.Equal(t, string(pool.TxStatusPending), status, "invalid tx status")
+		c++
+	}
+
+	assert.Equal(t, 1, c, "invalid number of txs in the pool")
+}
 
 func Test_GetPendingTxs(t *testing.T) {
 	initOrResetDB(t)
@@ -1087,10 +1087,12 @@ func Test_TryAddIncompatibleTxs(t *testing.T) {
 			expectedError: fmt.Errorf("chain id higher than allowed, max allowed is %v", uint64(math.MaxUint64)),
 		},
 	}
+	c := cfg
+	c.TxFeeCap = 0
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			incompatibleTx := testCase.createIncompatibleTx()
-			p := setupPool(t, cfg, bc, s, st, incompatibleTx.ChainId().Uint64(), ctx, eventLog)
+			p := setupPool(t, c, bc, s, st, incompatibleTx.ChainId().Uint64(), ctx, eventLog)
 			err = p.AddTx(ctx, incompatibleTx, ip)
 			assert.Equal(t, testCase.expectedError, err)
 		})
@@ -1961,6 +1963,115 @@ func Test_AddTx_IPValidation(t *testing.T) {
 				assert.ErrorIs(t, err, tc.expected)
 			} else {
 				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func Test_AddTx_TxFeeCap(t *testing.T) {
+	eventStorage, err := nileventstorage.NewNilEventStorage()
+	if err != nil {
+		log.Fatal(err)
+	}
+	eventLog := event.NewEventLog(event.Config{}, eventStorage)
+
+	initOrResetDB(t)
+
+	stateSqlDB, err := db.NewSQLDB(stateDBCfg)
+	if err != nil {
+		panic(err)
+	}
+	defer stateSqlDB.Close() //nolint:gosec,errcheck
+
+	poolSqlDB, err := db.NewSQLDB(poolDBCfg)
+	require.NoError(t, err)
+	defer poolSqlDB.Close() //nolint:gosec,errcheck
+
+	st := newState(stateSqlDB, eventLog)
+
+	genesisBlock := state.Block{
+		BlockNumber: 0,
+		BlockHash:   state.ZeroHash,
+		ParentHash:  state.ZeroHash,
+		ReceivedAt:  time.Now(),
+	}
+	genesis := state.Genesis{
+		Actions: []*state.GenesisAction{
+			{
+				Address: senderAddress,
+				Type:    int(merkletree.LeafTypeBalance),
+				Value:   "1000000000000000000000",
+			},
+		},
+	}
+	ctx := context.Background()
+	dbTx, err := st.BeginStateTransaction(ctx)
+	require.NoError(t, err)
+	_, err = st.SetGenesis(ctx, genesisBlock, genesis, metrics.SynchronizerCallerLabel, dbTx)
+	require.NoError(t, err)
+	require.NoError(t, dbTx.Commit(ctx))
+
+	s, err := pgpoolstorage.NewPostgresPoolStorage(poolDBCfg)
+	require.NoError(t, err)
+
+	p := setupPool(t, cfg, bc, s, st, chainID.Uint64(), ctx, eventLog)
+
+	privateKey, err := crypto.HexToECDSA(strings.TrimPrefix(senderPrivateKey, "0x"))
+	require.NoError(t, err)
+
+	auth, err := bind.NewKeyedTransactorWithChainID(privateKey, chainID)
+	require.NoError(t, err)
+
+	type testCase struct {
+		name          string
+		nonce         uint64
+		gas           uint64
+		gasPrice      string
+		expectedError error
+	}
+
+	testCases := []testCase{
+		{
+			name:          "add tx with fee under cap",
+			nonce:         0,
+			gas:           uint64(100000),
+			gasPrice:      "9999999999999",
+			expectedError: nil,
+		},
+		{
+			name:          "add tx with fee exactly as cap",
+			nonce:         0,
+			gas:           uint64(100000),
+			gasPrice:      "10000000000000",
+			expectedError: nil,
+		},
+		{
+			name:          "add tx with fee over the cap",
+			nonce:         0,
+			gas:           uint64(100000),
+			gasPrice:      "10000000000001",
+			expectedError: fmt.Errorf("tx fee (1.0000000000001 ether) exceeds the configured cap (1.00 ether)"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			gasPrice, ok := big.NewInt(0).SetString(tc.gasPrice, encoding.Base10)
+			require.True(t, ok)
+			tx := ethTypes.NewTx(&ethTypes.LegacyTx{
+				Nonce:    tc.nonce,
+				Gas:      tc.gas,
+				GasPrice: gasPrice,
+			})
+
+			signedTx, err := auth.Signer(auth.From, tx)
+			require.NoError(t, err)
+
+			err = p.AddTx(ctx, *signedTx, ip)
+			if tc.expectedError != nil {
+				require.Equal(t, err.Error(), tc.expectedError.Error())
+			} else {
+				require.Nil(t, err)
 			}
 		})
 	}

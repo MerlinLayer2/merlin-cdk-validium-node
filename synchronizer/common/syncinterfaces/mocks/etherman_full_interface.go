@@ -32,6 +32,10 @@ func (_m *EthermanFullInterface) EXPECT() *EthermanFullInterface_Expecter {
 func (_m *EthermanFullInterface) EthBlockByNumber(ctx context.Context, blockNumber uint64) (*types.Block, error) {
 	ret := _m.Called(ctx, blockNumber)
 
+	if len(ret) == 0 {
+		panic("no return value specified for EthBlockByNumber")
+	}
+
 	var r0 *types.Block
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, uint64) (*types.Block, error)); ok {
@@ -83,9 +87,69 @@ func (_c *EthermanFullInterface_EthBlockByNumber_Call) RunAndReturn(run func(con
 	return _c
 }
 
+// GetFinalizedBlockNumber provides a mock function with given fields: ctx
+func (_m *EthermanFullInterface) GetFinalizedBlockNumber(ctx context.Context) (uint64, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetFinalizedBlockNumber")
+	}
+
+	var r0 uint64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (uint64, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) uint64); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(uint64)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// EthermanFullInterface_GetFinalizedBlockNumber_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetFinalizedBlockNumber'
+type EthermanFullInterface_GetFinalizedBlockNumber_Call struct {
+	*mock.Call
+}
+
+// GetFinalizedBlockNumber is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *EthermanFullInterface_Expecter) GetFinalizedBlockNumber(ctx interface{}) *EthermanFullInterface_GetFinalizedBlockNumber_Call {
+	return &EthermanFullInterface_GetFinalizedBlockNumber_Call{Call: _e.mock.On("GetFinalizedBlockNumber", ctx)}
+}
+
+func (_c *EthermanFullInterface_GetFinalizedBlockNumber_Call) Run(run func(ctx context.Context)) *EthermanFullInterface_GetFinalizedBlockNumber_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context))
+	})
+	return _c
+}
+
+func (_c *EthermanFullInterface_GetFinalizedBlockNumber_Call) Return(_a0 uint64, _a1 error) *EthermanFullInterface_GetFinalizedBlockNumber_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *EthermanFullInterface_GetFinalizedBlockNumber_Call) RunAndReturn(run func(context.Context) (uint64, error)) *EthermanFullInterface_GetFinalizedBlockNumber_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetLatestBatchNumber provides a mock function with given fields:
 func (_m *EthermanFullInterface) GetLatestBatchNumber() (uint64, error) {
 	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetLatestBatchNumber")
+	}
 
 	var r0 uint64
 	var r1 error
@@ -134,9 +198,69 @@ func (_c *EthermanFullInterface_GetLatestBatchNumber_Call) RunAndReturn(run func
 	return _c
 }
 
+// GetLatestBlockNumber provides a mock function with given fields: ctx
+func (_m *EthermanFullInterface) GetLatestBlockNumber(ctx context.Context) (uint64, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetLatestBlockNumber")
+	}
+
+	var r0 uint64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (uint64, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) uint64); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(uint64)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// EthermanFullInterface_GetLatestBlockNumber_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetLatestBlockNumber'
+type EthermanFullInterface_GetLatestBlockNumber_Call struct {
+	*mock.Call
+}
+
+// GetLatestBlockNumber is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *EthermanFullInterface_Expecter) GetLatestBlockNumber(ctx interface{}) *EthermanFullInterface_GetLatestBlockNumber_Call {
+	return &EthermanFullInterface_GetLatestBlockNumber_Call{Call: _e.mock.On("GetLatestBlockNumber", ctx)}
+}
+
+func (_c *EthermanFullInterface_GetLatestBlockNumber_Call) Run(run func(ctx context.Context)) *EthermanFullInterface_GetLatestBlockNumber_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context))
+	})
+	return _c
+}
+
+func (_c *EthermanFullInterface_GetLatestBlockNumber_Call) Return(_a0 uint64, _a1 error) *EthermanFullInterface_GetLatestBlockNumber_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *EthermanFullInterface_GetLatestBlockNumber_Call) RunAndReturn(run func(context.Context) (uint64, error)) *EthermanFullInterface_GetLatestBlockNumber_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetLatestVerifiedBatchNum provides a mock function with given fields:
 func (_m *EthermanFullInterface) GetLatestVerifiedBatchNum() (uint64, error) {
 	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetLatestVerifiedBatchNum")
+	}
 
 	var r0 uint64
 	var r1 error
@@ -188,6 +312,10 @@ func (_c *EthermanFullInterface_GetLatestVerifiedBatchNum_Call) RunAndReturn(run
 // GetRollupInfoByBlockRange provides a mock function with given fields: ctx, fromBlock, toBlock
 func (_m *EthermanFullInterface) GetRollupInfoByBlockRange(ctx context.Context, fromBlock uint64, toBlock *uint64) ([]etherman.Block, map[common.Hash][]etherman.Order, error) {
 	ret := _m.Called(ctx, fromBlock, toBlock)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetRollupInfoByBlockRange")
+	}
 
 	var r0 []etherman.Block
 	var r1 map[common.Hash][]etherman.Order
@@ -254,6 +382,10 @@ func (_c *EthermanFullInterface_GetRollupInfoByBlockRange_Call) RunAndReturn(run
 func (_m *EthermanFullInterface) GetTrustedSequencerURL() (string, error) {
 	ret := _m.Called()
 
+	if len(ret) == 0 {
+		panic("no return value specified for GetTrustedSequencerURL")
+	}
+
 	var r0 string
 	var r1 error
 	if rf, ok := ret.Get(0).(func() (string, error)); ok {
@@ -304,6 +436,10 @@ func (_c *EthermanFullInterface_GetTrustedSequencerURL_Call) RunAndReturn(run fu
 // HeaderByNumber provides a mock function with given fields: ctx, number
 func (_m *EthermanFullInterface) HeaderByNumber(ctx context.Context, number *big.Int) (*types.Header, error) {
 	ret := _m.Called(ctx, number)
+
+	if len(ret) == 0 {
+		panic("no return value specified for HeaderByNumber")
+	}
 
 	var r0 *types.Header
 	var r1 error
@@ -359,6 +495,10 @@ func (_c *EthermanFullInterface_HeaderByNumber_Call) RunAndReturn(run func(conte
 // VerifyGenBlockNumber provides a mock function with given fields: ctx, genBlockNumber
 func (_m *EthermanFullInterface) VerifyGenBlockNumber(ctx context.Context, genBlockNumber uint64) (bool, error) {
 	ret := _m.Called(ctx, genBlockNumber)
+
+	if len(ret) == 0 {
+		panic("no return value specified for VerifyGenBlockNumber")
+	}
 
 	var r0 bool
 	var r1 error
