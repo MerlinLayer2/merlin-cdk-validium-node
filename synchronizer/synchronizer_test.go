@@ -308,7 +308,7 @@ func TestForcedBatchEtrog(t *testing.T) {
 				Times(1)
 
 			m.Etherman.
-				On("GetFinalizedBlockNumber", ctx).
+				On("GetLatestBlockNumber", ctx).
 				Return(ethBlock1.NumberU64(), nil).
 				Once()
 
@@ -548,7 +548,7 @@ func TestSequenceForcedBatchIncaberry(t *testing.T) {
 				Once()
 
 			m.Etherman.
-				On("GetFinalizedBlockNumber", ctx).
+				On("GetLatestBlockNumber", ctx).
 				Return(ethBlock1.NumberU64(), nil).
 				Once()
 
@@ -1165,7 +1165,7 @@ func TestReorg(t *testing.T) {
 				Once()
 
 			m.Etherman.
-				On("GetFinalizedBlockNumber", ctx).
+				On("GetLatestBlockNumber", ctx).
 				Return(ethBlock2bis.NumberU64(), nil).
 				Once()
 
@@ -1453,7 +1453,7 @@ func TestLatestSyncedBlockEmpty(t *testing.T) {
 				Once()
 
 			m.Etherman.
-				On("GetFinalizedBlockNumber", ctx).
+				On("GetLatestBlockNumber", ctx).
 				Return(ethBlock3.NumberU64(), nil).
 				Run(func(args mock.Arguments) {
 					sync.Stop()
@@ -1689,7 +1689,7 @@ func TestRegularReorg(t *testing.T) {
 				Once()
 
 			m.Etherman.
-				On("GetFinalizedBlockNumber", ctx).
+				On("GetLatestBlockNumber", ctx).
 				Return(ethBlock2bis.NumberU64(), nil).
 				Once()
 
@@ -1990,7 +1990,7 @@ func TestLatestSyncedBlockEmptyWithExtraReorg(t *testing.T) {
 				Once()
 
 			m.Etherman.
-				On("GetFinalizedBlockNumber", ctx).
+				On("GetLatestBlockNumber", ctx).
 				Return(ethBlock3.NumberU64(), nil).
 				Once()
 
@@ -2263,7 +2263,7 @@ func TestCallFromEmptyBlockAndReorg(t *testing.T) {
 				Once()
 
 			m.Etherman.
-				On("GetFinalizedBlockNumber", ctx).
+				On("GetLatestBlockNumber", ctx).
 				Return(ethBlock2bis.NumberU64(), nil).
 				Once()
 
