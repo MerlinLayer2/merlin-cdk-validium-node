@@ -12,7 +12,7 @@ Outputs = ["stderr"]
 	Name = "state_db"
 	Host = "zkevm-state-db"
 	Port = "5432"
-	EnableLog = false	
+	EnableLog = false
 	MaxConns = 200
 	[State.Batch]
 		[State.Batch.Constraints]
@@ -45,10 +45,10 @@ GlobalQueue = 0
 		ByteGasCost = 16
 		ZeroByteGasCost = 4
 		NetProfit = 1
-	    BreakEvenFactor = 1.1			
+	    BreakEvenFactor = 1.1
 		FinalDeviationPct = 10
 		EthTransferGasPrice = 0
-		EthTransferL1GasPriceFactor = 0			
+		EthTransferL1GasPriceFactor = 0
 		L2GasPriceSuggesterFactor = 0.5
 	[Pool.DB]
 	User = "pool_user"
@@ -130,15 +130,17 @@ StateConsistencyCheckInterval = "5s"
 		SequentialProcessL2Block = false
 	[Sequencer.Finalizer.Metrics]
 		Interval = "60m"
-		EnableLog = true		
+		EnableLog = true
 	[Sequencer.StreamServer]
 		Port = 6900
 		Filename = "/datastreamer/datastream.bin"
 		Version = 1
 		ChainID = 1337
 		WriteTimeout = "5s"
+		InactivityTimeout = "120s"
+		InactivityCheckInterval = "5s"
 		Enabled = true
-		
+
 
 [SequenceSender]
 WaitPeriodSendSequence = "15s"

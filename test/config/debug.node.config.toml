@@ -45,10 +45,10 @@ GlobalQueue = 1024
 		ByteGasCost = 16
 		ZeroByteGasCost = 4
 		NetProfit = 1
-	    BreakEvenFactor = 1.1			
+	    BreakEvenFactor = 1.1
 		FinalDeviationPct = 10
 		EthTransferGasPrice = 0
-		EthTransferL1GasPriceFactor = 0			
+		EthTransferL1GasPriceFactor = 0
 		L2GasPriceSuggesterFactor = 0.5
 	[Pool.DB]
 	User = "pool_user"
@@ -98,7 +98,7 @@ StateConsistencyCheckInterval = "5s"
 		L1InfoTreeL1BlockConfirmations = 0
 		L1InfoTreeCheckInterval = "10s"
 		BatchMaxDeltaTimestamp = "60s"
-		L2BlockMaxDeltaTimestamp = "3s"		
+		L2BlockMaxDeltaTimestamp = "3s"
 		ResourceExhaustedMarginPct = 10
 		StateRootSyncInterval = "120s"
 		FlushIdCheckInterval = "50ms"
@@ -107,12 +107,14 @@ StateConsistencyCheckInterval = "5s"
 		SequentialProcessL2Block = false
 	[Sequencer.Finalizer.Metrics]
 		Interval = "60m"
-		EnableLog = true		
+		EnableLog = true
 	[Sequencer.StreamServer]
 		Port = 6900
 		Filename = "/datastreamer/datastream.bin"
 		Version = 1
 		WriteTimeout = "5s"
+		InactivityTimeout = "120s"
+		InactivityCheckInterval = "5s"
 		Enabled = true
 
 [SequenceSender]
