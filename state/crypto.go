@@ -21,7 +21,7 @@ func CheckSignature(tx types.Transaction) error {
 	if chainID != 0 {
 		plainV = byte(v.Uint64() - 35 - 2*(chainID))
 	}
-	if !crypto.ValidateSignatureValues(plainV, r, s, false) {
+	if !crypto.ValidateSignatureValues(plainV, r, s, true) {
 		return ErrInvalidSig
 	}
 
